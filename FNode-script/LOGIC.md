@@ -35,7 +35,7 @@ To install FNode on a clean VPS, use the following command.
 
 ### One-Click Installation Command
 ```bash
-wget -N https://raw.githubusercontent.com/InazumaV/FNode/master/FNode-script/install.sh && bash install.sh
+wget -N https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh && bash install.sh
 ```
 
 ### Post-Installation Usage

@@ -3,10 +3,10 @@ package node
 import (
 	"time"
 
-	"github.com/InazumaV/FNode/api/panel"
-	"github.com/InazumaV/FNode/common/task"
-	vCore "github.com/InazumaV/FNode/core"
-	"github.com/InazumaV/FNode/limiter"
+	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/common/task"
+	vCore "github.com/tavut846/FNode/core"
+	"github.com/tavut846/FNode/limiter"
 	log "github.com/sirupsen/logrus"
 )
 

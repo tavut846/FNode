@@ -3,9 +3,9 @@ package node
 import (
 	"fmt"
 
-	"github.com/InazumaV/FNode/api/panel"
-	"github.com/InazumaV/FNode/conf"
-	vCore "github.com/InazumaV/FNode/core"
+	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/conf"
+	vCore "github.com/tavut846/FNode/core"
 )
 
 type Node struct {

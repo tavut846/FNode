@@ -6,12 +6,12 @@ import (
 	"net"
 	"sync"
 
-	"github.com/InazumaV/FNode/common/format"
-	"github.com/InazumaV/FNode/common/rate"
+	"github.com/tavut846/FNode/common/format"
+	"github.com/tavut846/FNode/common/rate"
 
-	"github.com/InazumaV/FNode/limiter"
+	"github.com/tavut846/FNode/limiter"
 
-	"github.com/InazumaV/FNode/common/counter"
+	"github.com/tavut846/FNode/common/counter"
 	"github.com/sagernet/sing-box/adapter"
 	"github.com/sagernet/sing-box/log"
 	N "github.com/sagernet/sing/common/network"

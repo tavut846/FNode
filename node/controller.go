@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/InazumaV/FNode/api/panel"
-	"github.com/InazumaV/FNode/common/task"
-	"github.com/InazumaV/FNode/conf"
-	vCore "github.com/InazumaV/FNode/core"
-	"github.com/InazumaV/FNode/limiter"
+	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/common/task"
+	"github.com/tavut846/FNode/conf"
+	vCore "github.com/tavut846/FNode/core"
+	"github.com/tavut846/FNode/limiter"
 	log "github.com/sirupsen/logrus"
 )
 

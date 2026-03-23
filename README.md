@@ -45,7 +45,7 @@ A V2board node server based on sing-box core, modified from XrayR.
 ### 一键安装
 
 ```
-wget -N https://raw.githubusercontent.com/wyx2685/FNode-script/master/install.sh && bash install.sh
+wget -N https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh && bash install.sh
 ```
 
 ### 手动安装

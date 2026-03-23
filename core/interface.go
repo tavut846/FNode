@@ -1,8 +1,8 @@
 package core
 
 import (
-	"github.com/InazumaV/FNode/api/panel"
-	"github.com/InazumaV/FNode/conf"
+	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/conf"
 )
 
 type AddUsersParams struct {

@@ -10,7 +10,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/InazumaV/FNode/conf"
+	"github.com/tavut846/FNode/conf"
 	"github.com/go-resty/resty/v2"
 )
 

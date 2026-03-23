@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/InazumaV/FNode/common/json5"
+	"github.com/tavut846/FNode/common/json5"
 
 	"encoding/json/v2"
 )

@@ -6,10 +6,10 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/InazumaV/FNode/conf"
-	vCore "github.com/InazumaV/FNode/core"
-	"github.com/InazumaV/FNode/limiter"
-	"github.com/InazumaV/FNode/node"
+	"github.com/tavut846/FNode/conf"
+	vCore "github.com/tavut846/FNode/core"
+	"github.com/tavut846/FNode/limiter"
+	"github.com/tavut846/FNode/node"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )

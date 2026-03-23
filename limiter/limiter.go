@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/InazumaV/FNode/api/panel"
-	"github.com/InazumaV/FNode/common/format"
-	"github.com/InazumaV/FNode/conf"
+	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/common/format"
+	"github.com/tavut846/FNode/conf"
 	"github.com/juju/ratelimit"
 )
 

@@ -1,4 +1,4 @@
-module github.com/InazumaV/FNode
+module github.com/tavut846/FNode
 
 go 1.25
 

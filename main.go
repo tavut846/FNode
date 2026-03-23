@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/InazumaV/FNode/cmd"
+	"github.com/tavut846/FNode/cmd"
 )
 
 func main() {

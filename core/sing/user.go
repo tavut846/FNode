@@ -4,9 +4,9 @@ import (
 	"encoding/base64"
 	"errors"
 
-	"github.com/InazumaV/FNode/api/panel"
-	"github.com/InazumaV/FNode/common/counter"
-	"github.com/InazumaV/FNode/core"
+	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/common/counter"
+	"github.com/tavut846/FNode/core"
 	"github.com/sagernet/sing-box/option"
 	"github.com/sagernet/sing-box/protocol/anytls"
 	"github.com/sagernet/sing-box/protocol/hysteria"

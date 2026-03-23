@@ -12,8 +12,8 @@ import (
 
 	"encoding/json"
 
-	"github.com/InazumaV/FNode/api/panel"
-	"github.com/InazumaV/FNode/conf"
+	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/conf"
 	"github.com/sagernet/sing-box/option"
 	F "github.com/sagernet/sing/common/format"
 	"github.com/sagernet/sing/common/json/badoption"

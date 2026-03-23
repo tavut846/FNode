@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/InazumaV/FNode/conf"
+	"github.com/tavut846/FNode/conf"
 	"github.com/sagernet/sing-box/option"
 )
 

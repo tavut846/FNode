@@ -129,20 +129,20 @@ install_FNode() {
     cd /usr/local/FNode/
 
     if  [ $# == 0 ] ;then
-        last_version=$(curl -Ls "https://api.github.com/repos/wyx2685/FNode/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+        last_version=$(curl -Ls "https://api.github.com/repos/tavut846/FNode/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
         if [[ ! -n "$last_version" ]]; then
             echo -e "${red}检测 FNode 版本失败，可能是超出 Github API 限制，请稍后再试，或手动指定 FNode 版本安装${plain}"
             exit 1
         fi
         echo -e "检测到 FNode 最新版本：${last_version}，开始安装"
-        wget --no-check-certificate -N --progress=bar -O /usr/local/FNode/FNode-linux.zip https://github.com/wyx2685/FNode/releases/download/${last_version}/FNode-linux-${arch}.zip
+        wget --no-check-certificate -N --progress=bar -O /usr/local/FNode/FNode-linux.zip https://github.com/tavut846/FNode/releases/download/${last_version}/FNode-linux-${arch}.zip
         if [[ $? -ne 0 ]]; then
             echo -e "${red}下载 FNode 失败，请确保你的服务器能够下载 Github 的文件${plain}"
             exit 1
         fi
     else
         last_version=$1
-        url="https://github.com/wyx2685/FNode/releases/download/${last_version}/FNode-linux-${arch}.zip"
+        url="https://github.com/tavut846/FNode/releases/download/${last_version}/FNode-linux-${arch}.zip"
         echo -e "开始安装 FNode $1"
         wget --no-check-certificate -N --progress=bar -O /usr/local/FNode/FNode-linux.zip ${url}
         if [[ $? -ne 0 ]]; then
@@ -243,7 +243,7 @@ EOF
     if [[ ! -f /etc/FNode/custom_inbound.json ]]; then
         cp custom_inbound.json /etc/FNode/
     fi
-    curl -o /usr/bin/FNode -Ls https://raw.githubusercontent.com/wyx2685/FNode-script/master/FNode.sh
+    curl -o /usr/bin/FNode -Ls https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/FNode.sh
     chmod +x /usr/bin/FNode
     if [ ! -L /usr/bin/fnode ]; then
         ln -s /usr/bin/FNode /usr/bin/fnode
@@ -275,7 +275,7 @@ EOF
     if [[ $first_install == true ]]; then
         read -rp "检测到你为第一次安装FNode,是否自动直接生成配置文件？(y/n): " if_generate
         if [[ $if_generate == [Yy] ]]; then
-            curl -o ./initconfig.sh -Ls https://raw.githubusercontent.com/wyx2685/FNode-script/master/initconfig.sh
+            curl -o ./initconfig.sh -Ls https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/initconfig.sh
             source initconfig.sh
             rm initconfig.sh -f
             generate_config_file

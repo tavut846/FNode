@@ -96,14 +96,7 @@ before_show_menu() {
 }
 
 install() {
-    bash <(curl -Ls https://raw.githubusercontent.com/wyx2685/FNode-script/master/install.sh)
-    if [[ $? == 0 ]]; then
-        if [[ $# == 0 ]]; then
-            start
-        else
-            start 0
-        fi
-    fi
+    bash <(curl -Ls https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh)
 }
 
 update() {
@@ -112,7 +105,7 @@ update() {
     else
         version=$2
     fi
-    bash <(curl -Ls https://raw.githubusercontent.com/wyx2685/FNode-script/master/install.sh) $version
+    bash <(curl -Ls https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh) $version
     if [[ $? == 0 ]]; then
         echo -e "${green}更新完成，已自动重启 FNode，请使用 FNode log 查看运行日志${plain}"
         exit
@@ -299,8 +292,7 @@ install_bbr() {
     bash <(curl -L -s https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcpx.sh)
 }
 
-update_shell() {
-    wget -O /usr/bin/FNode -N --no-check-certificate https://raw.githubusercontent.com/wyx2685/FNode-script/master/FNode.sh
+    wget -O /usr/bin/FNode -N --no-check-certificate https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/FNode.sh
     if [[ $? != 0 ]]; then
         echo ""
         echo -e "${red}下载脚本失败，请检查本机能否连接 Github${plain}"
@@ -812,11 +804,8 @@ show_usage() {
 show_menu() {
     echo -e "
   ${green}FNode 后端管理脚本，${plain}${red}不适用于docker${plain}
---- https://github.com/wyx2685/FNode ---
+--- https://github.com/tavut846/FNode ---
   ${green}0.${plain} 修改配置
-————————————————
-  ${green}1.${plain} 安装 FNode
-  ${green}2.${plain} 更新 FNode
   ${green}3.${plain} 卸载 FNode
 ————————————————
   ${green}4.${plain} 启动 FNode

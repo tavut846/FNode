@@ -9,8 +9,8 @@ import (
 	"github.com/sagernet/sing-box/include"
 	"github.com/sagernet/sing-box/log"
 
-	"github.com/InazumaV/FNode/conf"
-	vCore "github.com/InazumaV/FNode/core"
+	"github.com/tavut846/FNode/conf"
+	vCore "github.com/tavut846/FNode/core"
 	box "github.com/sagernet/sing-box"
 	"github.com/sagernet/sing-box/adapter"
 	"github.com/sagernet/sing-box/option"

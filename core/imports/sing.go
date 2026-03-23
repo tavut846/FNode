@@ -2,4 +2,4 @@
 
 package imports
 
-import _ "github.com/InazumaV/FNode/core/sing"
+import _ "github.com/tavut846/FNode/core/sing"
