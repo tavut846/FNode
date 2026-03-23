@@ -21,6 +21,9 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: write
+
 jobs:
 
   build:
@@ -55,6 +58,12 @@ jobs:
             goarch: mipsle
           - goos: linux
             goarch: mips
+          - goos: linux
+            goarch: mipsle
+            gomips: softfloat
+          - goos: linux
+            goarch: mips
+            gomips: softfloat
           # END MIPS
           # BEGIN PPC
           - goos: linux
@@ -73,6 +82,7 @@ jobs:
       GOOS: ${{ matrix.goos }}
       GOARCH: ${{ matrix.goarch }}
       GOARM: ${{ matrix.goarm }}
+      GOMIPS: ${{ matrix.gomips }}
       CGO_ENABLED: 0
     steps:
       - name: Checkout codebase
@@ -80,7 +90,7 @@ jobs:
       - name: Show workflow information
         id: get_filename
         run: |
-          export _NAME=$(jq ".\"$GOOS-$GOARCH$GOARM$GOMIPS\".friendlyName" -r < .github/build/friendly-filenames.json)
+          export _NAME=$(jq ".[\"$GOOS-$GOARCH$GOARM$GOMIPS\"].friendlyName" -r < .github/build/friendly-filenames.json)
           echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM, GOMIPS: $GOMIPS, RELEASE_NAME: $_NAME"
           echo "ASSET_NAME=$_NAME" >> $GITHUB_OUTPUT
           echo "ASSET_NAME=$_NAME" >> $GITHUB_ENV
@@ -94,24 +104,20 @@ jobs:
           go mod tidy
           go mod download
       - name: Get release version
-        if: ${{ github.event_name == 'release' }}
+        id: get_version
         run: |
-          echo "version=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_ENV
-      - name: Get other version
-        if: ${{ github.event_name != 'release' }}
-        run: |
-          echo "version=${{ github.sha }}" >> $GITHUB_ENV
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=$(echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build FNode
         run: |
-          echo "version: $version"
+          echo "version: ${{ steps.get_version.outputs.VERSION }}"
           mkdir -p build_assets
-          GOEXPERIMENT=jsonv2 go build -v -o build_assets/FNode -tags "sing with_quic with_grpc with_utls with_wireguard with_acme with_gvisor" -trimpath -ldflags "-X 'github.com/tavut846/FNode/cmd.version=$version' -s -w -buildid="
+          GOEXPERIMENT=jsonv2 go build -v -o build_assets/FNode -tags "sing with_quic with_grpc with_utls with_wireguard with_acme with_gvisor" -trimpath -ldflags "-X 'github.com/tavut846/FNode/cmd.version=${{ steps.get_version.outputs.VERSION }}' -s -w -buildid="
 
-      - name: Build Mips softfloat FNode
-        if: matrix.goarch == 'mips' || matrix.goarch == 'mipsle'
-        run: |
-          echo "version: $version"
-          GOEXPERIMENT=jsonv2 GOMIPS=softfloat go build -v -o build_assets/FNode_softfloat -tags "sing with_quic with_grpc with_utls with_wireguard with_acme with_gvisor" -trimpath -ldflags "-X 'github.com/tavut846/FNode/cmd.version=$version' -s -w -buildid="
       - name: Prepare to release
         run: |
           cp ${GITHUB_WORKSPACE}/README.md ./build_assets/README.md
@@ -155,3 +161,4 @@ jobs:
           file: ./FNode-${{ steps.get_filename.outputs.ASSET_NAME }}.zip*
           tag: ${{ github.ref }}
           file_glob: true
+          overwrite: true
