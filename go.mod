@@ -11,7 +11,7 @@ require (
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/juju/ratelimit v1.0.2
 	github.com/sagernet/sing v0.8.0-beta.6
-	github.com/sagernet/sing-box v1.13.3
+	github.com/sagernet/sing-box v1.13.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.19.0
@@ -326,5 +326,9 @@ require (
 	gvisor.dev/gvisor v0.0.0-20250428193742-2d800c3129d5 // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
 )
+
+replace github.com/sagernet/sing-box v1.13.0 => github.com/wyx2685/sing-box_mod v1.13.0-alpha.5.0.20251202212447-8d054dcd8bfe
+
+replace github.com/xtls/xray-core v1.251202.0 => github.com/wyx2685/xray-core v0.0.0-20251202200223-63db1dc9e9e2
 
 
