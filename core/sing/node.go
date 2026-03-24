@@ -380,12 +380,19 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 				Password: info.Hysteria2.ObfsType,
 			}
 		}
+		var masq *option.Hysteria2MasqueradeOptions
+		if info.Hysteria2.Masquerade != "" {
+			masq = &option.Hysteria2MasqueradeOptions{
+				Type: info.Hysteria2.Masquerade,
+			}
+		}
 		in.Options = &option.Hysteria2InboundOptions{
 			ListenOptions:         listen,
-			UpMbps:                info.Hysteria2.UpMbps,
-			DownMbps:              info.Hysteria2.DownMbps,
+			UpMbps:                uint32(info.Hysteria2.UpMbps),
+			DownMbps:              uint32(info.Hysteria2.DownMbps),
 			IgnoreClientBandwidth: info.Hysteria2.Ignore_Client_Bandwidth,
 			Obfs:                  obfs,
+			Masquerade:            masq,
 			InboundTLSOptionsContainer: option.InboundTLSOptionsContainer{
 				TLS: &tls,
 			},

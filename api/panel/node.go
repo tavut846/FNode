@@ -137,6 +137,8 @@ type Hysteria2Node struct {
 	DownMbps                int    `json:"down_mbps"`
 	ObfsType                string `json:"obfs"`
 	ObfsPassword            string `json:"obfs-password"`
+	Masquerade              string `json:"masquerade"`
+	UDPFragment             bool   `json:"udp_fragment"`
 }
 
 type RawDNS struct {
