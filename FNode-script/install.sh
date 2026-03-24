@@ -212,7 +212,6 @@ EOF
     if [[ ! -f /etc/FNode/config.json ]]; then
         cp config.json /etc/FNode/
         echo -e ""
-        echo -e "全新安装，请先参看教程：https://fnode.v-50.me/，配置必要的内容"
         first_install=true
     else
         if [[ x"${release}" == x"alpine" ]]; then
@@ -270,7 +269,6 @@ EOF
     echo "FNode uninstall    - 卸载 FNode"
     echo "FNode version      - 查看 FNode 版本"
     echo "------------------------------------------"
-    curl -fsS --max-time 10 "https://api.v-50.me/counter_fnode" || true
     # 首次安装询问是否生成配置文件
     if [[ $first_install == true ]]; then
         read -rp "检测到你为第一次安装FNode,是否自动直接生成配置文件？(y/n): " if_generate

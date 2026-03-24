@@ -292,6 +292,7 @@ install_bbr() {
     bash <(curl -L -s https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcpx.sh)
 }
 
+update_shell() {
     wget -O /usr/bin/FNode -N --no-check-certificate https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/FNode.sh
     if [[ $? != 0 ]]; then
         echo ""
@@ -415,14 +416,19 @@ show_FNode_version() {
 }
 
 add_node_config() {
-    echo -e "${green}节点核心类型：${plain}"
-    echo -e "${green}1. singbox${plain}"
+    echo -e "${green}节点核心类型：singbox${plain}"
     core_type="1"
     core="sing"
     core_sing=true
     while true; do
         read -rp "请输入节点Node ID：" NodeID
         # 判断NodeID是否为正整数
+        if [[ "$NodeID" =~ ^[0-9]+$ ]]; then
+            break
+        else
+            echo "错误：请输入正确的数字作为Node ID。"
+        fi
+    done
 
     echo -e "${yellow}请选择节点传输协议：${plain}"
     echo -e "${green}1. Shadowsocks${plain}"
@@ -520,8 +526,7 @@ generate_config_file() {
     echo -e "${red}2. 生成的配置文件会保存到 /etc/FNode/config.json${plain}"
     echo -e "${red}3. 原来的配置文件会保存到 /etc/FNode/config.json.bak${plain}"
     echo -e "${red}4. 目前仅部分支持TLS${plain}"
-    echo -e "${red}5. 使用此功能生成的配置文件会自带审计，确定继续？(y/n)${plain}"
-    read -rp "请输入：" continue_prompt
+    read -rp "是否继续？(y/n): " continue_prompt
     if [[ "$continue_prompt" =~ ^[Nn][Oo]? ]]; then
         exit 0
     fi
