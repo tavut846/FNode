@@ -168,7 +168,7 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -176,23 +176,22 @@ jobs:
           path: ./artifacts
           pattern: FNode-*
           merge-multiple: true
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
-        if: github.event_name == 'release'
+      - name: Publish Continuous Release
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
+        uses: ncipollo/release-action@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./artifacts/*
-          tag: ${{ github.ref }}
-          file_glob: true
-          overwrite: true
-      - name: Upload binaries to draft release
-        uses: svenstaro/upload-release-action@v2
-        if: github.event_name == 'workflow_dispatch'
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./artifacts/*
-          tag: latest
-          file_glob: true
-          overwrite: true
+          artifacts: "artifacts/*"
+          tag: "latest"
+          name: "Latest Build"
           draft: true
-          release_name: "Latest Build"
+          allowUpdates: true
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish Tagged Release
+        if: github.event_name == 'release'
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "artifacts/*"
+          allowUpdates: true
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
