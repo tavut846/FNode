@@ -807,10 +807,17 @@ show_usage() {
 }
 
 show_menu() {
+    fnode_version="未安装"
+    if [[ -f /usr/local/FNode/FNode ]]; then
+        fnode_version=$(/usr/local/FNode/FNode version 2>/dev/null)
+    fi
     echo -e "
   ${green}FNode 后端管理脚本，${plain}${red}不适用于docker${plain}
+  ${green}当前 FNode 版本: ${plain}${red}${fnode_version}${plain}
 --- https://github.com/tavut846/FNode ---
   ${green}0.${plain} 修改配置
+  ${green}1.${plain} 安装 FNode
+  ${green}2.${plain} 更新 FNode
   ${green}3.${plain} 卸载 FNode
 ————————————————
   ${green}4.${plain} 启动 FNode
