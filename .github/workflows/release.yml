@@ -176,22 +176,25 @@ jobs:
           path: ./artifacts
           pattern: FNode-*
           merge-multiple: true
+      - name: Display downloaded files
+        run: ls -lh ./artifacts
+
       - name: Publish Continuous Release
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v2
         with:
-          artifacts: "artifacts/*"
-          tag: "latest"
+          files: artifacts/*
+          tag_name: latest
           name: "Latest Build"
           draft: true
-          allowUpdates: true
-          replacesArtifacts: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publish Tagged Release
         if: github.event_name == 'release'
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v2
         with:
-          artifacts: "artifacts/*"
-          allowUpdates: true
-          replacesArtifacts: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          files: artifacts/*
+          tag_name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
