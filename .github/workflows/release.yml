@@ -116,13 +116,17 @@ jobs:
       - name: Get other version
         if: ${{ github.event_name != 'release' }}
         run: |
-          echo "version=$(echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_ENV
+          echo "version=$(git describe --tags --always --dirty 2>/dev/null || echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_ENV
+      - name: Get build metadata
+        run: |
+          echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
 
       - name: Build FNode
         run: |
-          echo "version: $version"
+          echo "version: $version, commit: $commit, buildDate: $buildDate"
           mkdir -p build_assets
-          GOEXPERIMENT=jsonv2 go build -v -o build_assets/FNode -tags "sing with_quic with_grpc with_utls with_wireguard with_acme with_gvisor" -trimpath -ldflags "-X 'github.com/tavut846/FNode/cmd.version=$version' -s -w -buildid="
+          GOEXPERIMENT=jsonv2 go build -v -o build_assets/FNode -tags "sing with_quic with_grpc with_utls with_wireguard with_acme with_gvisor" -trimpath -ldflags "-X 'github.com/tavut846/FNode/cmd.version=$version' -X 'github.com/tavut846/FNode/cmd.commit=$commit' -X 'github.com/tavut846/FNode/cmd.buildDate=$buildDate' -s -w -buildid="
 
       - name: Rename Windows FNode
         if: matrix.goos == 'windows'
@@ -179,16 +183,17 @@ jobs:
       - name: Display downloaded files
         run: ls -lh ./artifacts
 
-      - name: Publish Continuous Release
+      - name: Create Draft Release
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: artifacts/*
-          tag_name: latest
-          name: "Latest Build"
-          draft: true
+        run: |
+          gh release create \
+            "draft-$(git rev-parse --short HEAD 2>/dev/null || echo ${{ github.sha }} | cut -c1-8)-${{ github.run_number }}" \
+            artifacts/* \
+            --draft \
+            --title "Build #${{ github.run_number }}" \
+            --notes "Automated build from commit ${{ github.sha }} on ${{ github.ref_name }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish Tagged Release
         if: github.event_name == 'release'
