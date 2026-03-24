@@ -163,12 +163,32 @@ jobs:
           name: FNode-${{ steps.get_filename.outputs.ASSET_NAME }}
           path: |
             ./FNode-${{ steps.get_filename.outputs.ASSET_NAME }}/*
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
-        if: github.event_name == 'release'
+
+      - name: Upload zip to Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./FNode-${{ steps.get_filename.outputs.ASSET_NAME }}.zip*
-          tag: ${{ github.ref }}
-          file_glob: true
-          overwrite: true
+          name: release-asset-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm }}${{ matrix.gomips }}
+          path: |
+            ./FNode-${{ steps.get_filename.outputs.ASSET_NAME }}.zip*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./release_assets
+          pattern: release-asset-*
+          merge-multiple: true
+      - name: Create Release and Upload Assets
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: "./release_assets/*"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.event.release.tag_name || 'latest' }}
+          name: ${{ github.event.release.name || 'Latest Build' }}
+          body: ${{ github.event.release.body || 'FNode build assets collected from CI.' }}
+          draft: ${{ github.event_name != 'release' }}
