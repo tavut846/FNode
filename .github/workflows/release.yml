@@ -1,4 +1,4 @@
-name: Build and Release (Linux)
+name: Build and Release
 
 on:
   workflow_dispatch:
@@ -10,14 +10,14 @@ on:
       - "**/*.go"
       - "go.mod"
       - "go.sum"
-      - ".github/workflows/release-linux.yml"
+      - ".github/workflows/release.yml"
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - "**/*.go"
       - "go.mod"
       - "go.sum"
-      - ".github/workflows/release-linux.yml"
+      - ".github/workflows/release.yml"
   release:
     types: [published]
 
@@ -25,14 +25,16 @@ permissions:
   contents: write
 
 jobs:
-
   build:
     strategy:
       matrix:
-        goos: [linux]
+        goos: [linux, windows, freebsd, darwin]
         goarch: [amd64, 386]
+        exclude:
+          - goarch: 386
+            goos: darwin
         include:
-          # BEGIN Linux ARM 5 6 7
+          # Linux Specifics
           - goos: linux
             goarch: arm
             goarm: 7
@@ -42,14 +44,10 @@ jobs:
           - goos: linux
             goarch: arm
             goarm: 5
-          # END Linux ARM 5 6 7
-          # BEGIN riscv64 & ARM64
           - goos: linux
             goarch: arm64
           - goos: linux
             goarch: riscv64
-          # END riscv64 & ARM64
-          # BEGIN MIPS
           - goos: linux
             goarch: mips64
           - goos: linux
@@ -64,17 +62,24 @@ jobs:
           - goos: linux
             goarch: mips
             gomips: softfloat
-          # END MIPS
-          # BEGIN PPC
           - goos: linux
             goarch: ppc64
           - goos: linux
             goarch: ppc64le
-          # END PPC
-          # BEGIN S390X
           - goos: linux
             goarch: s390x
-          # END S390X
+          # MacOS ARM64
+          - goos: darwin
+            goarch: arm64
+          # Android ARM64
+          - goos: android
+            goarch: arm64
+          # FreeBSD Specials
+          - goos: freebsd
+            goarch: arm64
+          - goos: freebsd
+            goarch: arm
+            goarm: 7
       fail-fast: false
 
     runs-on: ubuntu-latest
@@ -118,6 +123,11 @@ jobs:
           mkdir -p build_assets
           GOEXPERIMENT=jsonv2 go build -v -o build_assets/FNode -tags "sing with_quic with_grpc with_utls with_wireguard with_acme with_gvisor" -trimpath -ldflags "-X 'github.com/tavut846/FNode/cmd.version=${{ steps.get_version.outputs.VERSION }}' -s -w -buildid="
 
+      - name: Rename Windows FNode
+        if: matrix.goos == 'windows'
+        run: |
+          cd ./build_assets || exit 1
+          mv FNode FNode.exe
       - name: Prepare to release
         run: |
           cp ${GITHUB_WORKSPACE}/README.md ./build_assets/README.md
