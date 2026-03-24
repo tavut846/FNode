@@ -163,24 +163,34 @@ jobs:
         with:
           name: FNode-${{ steps.get_filename.outputs.ASSET_NAME }}
           path: |
-            ./FNode-${{ steps.get_filename.outputs.ASSET_NAME }}/*
-            
+            ./FNode-${{ steps.get_filename.outputs.ASSET_NAME }}.zip*
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+          pattern: FNode-*
+          merge-multiple: true
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         if: github.event_name == 'release'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./FNode-${{ steps.get_filename.outputs.ASSET_NAME }}.zip*
+          file: ./artifacts/*
           tag: ${{ github.ref }}
           file_glob: true
           overwrite: true
-          
       - name: Upload binaries to draft release
         uses: svenstaro/upload-release-action@v2
         if: github.event_name == 'workflow_dispatch'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./FNode-${{ steps.get_filename.outputs.ASSET_NAME }}.zip*
+          file: ./artifacts/*
           tag: latest
           file_glob: true
           overwrite: true
