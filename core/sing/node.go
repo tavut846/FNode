@@ -220,7 +220,7 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 					return option.Inbound{}, fmt.Errorf("decode NetworkSettings error: %s", err)
 				}
 			}
-			t.Type = "xhttp"
+			t.Type = "httpupgrade"
 			t.HTTPUpgradeOptions = option.V2RayHTTPUpgradeOptions{
 				Path: network.Path,
 				Host: network.Host,
@@ -346,7 +346,7 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 					return option.Inbound{}, fmt.Errorf("decode NetworkSettings error: %s", err)
 				}
 			}
-			t.Type = "xhttp"
+			t.Type = "httpupgrade"
 			t.HTTPUpgradeOptions = option.V2RayHTTPUpgradeOptions{
 				Path: network.Path,
 				Host: network.Host,
