@@ -9,6 +9,7 @@ import (
 	"github.com/sagernet/sing-box/include"
 	"github.com/sagernet/sing-box/log"
 
+	"github.com/tavut846/FNode/api/panel"
 	"github.com/tavut846/FNode/conf"
 	vCore "github.com/tavut846/FNode/core"
 	box "github.com/sagernet/sing-box"
@@ -86,7 +87,7 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 	}
 	b.Router().AppendTracker(hs)
 	return &Sing{
-		ctx:        b.Router().GetCtx(),
+		ctx:        ctx,
 		box:        b,
 		hookServer: hs,
 		router:     b.Router(),
