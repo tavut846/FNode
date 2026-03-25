@@ -50,6 +50,13 @@ type HttpupgradeNetworkConfig struct {
 	Host string `json:"host"`
 }
 
+type XhttpNetworkConfig struct {
+	Path  string          `json:"path"`
+	Host  string          `json:"host"`
+	Mode  string          `json:"mode"`
+	Extra json.RawMessage `json:"extra"`
+}
+
 func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (option.Inbound, error) {
 	addr, err := netip.ParseAddr(c.ListenIP)
 	if err != nil {
@@ -205,6 +212,19 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 				Path: network.Path,
 				Host: network.Host,
 			}
+		case "xhttp":
+			network := XhttpNetworkConfig{}
+			if len(n.NetworkSettings) != 0 {
+				err := json.Unmarshal(n.NetworkSettings, &network)
+				if err != nil {
+					return option.Inbound{}, fmt.Errorf("decode NetworkSettings error: %s", err)
+				}
+			}
+			t.Type = "httpupgrade" // sing-box internally uses httpupgrade
+			t.HTTPUpgradeOptions = option.V2RayHTTPUpgradeOptions{
+				Path: network.Path,
+				Host: network.Host,
+			}
 		}
 		if info.Type == "vless" {
 			in.Type = "vless"
@@ -305,6 +325,31 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 			}
 			t.GRPCOptions = option.V2RayGRPCOptions{
 				ServiceName: network.ServiceName,
+			}
+		case "httpupgrade":
+			network := HttpupgradeNetworkConfig{}
+			if len(n.NetworkSettings) != 0 {
+				err := json.Unmarshal(n.NetworkSettings, &network)
+				if err != nil {
+					return option.Inbound{}, fmt.Errorf("decode NetworkSettings error: %s", err)
+				}
+			}
+			t.HTTPUpgradeOptions = option.V2RayHTTPUpgradeOptions{
+				Path: network.Path,
+				Host: network.Host,
+			}
+		case "xhttp":
+			network := XhttpNetworkConfig{}
+			if len(n.NetworkSettings) != 0 {
+				err := json.Unmarshal(n.NetworkSettings, &network)
+				if err != nil {
+					return option.Inbound{}, fmt.Errorf("decode NetworkSettings error: %s", err)
+				}
+			}
+			t.Type = "httpupgrade" // sing-box internally uses httpupgrade
+			t.HTTPUpgradeOptions = option.V2RayHTTPUpgradeOptions{
+				Path: network.Path,
+				Host: network.Host,
 			}
 		default:
 			t.Type = ""
