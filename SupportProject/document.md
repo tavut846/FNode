@@ -15,4 +15,7 @@ This project contains the original scripts for managing FNode/V2bX. It includes:
 - `initconfig.sh`: Script for initializing configurations.
 
 ### [Xboard](./Xboard)
-Xboard is the frontend dashboard server for managing nodes and users. It is a modern panel system built on Laravel 11 that communicates with FNode (V2bX) through an API to manage nodes and track usage.
+Xboard is the modern frontend dashboard server for managing nodes and users. Built on Laravel 11, it provides a comprehensive panel system for overseeing various backends (FNode, V2bX, Xboard-Node) through a unified API.
+
+### [Xboard-Node](./Xboard-Node)
+Xboard-Node is a Go-based backend specifically built by the Xboard team as the native node server. It leverages a specialized sing-box fork (`cedar2025/sing-box`) to provide first-class support for modern protocols like `xhttp` (SplitHTTP) and `naive` transport, as well as real-time synchronization via the V2 handshake API.
