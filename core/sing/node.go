@@ -441,6 +441,12 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 
 func (b *Sing) AddNode(tag string, info *panel.NodeInfo, config *conf.Options) error {
 	b.nodeReportMinTrafficBytes[tag] = config.ReportMinTraffic * 1024
+	b.users.mapLock.Lock()
+	b.inboundInfo[tag] = info
+	if _, ok := b.inboundUsers[tag]; !ok {
+		b.inboundUsers[tag] = make([]panel.UserInfo, 0)
+	}
+	b.users.mapLock.Unlock()
 	c, err := getInboundOptions(tag, info, config)
 	if err != nil {
 		return err
@@ -462,6 +468,10 @@ func (b *Sing) AddNode(tag string, info *panel.NodeInfo, config *conf.Options) e
 }
 
 func (b *Sing) DelNode(tag string) error {
+	b.users.mapLock.Lock()
+	delete(b.inboundInfo, tag)
+	delete(b.inboundUsers, tag)
+	b.users.mapLock.Unlock()
 	in := b.box.Inbound()
 	err := in.Remove(tag)
 	if err != nil {

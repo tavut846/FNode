@@ -31,6 +31,8 @@ type Sing struct {
 	router                    adapter.Router
 	logFactory                log.Factory
 	users                     *UserMap
+	inboundUsers              map[string][]panel.UserInfo
+	inboundInfo               map[string]*panel.NodeInfo
 	nodeReportMinTrafficBytes map[string]int64
 }
 
@@ -92,6 +94,8 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 		users: &UserMap{
 			uidMap: make(map[string]int),
 		},
+		inboundUsers:              make(map[string][]panel.UserInfo),
+		inboundInfo:               make(map[string]*panel.NodeInfo),
 		nodeReportMinTrafficBytes: make(map[string]int64),
 	}, nil
 }

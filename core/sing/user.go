@@ -7,118 +7,169 @@ import (
 	"github.com/tavut846/FNode/api/panel"
 	"github.com/tavut846/FNode/common/counter"
 	"github.com/tavut846/FNode/core"
+	"github.com/sagernet/sing-box/adapter"
 	"github.com/sagernet/sing-box/option"
-	"github.com/sagernet/sing-box/protocol/anytls"
-	"github.com/sagernet/sing-box/protocol/hysteria"
-	"github.com/sagernet/sing-box/protocol/hysteria2"
-	"github.com/sagernet/sing-box/protocol/shadowsocks"
-	"github.com/sagernet/sing-box/protocol/trojan"
-	"github.com/sagernet/sing-box/protocol/tuic"
-	"github.com/sagernet/sing-box/protocol/vless"
-	"github.com/sagernet/sing-box/protocol/vmess"
 )
 
 func (b *Sing) AddUsers(p *core.AddUsersParams) (added int, err error) {
-	in, found := b.box.Inbound().Get(p.Tag)
-	if !found {
-		return 0, errors.New("the inbound not found")
-	}
 	b.users.mapLock.Lock()
 	defer b.users.mapLock.Unlock()
+
 	for i := range p.Users {
 		b.users.uidMap[p.Users[i].Uuid] = p.Users[i].Id
 	}
-	switch p.NodeInfo.Type {
+
+	if _, ok := b.inboundUsers[p.Tag]; !ok {
+		b.inboundUsers[p.Tag] = make([]panel.UserInfo, 0)
+	}
+	b.inboundUsers[p.Tag] = append(b.inboundUsers[p.Tag], p.Users...)
+
+	if p.NodeInfo != nil {
+		b.inboundInfo[p.Tag] = p.NodeInfo
+	}
+
+	return len(p.Users), b.updateInboundUsers(p.Tag)
+}
+
+func (b *Sing) DelUsers(users []panel.UserInfo, tag string, _ *panel.NodeInfo) error {
+	b.users.mapLock.Lock()
+	defer b.users.mapLock.Unlock()
+
+	removeSet := make(map[string]struct{}, len(users))
+	for i := range users {
+		removeSet[users[i].Uuid] = struct{}{}
+
+		if v, ok := b.hookServer.counter.Load(tag); ok {
+			c := v.(*counter.TrafficCounter)
+			c.Delete(users[i].Uuid)
+		}
+		delete(b.users.uidMap, users[i].Uuid)
+	}
+
+	if currentUsers, ok := b.inboundUsers[tag]; ok {
+		var kept []panel.UserInfo
+		for _, u := range currentUsers {
+			if _, rm := removeSet[u.Uuid]; !rm {
+				kept = append(kept, u)
+			}
+		}
+		b.inboundUsers[tag] = kept
+	}
+
+	return b.updateInboundUsers(tag)
+}
+
+func (b *Sing) updateInboundUsers(tag string) error {
+	in, found := b.box.Inbound().Get(tag)
+	if !found {
+		return errors.New("the inbound not found")
+	}
+	users := b.inboundUsers[tag]
+	info := b.inboundInfo[tag]
+	if info == nil {
+		return errors.New("node info not found for tag: " + tag)
+	}
+
+	switch info.Type {
 	case "vless":
-		us := make([]option.VLESSUser, len(p.Users))
-		for i := range p.Users {
+		us := make([]option.VLESSUser, len(users))
+		for i := range users {
 			us[i] = option.VLESSUser{
-				Name: p.Users[i].Uuid,
-				Flow: p.VAllss.Flow,
-				UUID: p.Users[i].Uuid,
+				Name: users[i].Uuid,
+				Flow: info.VAllss.Flow,
+				UUID: users[i].Uuid,
 			}
 		}
-		err = in.(*vless.Inbound).AddUsers(us)
+		if u, ok := in.(adapter.UpdatableInbound[option.VLESSUser]); ok {
+			return u.UpdateUsers(us)
+		}
 	case "vmess":
-		us := make([]option.VMessUser, len(p.Users))
-		for i := range p.Users {
+		us := make([]option.VMessUser, len(users))
+		for i := range users {
 			us[i] = option.VMessUser{
-				Name: p.Users[i].Uuid,
-				UUID: p.Users[i].Uuid,
+				Name: users[i].Uuid,
+				UUID: users[i].Uuid,
 			}
 		}
-		err = in.(*vmess.Inbound).AddUsers(us)
+		if u, ok := in.(adapter.UpdatableInbound[option.VMessUser]); ok {
+			return u.UpdateUsers(us)
+		}
 	case "shadowsocks":
-		us := make([]option.ShadowsocksUser, len(p.Users))
-		for i := range p.Users {
-			var password = p.Users[i].Uuid
-			switch p.Shadowsocks.Cipher {
+		us := make([]option.ShadowsocksUser, len(users))
+		for i := range users {
+			var password = users[i].Uuid
+			switch info.Shadowsocks.Cipher {
 			case "2022-blake3-aes-128-gcm":
 				password = base64.StdEncoding.EncodeToString([]byte(password[:16]))
 			case "2022-blake3-aes-256-gcm":
 				password = base64.StdEncoding.EncodeToString([]byte(password[:32]))
 			}
 			us[i] = option.ShadowsocksUser{
-				Name:     p.Users[i].Uuid,
+				Name:     users[i].Uuid,
 				Password: password,
 			}
 		}
-		err = in.(*shadowsocks.MultiInbound).AddUsers(us)
+		if u, ok := in.(adapter.UpdatableShadowsocksInbound); ok {
+			return u.UpdateUsersByOptions(us)
+		}
 	case "trojan":
-		us := make([]option.TrojanUser, len(p.Users))
-		for i := range p.Users {
+		us := make([]option.TrojanUser, len(users))
+		for i := range users {
 			us[i] = option.TrojanUser{
-				Name:     p.Users[i].Uuid,
-				Password: p.Users[i].Uuid,
+				Name:     users[i].Uuid,
+				Password: users[i].Uuid,
 			}
 		}
-		err = in.(*trojan.Inbound).AddUsers(us)
+		if u, ok := in.(adapter.UpdatableInbound[option.TrojanUser]); ok {
+			return u.UpdateUsers(us)
+		}
 	case "tuic":
-		us := make([]option.TUICUser, len(p.Users))
-		id := make([]int, len(p.Users))
-		for i := range p.Users {
+		us := make([]option.TUICUser, len(users))
+		for i := range users {
 			us[i] = option.TUICUser{
-				Name:     p.Users[i].Uuid,
-				UUID:     p.Users[i].Uuid,
-				Password: p.Users[i].Uuid,
+				Name:     users[i].Uuid,
+				UUID:     users[i].Uuid,
+				Password: users[i].Uuid,
 			}
-			id[i] = p.Users[i].Id
 		}
-		err = in.(*tuic.Inbound).AddUsers(us, id)
+		if u, ok := in.(adapter.UpdatableInbound[option.TUICUser]); ok {
+			return u.UpdateUsers(us)
+		}
 	case "hysteria":
-		us := make([]option.HysteriaUser, len(p.Users))
-		for i := range p.Users {
+		us := make([]option.HysteriaUser, len(users))
+		for i := range users {
 			us[i] = option.HysteriaUser{
-				Name:       p.Users[i].Uuid,
-				AuthString: p.Users[i].Uuid,
+				Name:       users[i].Uuid,
+				AuthString: users[i].Uuid,
 			}
 		}
-		err = in.(*hysteria.Inbound).AddUsers(us)
+		if u, ok := in.(adapter.UpdatableInbound[option.HysteriaUser]); ok {
+			return u.UpdateUsers(us)
+		}
 	case "hysteria2":
-		us := make([]option.Hysteria2User, len(p.Users))
-		id := make([]int, len(p.Users))
-		for i := range p.Users {
+		us := make([]option.Hysteria2User, len(users))
+		for i := range users {
 			us[i] = option.Hysteria2User{
-				Name:     p.Users[i].Uuid,
-				Password: p.Users[i].Uuid,
+				Name:     users[i].Uuid,
+				Password: users[i].Uuid,
 			}
-			id[i] = p.Users[i].Id
 		}
-		err = in.(*hysteria2.Inbound).AddUsers(us, id)
+		if u, ok := in.(adapter.UpdatableInbound[option.Hysteria2User]); ok {
+			return u.UpdateUsers(us)
+		}
 	case "anytls":
-		us := make([]option.AnyTLSUser, len(p.Users))
-		for i := range p.Users {
+		us := make([]option.AnyTLSUser, len(users))
+		for i := range users {
 			us[i] = option.AnyTLSUser{
-				Name:     p.Users[i].Uuid,
-				Password: p.Users[i].Uuid,
+				Name:     users[i].Uuid,
+				Password: users[i].Uuid,
 			}
 		}
-		err = in.(*anytls.Inbound).AddUsers(us)
+		if u, ok := in.(adapter.UpdatableInbound[option.AnyTLSUser]); ok {
+			return u.UpdateUsers(us)
+		}
 	}
-	if err != nil {
-		return 0, err
-	}
-	return len(p.Users), err
+	return errors.New("unsupported inbound type for dynamic users or inbound does not support UpdatableInbound")
 }
 
 func (b *Sing) GetUserTraffic(tag, uuid string, reset bool) (up int64, down int64) {
@@ -169,50 +220,4 @@ func (b *Sing) GetUserTrafficSlice(tag string, reset bool) ([]panel.UserTraffic,
 		return trafficSlice, nil
 	}
 	return nil, nil
-}
-
-type UserDeleter interface {
-	DelUsers(uuid []string) error
-}
-
-func (b *Sing) DelUsers(users []panel.UserInfo, tag string, info *panel.NodeInfo) error {
-	var del UserDeleter
-	if i, found := b.box.Inbound().Get(tag); found {
-		switch info.Type {
-		case "vmess":
-			del = i.(*vmess.Inbound)
-		case "vless":
-			del = i.(*vless.Inbound)
-		case "shadowsocks":
-			del = i.(*shadowsocks.MultiInbound)
-		case "trojan":
-			del = i.(*trojan.Inbound)
-		case "tuic":
-			del = i.(*tuic.Inbound)
-		case "hysteria":
-			del = i.(*hysteria.Inbound)
-		case "hysteria2":
-			del = i.(*hysteria2.Inbound)
-		case "anytls":
-			del = i.(*anytls.Inbound)
-		}
-	} else {
-		return errors.New("the inbound not found")
-	}
-	uuids := make([]string, len(users))
-	b.users.mapLock.Lock()
-	defer b.users.mapLock.Unlock()
-	for i := range users {
-		if v, ok := b.hookServer.counter.Load(tag); ok {
-			c := v.(*counter.TrafficCounter)
-			c.Delete(users[i].Uuid)
-		}
-		delete(b.users.uidMap, users[i].Uuid)
-		uuids[i] = users[i].Uuid
-	}
-	err := del.DelUsers(uuids)
-	if err != nil {
-		return err
-	}
-	return nil
 }
