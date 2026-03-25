@@ -111,7 +111,7 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 			Enabled:    true,
 			ShortID:    []string{v.TlsSettings.ShortId},
 			PrivateKey: v.TlsSettings.PrivateKey,
-			Xver:       uint8(v.TlsSettings.Xver),
+			// Xver:       uint8(v.TlsSettings.Xver), // Xver is not supported in cedar2025 fork
 			Handshake: option.InboundRealityHandshakeOptions{
 				ServerOptions: option.ServerOptions{
 					Server:     dest,
@@ -220,7 +220,7 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 					return option.Inbound{}, fmt.Errorf("decode NetworkSettings error: %s", err)
 				}
 			}
-			t.Type = "httpupgrade" // sing-box internally uses httpupgrade
+			t.Type = "xhttp"
 			t.HTTPUpgradeOptions = option.V2RayHTTPUpgradeOptions{
 				Path: network.Path,
 				Host: network.Host,
@@ -346,7 +346,7 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 					return option.Inbound{}, fmt.Errorf("decode NetworkSettings error: %s", err)
 				}
 			}
-			t.Type = "httpupgrade" // sing-box internally uses httpupgrade
+			t.Type = "xhttp"
 			t.HTTPUpgradeOptions = option.V2RayHTTPUpgradeOptions{
 				Path: network.Path,
 				Host: network.Host,
