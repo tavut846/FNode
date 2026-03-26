@@ -92,6 +92,19 @@ jobs:
     steps:
       - name: Checkout codebase
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version and metadata
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "version=${{ github.ref_name }}" >> $GITHUB_ENV
+          else
+            echo "version=$(git describe --tags --always --dirty 2>/dev/null || echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_ENV
+          fi
+          echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
+
       - name: Show workflow information
         id: get_filename
         run: |
@@ -99,6 +112,7 @@ jobs:
           echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM, GOMIPS: $GOMIPS, RELEASE_NAME: $_NAME"
           echo "ASSET_NAME=$_NAME" >> $GITHUB_OUTPUT
           echo "ASSET_NAME=$_NAME" >> $GITHUB_ENV
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -108,19 +122,6 @@ jobs:
         run: |
           go mod tidy
           go mod download
-          
-      - name: Get release version
-        if: ${{ github.event_name == 'release' }}
-        run: |
-          echo "version=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_ENV
-      - name: Get other version
-        if: ${{ github.event_name != 'release' }}
-        run: |
-          echo "version=$(git describe --tags --always --dirty 2>/dev/null || echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_ENV
-      - name: Get build metadata
-        run: |
-          echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          echo "buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
 
       - name: Build FNode
         run: |

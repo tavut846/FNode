@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	version   = "unknown"   // use ldflags replace
-	commit    = "unknown"   // use ldflags replace
-	buildDate = "unknown"   // use ldflags replace
+	version   = "unknown" // use ldflags replace
+	commit    = "unknown" // use ldflags replace
+	buildDate = "unknown" // use ldflags replace
 	codename  = "FNode"
 	intro     = "A V2board backend based on multi core"
 )
@@ -34,9 +35,12 @@ _/      _/      _/    _/    _/      _/
  _/  _/      _/      _/    _/    _/  _/
   _/      _/_/_/_/  _/_/_/    _/      _/
                                                 `)
-	fmt.Printf("%s\n", codename)
-	fmt.Printf("  Version:    %s\n", version)
-	fmt.Printf("  Commit:     %s\n", commit)
-	fmt.Printf("  Build Date: %s\n", buildDate)
-	fmt.Printf("  Description:%s\n", intro)
+	fmt.Println("--------------------------------------------------")
+	fmt.Printf("Codename:    %s\n", codename)
+	fmt.Printf("Version:     %s\n", version)
+	fmt.Printf("Commit:      %s\n", commit)
+	fmt.Printf("Build Date:  %s\n", buildDate)
+	fmt.Printf("Platform:    %s/%s\n", runtime.GOOS, runtime.GOARCH)
+	fmt.Printf("Description: %s\n", intro)
+	fmt.Println("--------------------------------------------------")
 }
