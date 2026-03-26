@@ -18,12 +18,18 @@ var (
 var versionCommand = cobra.Command{
 	Use:   "version",
 	Short: "Print version info",
-	Run: func(_ *cobra.Command, _ []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
+		short, _ := cmd.Flags().GetBool("short")
+		if short {
+			fmt.Println(version)
+			return
+		}
 		showVersion()
 	},
 }
 
 func init() {
+	versionCommand.Flags().BoolP("short", "s", false, "only print version")
 	command.AddCommand(&versionCommand)
 }
 

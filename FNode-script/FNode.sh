@@ -809,7 +809,7 @@ show_usage() {
 show_menu() {
     fnode_version="未安装"
     if [[ -f /usr/local/FNode/FNode ]]; then
-        fnode_version=$(/usr/local/FNode/FNode version 2>/dev/null)
+        fnode_version=$(/usr/local/FNode/FNode version --short 2>/dev/null || /usr/local/FNode/FNode version 2>/dev/null | grep "Version:" | awk '{print $2}')
     fi
     echo -e "
   ${green}FNode 后端管理脚本，${plain}${red}不适用于docker${plain}

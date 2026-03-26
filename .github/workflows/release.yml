@@ -6,6 +6,8 @@ on:
     branches:
       - master
       - dev_new
+    tags:
+      - "*"
     paths:
       - "**/*.go"
       - "go.mod"
@@ -98,10 +100,19 @@ jobs:
       - name: Get version and metadata
         run: |
           if [ "${{ github.event_name }}" = "release" ]; then
-            echo "version=${{ github.ref_name }}" >> $GITHUB_ENV
+            VERSION="${{ github.ref_name }}"
           else
-            echo "version=$(git describe --tags --always --dirty 2>/dev/null || echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_ENV
+            # Try to get tag on current commit
+            TAG_ON_COMMIT=$(git tag --points-at HEAD | head -n 1)
+            if [ -n "$TAG_ON_COMMIT" ]; then
+              VERSION="$TAG_ON_COMMIT"
+            else
+              VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "${{ github.sha }}" | cut -c1-8)
+            fi
           fi
+          # Strip leading 'v' if present
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_ENV
           echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
           echo "buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
 
@@ -125,9 +136,9 @@ jobs:
 
       - name: Build FNode
         run: |
-          echo "version: $version, commit: $commit, buildDate: $buildDate"
+          echo "version: ${{ env.version }}, commit: ${{ env.commit }}, buildDate: ${{ env.buildDate }}"
           mkdir -p build_assets
-          GOEXPERIMENT=jsonv2 go build -v -o build_assets/FNode -tags "sing with_quic with_grpc with_utls with_wireguard with_acme with_gvisor" -trimpath -ldflags "-X 'github.com/tavut846/FNode/cmd.version=$version' -X 'github.com/tavut846/FNode/cmd.commit=$commit' -X 'github.com/tavut846/FNode/cmd.buildDate=$buildDate' -s -w -buildid="
+          GOEXPERIMENT=jsonv2 go build -v -o build_assets/FNode -tags "sing with_quic with_grpc with_utls with_wireguard with_acme with_gvisor" -trimpath -ldflags "-X 'github.com/tavut846/FNode/cmd.version=${{ env.version }}' -X 'github.com/tavut846/FNode/cmd.commit=${{ env.commit }}' -X 'github.com/tavut846/FNode/cmd.buildDate=${{ env.buildDate }}' -s -w -buildid="
 
       - name: Rename Windows FNode
         if: matrix.goos == 'windows'
