@@ -34,13 +34,6 @@ func init() {
 }
 
 func showVersion() {
-	fmt.Println(`
-  _/      _/    _/_/    _/        _/      _/
- _/      _/  _/    _/  _/_/_/      _/  _/
-_/      _/      _/    _/    _/      _/
- _/  _/      _/      _/    _/    _/  _/
-  _/      _/_/_/_/  _/_/_/    _/      _/
-                                                `)
 	fmt.Println("--------------------------------------------------")
 	fmt.Printf("Codename:    %s\n", codename)
 	fmt.Printf("Version:     %s\n", version)
