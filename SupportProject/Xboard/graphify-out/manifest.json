@@ -1,0 +1,2742 @@
+{
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\artisan": {
+    "mtime": 1779733403.0,
+    "hash": "b46a90df551d4b1c280332a1c8921b4e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\chunk_files.py": {
+    "mtime": 1777882803.390728,
+    "hash": "842b7f83c0ac158544f07534081e8893"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\extract_ast.py": {
+    "mtime": 1777882922.278964,
+    "hash": "85d00c38f5ef4fc92f63170fbac821a8"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\graphify_counts.py": {
+    "mtime": 1777882433.1074626,
+    "hash": "f64e468382d032c7d960fe21fbb87b8b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\tmp_dump_routes.php": {
+    "mtime": 1774512340.70026,
+    "hash": "2dac77c7c0cab1c426a14c9599bca2ee"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Kernel.php": {
+    "mtime": 1779733403.0,
+    "hash": "0a3c6683a7771e11f6cb1b9735835aa7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\BackupDatabase.php": {
+    "mtime": 1779733403.0,
+    "hash": "3a13dcae85347dcbd9ca69936723d2d7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\CheckCommission.php": {
+    "mtime": 1779733403.0,
+    "hash": "b925684f96d0b55b59dce0179f4c78c9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\CheckOrder.php": {
+    "mtime": 1779733403.0,
+    "hash": "b0b9368f853bd27459a2db28388687c5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\CheckServer.php": {
+    "mtime": 1779733403.0,
+    "hash": "51b7d256551a539425705a83b8934518"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\CheckTicket.php": {
+    "mtime": 1779733403.0,
+    "hash": "b168b191bf72b4ba27160e33c7ee1e39"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\CheckTrafficExceeded.php": {
+    "mtime": 1779733403.0,
+    "hash": "64866217f4b15e9b24dba6ca3e2f3551"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\CleanupOnlineStatus.php": {
+    "mtime": 1779733403.0,
+    "hash": "5e0422de90cd85137a270721a5d28f0d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\ClearUser.php": {
+    "mtime": 1779733403.0,
+    "hash": "a8a49c954a1d17b569c9415a40e338fa"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\HookList.php": {
+    "mtime": 1779733403.0,
+    "hash": "d2cda3ebe500fccecc1b9756eb1a9af0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\MigrateFromV2b.php": {
+    "mtime": 1779733403.0,
+    "hash": "5085e8f4c7052145a39b490fe43b7a10"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\NodeWebSocketServer.php": {
+    "mtime": 1779733403.0,
+    "hash": "08b0b8d8072f03eb90091d8d65d85451"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\ResetLog.php": {
+    "mtime": 1779733403.0,
+    "hash": "fa3bea503886feedd71e2b0ddadec203"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\ResetTraffic.php": {
+    "mtime": 1779733403.0,
+    "hash": "80867029f2e9e930e8031f2135ab7cf3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\ResetUser.php": {
+    "mtime": 1779733403.0,
+    "hash": "d5414dcdedd2adb86ef66a21e024f224"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\SendRemindMail.php": {
+    "mtime": 1779733403.0,
+    "hash": "b0ae80668439adb48eba28c6596c0af2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\Test.php": {
+    "mtime": 1779733403.0,
+    "hash": "cf0f7da48c5c79d0dd0b412a7b5ecd6d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\XboardInstall.php": {
+    "mtime": 1779733403.0,
+    "hash": "8e5d8e01188ac8410beb32f34c27d4ff"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\XboardRollback.php": {
+    "mtime": 1779733403.0,
+    "hash": "2a2fa685ec5f98adff49b8341dc561f3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\XboardStatistics.php": {
+    "mtime": 1779733403.0,
+    "hash": "11607fdcba97f47157a153aeb598376f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Console\\Commands\\XboardUpdate.php": {
+    "mtime": 1779733403.0,
+    "hash": "0e334744501882c9830cda886f8b49ff"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Contracts\\PaymentInterface.php": {
+    "mtime": 1779733403.0,
+    "hash": "d1e964d930c8e6987c2d72abc98aa28c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Exceptions\\ApiException.php": {
+    "mtime": 1779733403.0,
+    "hash": "1b6453a2968096ea1ad5b9b2a7fbd6f9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Exceptions\\BusinessException.php": {
+    "mtime": 1779733403.0,
+    "hash": "bee19f2b08b46e219e8489295e566af3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Exceptions\\Handler.php": {
+    "mtime": 1779733403.0,
+    "hash": "7b8cbbfbcb350d1f7051de27ffbdd311"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Helpers\\ApiResponse.php": {
+    "mtime": 1779733403.0,
+    "hash": "d0e70d2edd0a09a1a21453ea4264030a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Helpers\\Functions.php": {
+    "mtime": 1779733403.0,
+    "hash": "125e524afcd821fd69fcf9876c11b893"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Helpers\\ResponseEnum.php": {
+    "mtime": 1779733403.0,
+    "hash": "2c7691880ee5281dd930e33dbe79e485"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Kernel.php": {
+    "mtime": 1779733403.0,
+    "hash": "a7bf0ee4726897ee312d8ffa363bf89d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\Controller.php": {
+    "mtime": 1779733403.0,
+    "hash": "64fd99bf68ec03fa3d86422debcb94b1"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\PluginController.php": {
+    "mtime": 1779733403.0,
+    "hash": "6558f475ca0eca294c8238969f30773e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\Client\\AppController.php": {
+    "mtime": 1779733403.0,
+    "hash": "b6fc45d41fc22e7d3c613536423382c2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\Client\\ClientController.php": {
+    "mtime": 1779733403.0,
+    "hash": "38e22468cc28648d8c56ab099bb0e03c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\Guest\\CommController.php": {
+    "mtime": 1779733403.0,
+    "hash": "714a51f578efe55349b7bc512052a54a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\Guest\\PaymentController.php": {
+    "mtime": 1779733403.0,
+    "hash": "d82c6c020769dfca2433c91a85ed7c9a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\Guest\\PlanController.php": {
+    "mtime": 1779733403.0,
+    "hash": "b617144e79177cb861dcacebb58eeb01"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\Guest\\TelegramController.php": {
+    "mtime": 1779733403.0,
+    "hash": "105aad2e048e0e15dac4d669b7cf0a12"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\Passport\\AuthController.php": {
+    "mtime": 1779733403.0,
+    "hash": "094356a4ec766d529f2995dda3e06f2b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\Passport\\CommController.php": {
+    "mtime": 1779733403.0,
+    "hash": "3316970e4b25a6226617f571dade8cee"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\Server\\ShadowsocksTidalabController.php": {
+    "mtime": 1779733403.0,
+    "hash": "bb8ca2aec97f009d84b1111fcae28c20"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\Server\\TrojanTidalabController.php": {
+    "mtime": 1779733403.0,
+    "hash": "9eed3a8f67143cc835de603f0243fbe3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\Server\\UniProxyController.php": {
+    "mtime": 1779733403.0,
+    "hash": "7bc97c3f8f61dcbe2443beaf0c09f3c4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\User\\CommController.php": {
+    "mtime": 1779733403.0,
+    "hash": "5e623956d0f2dda90d0683a62c8b4172"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\User\\CouponController.php": {
+    "mtime": 1779733403.0,
+    "hash": "8009cf475e0a4edda24acf83bdccc9aa"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\User\\GiftCardController.php": {
+    "mtime": 1779733403.0,
+    "hash": "89784810d37ed8f5f4cf0911f9c2fadc"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\User\\InviteController.php": {
+    "mtime": 1779733403.0,
+    "hash": "64060cdb03258eee92c68fed0d0ce5d8"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\User\\KnowledgeController.php": {
+    "mtime": 1779733403.0,
+    "hash": "d9794becf4c6c74f5bc0a18185b87631"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\User\\NoticeController.php": {
+    "mtime": 1779733403.0,
+    "hash": "68284a05d1ca0c69cf82a246d008b146"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\User\\OrderController.php": {
+    "mtime": 1779733403.0,
+    "hash": "4c50218dc67bf8f67245d81d758825a3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\User\\PlanController.php": {
+    "mtime": 1779733403.0,
+    "hash": "093e992168f0ffdb14cc6c17d3924608"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\User\\ServerController.php": {
+    "mtime": 1779733403.0,
+    "hash": "4909125b9ad32056b04cd5d78edf325d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\User\\StatController.php": {
+    "mtime": 1779733403.0,
+    "hash": "1694e097fdeec3f1e12747eb2dc77aac"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\User\\TelegramController.php": {
+    "mtime": 1779733403.0,
+    "hash": "7f5c6303a77f75b330b4ddd546a5e529"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\User\\TicketController.php": {
+    "mtime": 1779733403.0,
+    "hash": "983033647bb6cdce8b3cf1fff96c9820"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V1\\User\\UserController.php": {
+    "mtime": 1779733403.0,
+    "hash": "27a1c2e3501e1b93bc4a5cbb5be8e0a6"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\ConfigController.php": {
+    "mtime": 1779733403.0,
+    "hash": "5ac1021435ede18e292a18a20cb27cce"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\CouponController.php": {
+    "mtime": 1779733403.0,
+    "hash": "39904fb7616672232c2d7ac9a1fc74cb"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\GiftCardController.php": {
+    "mtime": 1779733403.0,
+    "hash": "3281b54613027c75ecff20b313cbcace"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\KnowledgeController.php": {
+    "mtime": 1779733403.0,
+    "hash": "560b2a6958c30ce03d9d3f46c11ff922"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\MailTemplateController.php": {
+    "mtime": 1779733403.0,
+    "hash": "c362f46818ee48ae92b479502fbbf3e6"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\NoticeController.php": {
+    "mtime": 1779733403.0,
+    "hash": "d65e01c13a45372ef81dcf4c9aeb9fad"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\OrderController.php": {
+    "mtime": 1779733403.0,
+    "hash": "5a65b634d66902ed4e8acf5fc3ba3748"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\PaymentController.php": {
+    "mtime": 1779733403.0,
+    "hash": "ed3d749586a95ee5a91cec0bc740d83f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\PlanController.php": {
+    "mtime": 1779733403.0,
+    "hash": "423fa3280a94f1a09d472a83200b8f8b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\PluginController.php": {
+    "mtime": 1779733403.0,
+    "hash": "78292041587476aa20e422eddfbe57f7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\StatController.php": {
+    "mtime": 1779733403.0,
+    "hash": "0a5419755ee95915f4dc523190589193"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\SystemController.php": {
+    "mtime": 1779733403.0,
+    "hash": "e9f7e5cb96c46db1a83b823a4a9fd8ac"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\ThemeController.php": {
+    "mtime": 1779733403.0,
+    "hash": "3694455e1e025f070c8335d54e05377d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\TicketController.php": {
+    "mtime": 1779733403.0,
+    "hash": "5ca071de2726fba0a53ea179d7fbe5c3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\TrafficResetController.php": {
+    "mtime": 1779733403.0,
+    "hash": "f90732891740bcf920b8d4cff2a9488c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\UpdateController.php": {
+    "mtime": 1779733403.0,
+    "hash": "c359efeab378d6682350488db0304faf"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\UserController.php": {
+    "mtime": 1779733403.0,
+    "hash": "cd029d5da56d435c317f78ca4ed07d3c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\Server\\GroupController.php": {
+    "mtime": 1779733403.0,
+    "hash": "99620e2ee8d19bcd44dbf9203b625de0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\Server\\MachineController.php": {
+    "mtime": 1779733403.0,
+    "hash": "b2376b720d1fece389864662f092b415"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\Server\\ManageController.php": {
+    "mtime": 1779733403.0,
+    "hash": "97e10ed3baee1b7bcaa8f733beaee2e2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Admin\\Server\\RouteController.php": {
+    "mtime": 1779733403.0,
+    "hash": "136d030eb45043b5a9e62fd5def94198"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Client\\AppController.php": {
+    "mtime": 1779733403.0,
+    "hash": "8127a9e69788a3d941706ae081dbf51a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Server\\MachineController.php": {
+    "mtime": 1779733403.0,
+    "hash": "83f47a654745d22c71c72235980d9ccb"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Controllers\\V2\\Server\\ServerController.php": {
+    "mtime": 1779733403.0,
+    "hash": "10f91768c2c4570de502e8d2298c250c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\Admin.php": {
+    "mtime": 1779733403.0,
+    "hash": "1d86531abb50700a32eeec8338f19c46"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\ApplyRuntimeSettings.php": {
+    "mtime": 1779733403.0,
+    "hash": "0f768b77cb7c4a79589197571998b0ac"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\Authenticate.php": {
+    "mtime": 1779733403.0,
+    "hash": "496147cf1bc10306f4577cf6f71b8a02"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\CheckForMaintenanceMode.php": {
+    "mtime": 1779733403.0,
+    "hash": "10b7b2c6774aa8795738e172bafbe4d3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\Client.php": {
+    "mtime": 1779733403.0,
+    "hash": "7a6f31f8ee266a0a4c00e815b110017d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\EncryptCookies.php": {
+    "mtime": 1779733403.0,
+    "hash": "096122540e34ffc931f647cf7de21c87"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\EnsureTransactionState.php": {
+    "mtime": 1779733403.0,
+    "hash": "1a56c176b7a4f4dfbb1cb803bb30c274"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\ForceJson.php": {
+    "mtime": 1779733403.0,
+    "hash": "faf032b8d3d6f2846e50fe931ba7c8ce"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\InitializePlugins.php": {
+    "mtime": 1779733403.0,
+    "hash": "d87d3fa0375f9cc2e37c64274d5067ad"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\Language.php": {
+    "mtime": 1779733403.0,
+    "hash": "bc75ef651e92e9f36890f6eabba48967"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\RedirectIfAuthenticated.php": {
+    "mtime": 1779733403.0,
+    "hash": "f657cd1bf92e62c8f94938ba4b59cd44"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\RequestLog.php": {
+    "mtime": 1779733403.0,
+    "hash": "4522db5743a7253018221498909fe006"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\Server.php": {
+    "mtime": 1779733403.0,
+    "hash": "03831eb3c73b661ec02f80c7e2501489"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\ServerV2.php": {
+    "mtime": 1779733403.0,
+    "hash": "9c9c2bfbf9d36481278ba06a80011e2d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\Staff.php": {
+    "mtime": 1779733403.0,
+    "hash": "e9c19ee4e34f11b43dbdb7d6a9c6aeb0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\TrimStrings.php": {
+    "mtime": 1779733403.0,
+    "hash": "270864b59784b4605961d016315d8f6d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\TrustProxies.php": {
+    "mtime": 1779733403.0,
+    "hash": "5d51617232fc23d2c3f118782a55d4a2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Middleware\\User.php": {
+    "mtime": 1779733403.0,
+    "hash": "29aa6f67d389043c8662d80fc0abd494"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\ConfigSave.php": {
+    "mtime": 1779733403.0,
+    "hash": "c44d9ca62f3ee0bee21336fb6d22970e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\CouponGenerate.php": {
+    "mtime": 1779733403.0,
+    "hash": "a751065db0335abe76f21d08545f6661"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\KnowledgeCategorySave.php": {
+    "mtime": 1779733403.0,
+    "hash": "0dbccfe294de27349125d739217cf290"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\KnowledgeCategorySort.php": {
+    "mtime": 1779733403.0,
+    "hash": "3232e8f0dd5a050622276c50c6796f83"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\KnowledgeSave.php": {
+    "mtime": 1779733403.0,
+    "hash": "1f993546414d3c1b22196dc937facdda"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\KnowledgeSort.php": {
+    "mtime": 1779733403.0,
+    "hash": "0e1d1af0791e62f21d45d990dc14e9aa"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\MailSend.php": {
+    "mtime": 1779733403.0,
+    "hash": "27fd63777e0ba1f987a83336d854e003"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\NoticeSave.php": {
+    "mtime": 1779733403.0,
+    "hash": "56916d41ae77adaaf3d76af171d358a5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\OrderAssign.php": {
+    "mtime": 1779733403.0,
+    "hash": "b47fdf811d0d59c99a14acb0b1123813"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\OrderFetch.php": {
+    "mtime": 1779733403.0,
+    "hash": "0adfa4372af676f717716d5d24d4eb5f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\OrderUpdate.php": {
+    "mtime": 1779733403.0,
+    "hash": "1a9fbb397268f5f490a6fa29d71f50be"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\PlanSave.php": {
+    "mtime": 1779733403.0,
+    "hash": "5806ce20580a2c9df9417ca80e165c81"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\PlanSort.php": {
+    "mtime": 1779733403.0,
+    "hash": "d7b41caae42a0c55a3e7cb272869aaf6"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\PlanUpdate.php": {
+    "mtime": 1779733403.0,
+    "hash": "a3233121e91a0f0b534dc4d47904e26e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\ServerSave.php": {
+    "mtime": 1779733403.0,
+    "hash": "57dfce83c9ae842fa7dbcce67f3d645a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\UserFetch.php": {
+    "mtime": 1779733403.0,
+    "hash": "092e9baa39a191c7eae150b0b907b037"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\UserGenerate.php": {
+    "mtime": 1779733403.0,
+    "hash": "e480862ea74cd2b64d15e9cda7c9b67f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\UserSendMail.php": {
+    "mtime": 1779733403.0,
+    "hash": "a10702513cfef3062cb75bbc22cbea83"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Admin\\UserUpdate.php": {
+    "mtime": 1779733403.0,
+    "hash": "8e77c1539abba70c47d61ac00bfe5b96"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Passport\\AuthForget.php": {
+    "mtime": 1779733403.0,
+    "hash": "35739cbd993ef3a50d67def94cdff381"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Passport\\AuthLogin.php": {
+    "mtime": 1779733403.0,
+    "hash": "5bc30bd32dc64b0fd8231b9e569a0287"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Passport\\AuthRegister.php": {
+    "mtime": 1779733403.0,
+    "hash": "9702a111c3b991bf4a7f9f4e37261480"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Passport\\CommSendEmailVerify.php": {
+    "mtime": 1779733403.0,
+    "hash": "3c5652bdd9b8a86a1df44f02d21c0426"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\Staff\\UserUpdate.php": {
+    "mtime": 1779733403.0,
+    "hash": "f2a36af097e7b2c05dce77cdab8fe895"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\User\\GiftCardCheckRequest.php": {
+    "mtime": 1779733403.0,
+    "hash": "4188e10af587ae5f5c4e55e1290a7832"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\User\\GiftCardRedeemRequest.php": {
+    "mtime": 1779733403.0,
+    "hash": "d61697de6507b7e4b93c8c2fd0f3cd34"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\User\\OrderSave.php": {
+    "mtime": 1779733403.0,
+    "hash": "879f03e24df45d1daa3db75754fc8841"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\User\\TicketSave.php": {
+    "mtime": 1779733403.0,
+    "hash": "67cf159cfe0d51fe694aca6a2eaeb9f9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\User\\TicketWithdraw.php": {
+    "mtime": 1779733403.0,
+    "hash": "c21a8a1e34d6970a70b259ee034a928a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\User\\UserTransfer.php": {
+    "mtime": 1779733403.0,
+    "hash": "cae5a7ee83c5319b5f78a34acd773023"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Requests\\User\\UserUpdate.php": {
+    "mtime": 1779733403.0,
+    "hash": "916f153be02ba4e95817fb51c5900562"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Resources\\ComissionLogResource.php": {
+    "mtime": 1779733403.0,
+    "hash": "de4ef851a4bccde0e6507e9fb9d73611"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Resources\\CouponResource.php": {
+    "mtime": 1779733403.0,
+    "hash": "600ec8479006527c4cb9e7bdc454c184"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Resources\\InviteCodeResource.php": {
+    "mtime": 1779733403.0,
+    "hash": "3dc892ab4cf376534f1e700de13da476"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Resources\\KnowledgeResource.php": {
+    "mtime": 1779733403.0,
+    "hash": "3f87f919e4d16468df50fcec09f49184"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Resources\\MessageResource.php": {
+    "mtime": 1779733403.0,
+    "hash": "4095d8ee2194a65dd78ebd2387ecfe95"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Resources\\NodeResource.php": {
+    "mtime": 1779733403.0,
+    "hash": "af870cc68370b51db6078bccd24452d4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Resources\\OrderResource.php": {
+    "mtime": 1779733403.0,
+    "hash": "bd5f03010410bdf655a73ea339f2bdd2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Resources\\PlanResource.php": {
+    "mtime": 1779733403.0,
+    "hash": "4d4814a3f8170bfc61fd4990ec73d14c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Resources\\TicketResource.php": {
+    "mtime": 1779733403.0,
+    "hash": "7cb62aaceab793d24f78c2d5cc3a3df0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Resources\\TrafficLogResource.php": {
+    "mtime": 1779733403.0,
+    "hash": "d4bdbcf986a0968a229b2ab68f7103da"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Routes\\V1\\ClientRoute.php": {
+    "mtime": 1779733403.0,
+    "hash": "8cb80b368eb1068013e550c2381bd0c7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Routes\\V1\\GuestRoute.php": {
+    "mtime": 1779733403.0,
+    "hash": "631b41cd30b083454b06a27ef3fb7ec9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Routes\\V1\\PassportRoute.php": {
+    "mtime": 1779733403.0,
+    "hash": "29e5f872aae38a2e064e38ac9d878108"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Routes\\V1\\ServerRoute.php": {
+    "mtime": 1779733403.0,
+    "hash": "09c951df7de50984d09c85d9585d0abd"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Routes\\V1\\UserRoute.php": {
+    "mtime": 1779733403.0,
+    "hash": "1e9cc2120ee78cecd3d862758584054d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Routes\\V2\\AdminRoute.php": {
+    "mtime": 1779733403.0,
+    "hash": "e71d29b7263f6436f00f81cd30f3e7c7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Routes\\V2\\ClientRoute.php": {
+    "mtime": 1779733403.0,
+    "hash": "1fef9a308d9d2600e2a98a69058f2ad4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Routes\\V2\\PassportRoute.php": {
+    "mtime": 1779733403.0,
+    "hash": "c6d681eb837e674b816c098136d380ac"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Routes\\V2\\ServerRoute.php": {
+    "mtime": 1779733403.0,
+    "hash": "cc5df60599e67d66a1aa354015d94129"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Http\\Routes\\V2\\UserRoute.php": {
+    "mtime": 1779733403.0,
+    "hash": "0db150413ce09bd5ffc30895a5f3430c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Jobs\\NodeUserSyncJob.php": {
+    "mtime": 1779733403.0,
+    "hash": "9238cb8ace123ae492066b4142e4f8dd"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Jobs\\OrderHandleJob.php": {
+    "mtime": 1779733403.0,
+    "hash": "4c8213b99b0ffeaebe21afd105c8f902"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Jobs\\SendEmailJob.php": {
+    "mtime": 1779733403.0,
+    "hash": "f2c9809b84879d08657873e28b72a3ad"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Jobs\\SendTelegramJob.php": {
+    "mtime": 1779733403.0,
+    "hash": "19128a8d5ea116203b345654a6604615"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Jobs\\StatServerJob.php": {
+    "mtime": 1779733403.0,
+    "hash": "77f950372c8f9d05968604982c354296"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Jobs\\StatUserJob.php": {
+    "mtime": 1779733403.0,
+    "hash": "4f8dbc05a639ab7733328c08ef72807d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Jobs\\TrafficFetchJob.php": {
+    "mtime": 1779733403.0,
+    "hash": "44ad0e3053c679f103a5559d2fc2c922"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\AdminAuditLog.php": {
+    "mtime": 1779733403.0,
+    "hash": "5d11d678396484ec3633bb7d5da6f5f6"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\CommissionLog.php": {
+    "mtime": 1779733403.0,
+    "hash": "3f9c24be9f32e18c246d485fd6974584"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\Coupon.php": {
+    "mtime": 1779733403.0,
+    "hash": "513e7b74a7cf2a896848850627464aec"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\GiftCardCode.php": {
+    "mtime": 1779733403.0,
+    "hash": "370290284a1f96561049d693c598a252"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\GiftCardTemplate.php": {
+    "mtime": 1779733403.0,
+    "hash": "12dd7e0f517a884c6989c24ca6b06aee"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\GiftCardUsage.php": {
+    "mtime": 1779733403.0,
+    "hash": "1e91081c0a187a95909f1f195c2f03e8"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\InviteCode.php": {
+    "mtime": 1779733403.0,
+    "hash": "d36b71aa453b5a4039ab195bf4cb0e2b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\Knowledge.php": {
+    "mtime": 1779733403.0,
+    "hash": "7b46faa4330a25d4ad1add905a076d7b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\MailLog.php": {
+    "mtime": 1779733403.0,
+    "hash": "a62cd6422361ff55293be70c81c4875a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\MailTemplate.php": {
+    "mtime": 1779733403.0,
+    "hash": "0c10e7bc108ac26db604fd3243a30199"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\Notice.php": {
+    "mtime": 1779733403.0,
+    "hash": "1d519a50fa84f71ff99c0a78cd537972"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\Order.php": {
+    "mtime": 1779733403.0,
+    "hash": "87c8ca30647add61c1c5d73ac003e171"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\Payment.php": {
+    "mtime": 1779733403.0,
+    "hash": "dc0e78401d801fa4adae7a3806d0996b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\Plan.php": {
+    "mtime": 1779733403.0,
+    "hash": "0146f099e9d835cf4d3dbc69f1b0805e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\Plugin.php": {
+    "mtime": 1779733403.0,
+    "hash": "100edc66f9967ceed677f66e89d6b3c4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\Server.php": {
+    "mtime": 1779733403.0,
+    "hash": "8a7d7bacbb0b16629c2801bfcedf8d2c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\ServerGroup.php": {
+    "mtime": 1779733403.0,
+    "hash": "74ceb1d581e72b41b38764a79ef768ab"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\ServerLog.php": {
+    "mtime": 1779733403.0,
+    "hash": "b2a0cd1f61ffddaa3332b4c0d89e88f9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\ServerMachine.php": {
+    "mtime": 1779733403.0,
+    "hash": "58912ca3474ada8532d3e0787838aa67"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\ServerMachineLoadHistory.php": {
+    "mtime": 1779733403.0,
+    "hash": "5b2d77f16c312e2f826f2c2829030714"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\ServerRoute.php": {
+    "mtime": 1779733403.0,
+    "hash": "3bdad29bb6b4c97504c67b1553083bb3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\ServerStat.php": {
+    "mtime": 1779733403.0,
+    "hash": "6e0736496ef6fc760afea3883b43110f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\Setting.php": {
+    "mtime": 1779733403.0,
+    "hash": "86ee367d075a608bd8d5cfb7f860c0b7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\Stat.php": {
+    "mtime": 1779733403.0,
+    "hash": "6269a37180cdcd4e1eb3b0c521d75da8"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\StatServer.php": {
+    "mtime": 1779733403.0,
+    "hash": "9b67ba5c85612b6d34ff345ffbf8391c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\StatUser.php": {
+    "mtime": 1779733403.0,
+    "hash": "7e17b1d1564d1131036fbcd6a28faac1"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\SubscribeTemplate.php": {
+    "mtime": 1779733403.0,
+    "hash": "83ad9e6ab20d47155a5aba5b6bb66496"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\Ticket.php": {
+    "mtime": 1779733403.0,
+    "hash": "0351b072e600e6d31e1c60b2b883bf92"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\TicketMessage.php": {
+    "mtime": 1779733403.0,
+    "hash": "353b934151bd8100cf959136f20a3103"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\TrafficResetLog.php": {
+    "mtime": 1779733403.0,
+    "hash": "3ba1d0bde8fcd5f13d7ea69797c461d0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Models\\User.php": {
+    "mtime": 1779733403.0,
+    "hash": "a37e7d8513a138a44d40fc97d118b883"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Observers\\PlanObserver.php": {
+    "mtime": 1779733403.0,
+    "hash": "ab8d3b9d9d19053ab4e57f233cb74212"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Observers\\ServerObserver.php": {
+    "mtime": 1779733403.0,
+    "hash": "8cf27ff21f24196ace63eec65dbffce2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Observers\\ServerRouteObserver.php": {
+    "mtime": 1779733403.0,
+    "hash": "338457f174712b2528ec7b304e88395d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Observers\\UserObserver.php": {
+    "mtime": 1779733403.0,
+    "hash": "cab4dbfde6a56d551f701657c780ecea"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Protocols\\Clash.php": {
+    "mtime": 1779733403.0,
+    "hash": "45c9563be8c5d018c28aae03991e2f04"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Protocols\\ClashMeta.php": {
+    "mtime": 1779733403.0,
+    "hash": "d4781796e7a68b431a283b408a69fc4f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Protocols\\Egern.php": {
+    "mtime": 1779210330.9717126,
+    "hash": "193a5c298da6d1366da23386d02b28e3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Protocols\\General.php": {
+    "mtime": 1779733403.0,
+    "hash": "380e56adee8b855bdeee862a63af6c4c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Protocols\\Loon.php": {
+    "mtime": 1779733403.0,
+    "hash": "3f90f8f6447e7508e1472349d74333df"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Protocols\\QuantumultX.php": {
+    "mtime": 1779733403.0,
+    "hash": "e196d36259c7857f1e7339e4798e010b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Protocols\\Shadowrocket.php": {
+    "mtime": 1779733403.0,
+    "hash": "59fd349d7aa209200e08e63e67a30d99"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Protocols\\Shadowsocks.php": {
+    "mtime": 1779733403.0,
+    "hash": "ff198ea0e2f25846935f9a2fc0b7f6f4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Protocols\\SingBox.php": {
+    "mtime": 1779733403.0,
+    "hash": "3bc39d8a95188c9fa9d20f5c0815e32e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Protocols\\Stash.php": {
+    "mtime": 1779733403.0,
+    "hash": "9039c8ddfbaeb11a75331fd9897500f5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Protocols\\Surfboard.php": {
+    "mtime": 1779733403.0,
+    "hash": "5722f37e62c19fc9605bd7471a0cc466"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Protocols\\Surge.php": {
+    "mtime": 1779733403.0,
+    "hash": "62f08eca3fb972e9b5455b1c373ebc02"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Providers\\AuthServiceProvider.php": {
+    "mtime": 1779733403.0,
+    "hash": "2902a4c1b10647a6356211fa4fc204b2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Providers\\BroadcastServiceProvider.php": {
+    "mtime": 1779733403.0,
+    "hash": "66addd4b8d63de202681078a53159174"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Providers\\EventServiceProvider.php": {
+    "mtime": 1779733403.0,
+    "hash": "134e40e6b536cf2753b270a5f4eee52c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Providers\\HorizonServiceProvider.php": {
+    "mtime": 1779733403.0,
+    "hash": "5215a5bf5a1be7d6b9a420f2cc0c36c1"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Providers\\OctaneServiceProvider.php": {
+    "mtime": 1779733403.0,
+    "hash": "8ff08696bdac3c3b227fed175fdcd44b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Providers\\PluginServiceProvider.php": {
+    "mtime": 1779733403.0,
+    "hash": "692e28f734916b3f2bd19997ec615858"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Providers\\ProtocolServiceProvider.php": {
+    "mtime": 1779733403.0,
+    "hash": "2d649a848f48beb946bbbf960c4ee2d2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Providers\\RouteServiceProvider.php": {
+    "mtime": 1779733403.0,
+    "hash": "055e107ef3d2db79af6ff7efe5f5b116"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Providers\\SettingServiceProvider.php": {
+    "mtime": 1779733403.0,
+    "hash": "83a0a219307cc91c1b8f9b34ba1d4389"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Scope\\FilterScope.php": {
+    "mtime": 1779733403.0,
+    "hash": "7052b27eaa3dae4204036e93cb62c653"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\AuthService.php": {
+    "mtime": 1779733403.0,
+    "hash": "a7c1a9a7539fd01d223f9e0b839e10e6"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\CaptchaService.php": {
+    "mtime": 1779733403.0,
+    "hash": "4bdc58392b2272117704a3ecab4371b3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\CouponService.php": {
+    "mtime": 1779733403.0,
+    "hash": "82adcfa6f8f2288e5d5d6e291526a786"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\DeviceStateService.php": {
+    "mtime": 1779733403.0,
+    "hash": "f1efa982421f09790409796eb490fd3e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\GiftCardService.php": {
+    "mtime": 1779733403.0,
+    "hash": "d94e790fe4bda90e97d5a9552f2c90ed"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\MailService.php": {
+    "mtime": 1779733403.0,
+    "hash": "b08d9559a060a1b745f9bd04a51ea2d1"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\NodeRegistry.php": {
+    "mtime": 1779733403.0,
+    "hash": "8186b776aee748209eecdb5713233ed3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\NodeSyncService.php": {
+    "mtime": 1779733403.0,
+    "hash": "ab55e7ff6db703af6dad5f5063ceb1fc"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\OrderService.php": {
+    "mtime": 1779733403.0,
+    "hash": "1311b600a23e6f5c5a0c69e87d5065e5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\PaymentService.php": {
+    "mtime": 1779733403.0,
+    "hash": "1bb597a665ce9388d5c06577af6e10c1"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\PlanService.php": {
+    "mtime": 1779733403.0,
+    "hash": "c50e4bc953d7eed2e1bebe0e45819d92"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\ServerService.php": {
+    "mtime": 1779733403.0,
+    "hash": "d313bbc4b2d2f226c841d1f1f71afe50"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\SettingService.php": {
+    "mtime": 1779733403.0,
+    "hash": "d5708b58f05260e1a0f61565d25e2701"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\StatisticalService.php": {
+    "mtime": 1779733403.0,
+    "hash": "7bac2efd5a3fe934ac722722ab485113"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\TelegramService.php": {
+    "mtime": 1779733403.0,
+    "hash": "1bff76e880463bcb7071113a3b3a410d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\ThemeService.php": {
+    "mtime": 1779733403.0,
+    "hash": "670b0ca30b2ef2f92660cd11b49078d2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\TicketService.php": {
+    "mtime": 1779733403.0,
+    "hash": "b545d737ccf4365865b472c2e8b417e6"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\TrafficResetService.php": {
+    "mtime": 1779733403.0,
+    "hash": "9b6c6264601fec7eb456f75952cb4972"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\UpdateService.php": {
+    "mtime": 1779733403.0,
+    "hash": "342d1642888fe6e0d6456f08af8e356c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\UserService.php": {
+    "mtime": 1779733403.0,
+    "hash": "fbbd382a755c8d1c5a240e7c2e982561"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\Auth\\LoginService.php": {
+    "mtime": 1779733403.0,
+    "hash": "e8427363145066fff723ecfa642915ca"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\Auth\\MailLinkService.php": {
+    "mtime": 1779733403.0,
+    "hash": "aac1d7d37b08ce155e56e5d237aa9905"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\Auth\\RegisterService.php": {
+    "mtime": 1779733403.0,
+    "hash": "e0bd4d6fc478e0cc88df3a8d8ffc99ac"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\Plugin\\AbstractPlugin.php": {
+    "mtime": 1779733403.0,
+    "hash": "d31bcd5bc0872d3115681ea5cbdebefb"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\Plugin\\HookManager.php": {
+    "mtime": 1779733403.0,
+    "hash": "1f4d58be51d1c5c05d5999b0977a041c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\Plugin\\InterceptResponseException.php": {
+    "mtime": 1779733403.0,
+    "hash": "71c7b0346d6e8dd043271aa39717c8d7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\Plugin\\PluginConfigService.php": {
+    "mtime": 1779733403.0,
+    "hash": "f8ba7e73183c754ff56fea4e7d003b8c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Services\\Plugin\\PluginManager.php": {
+    "mtime": 1779733403.0,
+    "hash": "085d22006b6158dcda4068d6b1b90a55"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Support\\AbstractProtocol.php": {
+    "mtime": 1779733403.0,
+    "hash": "8856deaff10dafe3e3582b9807f40936"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Support\\ProtocolManager.php": {
+    "mtime": 1779733403.0,
+    "hash": "51ab568818611dccf211d5fe8f7d15b5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Support\\Setting.php": {
+    "mtime": 1779733403.0,
+    "hash": "28c92d1c0e81eedeeb127e78e95777b0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Traits\\HasPluginConfig.php": {
+    "mtime": 1779733403.0,
+    "hash": "f1768c8585a4b1eeeda3157dd5e1bacd"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Traits\\QueryOperators.php": {
+    "mtime": 1779733403.0,
+    "hash": "848ee3965193ff0adb62fa091aa4d74c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Utils\\CacheKey.php": {
+    "mtime": 1779733403.0,
+    "hash": "46a39aa75837b64a02d11409b8df863e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Utils\\Dict.php": {
+    "mtime": 1779733403.0,
+    "hash": "dbbbcce1b529d373face290f0a6481af"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\Utils\\Helper.php": {
+    "mtime": 1779733403.0,
+    "hash": "c8848eb66bfa948fd5425d546bc9e095"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\WebSocket\\NodeEventHandlers.php": {
+    "mtime": 1779733403.0,
+    "hash": "57dd996125d42f7d021d289c2e4367e4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\app\\WebSocket\\NodeWorker.php": {
+    "mtime": 1779733403.0,
+    "hash": "607ed44ca9b061c5477c2032e0df3b0b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\bootstrap\\app.php": {
+    "mtime": 1779733403.0,
+    "hash": "602c20aacb6ff929c61a540d6dc508b2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\app.php": {
+    "mtime": 1779733403.0,
+    "hash": "3b14dcbca9fbd078df5e90f2042d90b2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\auth.php": {
+    "mtime": 1779733403.0,
+    "hash": "37a07ecd611f96df8fa8907c515bbaec"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\broadcasting.php": {
+    "mtime": 1779733403.0,
+    "hash": "bf5b67dc7929b3c338925e1ff5b2c43c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\cache.php": {
+    "mtime": 1779733403.0,
+    "hash": "1010a55ff7137793ef094eb95ab332b3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\cloud_storage.php": {
+    "mtime": 1779733403.0,
+    "hash": "2ad8934e9a9d21442ce4a8d4a31db39f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\cors.php": {
+    "mtime": 1779733403.0,
+    "hash": "c50ff880307bd72e3271f2ec32b78f5e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\database.php": {
+    "mtime": 1779733403.0,
+    "hash": "19c72b15c30acbb1d689c9d0a2c87e72"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\debugbar.php": {
+    "mtime": 1779733403.0,
+    "hash": "0e541de36ef28353ef4aa5a7b42b4899"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\filesystems.php": {
+    "mtime": 1779733403.0,
+    "hash": "5a140392972ff2d6482bb45e19b62083"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\hashing.php": {
+    "mtime": 1779733403.0,
+    "hash": "41bd566dc142b120f3490e275bdaa51d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\hidden_features.php": {
+    "mtime": 1779733403.0,
+    "hash": "dd9cb5feea0c5df454d4c4101ff8670b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\horizon.php": {
+    "mtime": 1779733403.0,
+    "hash": "536b6ca2e044e341524eac460acb698c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\logging.php": {
+    "mtime": 1779733403.0,
+    "hash": "605c5f2fb051a55633812be5d51510d7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\mail.php": {
+    "mtime": 1779733403.0,
+    "hash": "63109612286bf66d1746afae8c129824"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\octane.php": {
+    "mtime": 1779733403.0,
+    "hash": "b5c19f49cf08169309f7d2ae70f1e895"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\queue.php": {
+    "mtime": 1779733403.0,
+    "hash": "9b829a1b1fd4e369bce7fb98cc27a291"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\sanctum.php": {
+    "mtime": 1779733403.0,
+    "hash": "e944eb1da4bc41aa3baaa2c91e28d2b3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\scribe.php": {
+    "mtime": 1779733403.0,
+    "hash": "403cff0450604264d610be988518346f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\services.php": {
+    "mtime": 1779733403.0,
+    "hash": "04199cc159c4582f20a2f81b5dbd611a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\session.php": {
+    "mtime": 1779733403.0,
+    "hash": "d21c5e41e55e3182cda5eb971d459c9e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\config\\view.php": {
+    "mtime": 1779733403.0,
+    "hash": "24e00ccca17634d028fbbfdafd9e7461"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\factories\\UserFactory.php": {
+    "mtime": 1779733403.0,
+    "hash": "a6b770f36998cf1ec71e85fed1714971"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2019_08_19_000000_create_failed_jobs_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "2a45032fdcb7180a7a6921c6caceb9c2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2023_03_19_000000_create_v2_tables.php": {
+    "mtime": 1779733403.0,
+    "hash": "a8b96b7c3f24c6463f81175ffa769250"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2023_08_14_221234_create_v2_settings_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "1f5f4a34a477c4231d59941c21ef69c0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2023_09_04_190923_add_column_excludes_to_server_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "c621fa92a692690d7f772315d3f2b126"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2023_09_06_195956_add_column_ips_to_server_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "1680ad2abd0e399b749bf76e91d31eb3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2023_09_14_013244_add_column_alpn_to_server_hysteria_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "65b344ca0c3c538da715109a0871f9cc"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2023_09_24_040317_add_column_network_and_network_settings_to_v2_server_trojan.php": {
+    "mtime": 1779733403.0,
+    "hash": "0bea1bb2859e9f19aac9eba9c9e65d0e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2023_09_29_044957_add_column_version_and_is_obfs_to_server_hysteria_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "f39c824aa2b56dd755b45830b071247c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2023_11_19_205026_change_column_value_to_v2_settings_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "72e6bdb261a9092253ea0871577488b3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2023_12_12_212239_add_index_to_v2_user_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "fa2f15073b192181e2f7c7bee17b4e6c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2024_03_19_103149_modify_icon_column_to_v2_payment_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "ac4a02ecee25fff6b2ae7f86d61b9e65"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_01_01_130644_modify_commission_status_in_v2_order_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "360e197c198ebebc03186a1577e658a1"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_01_04_optimize_plan_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "889c73e0bc6133afe17fdb1284415a03"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_01_05_131425_create_v2_server_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "dac0a12195911bc8990f8b41d652043c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_01_10_152139_add_device_limit_column.php": {
+    "mtime": 1779733403.0,
+    "hash": "ca69870bdadd0ae4abd3a3605c17197a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_01_12_190315_add_sort_to_v2_notice_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "319827f809175300b2d24d60aa0f6224"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_01_12_200936_modify_commission_status_in_v2_order_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "61284cb1f956d7f659b00b1c4eee5f19"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_01_13_000000_convert_order_period_fields.php": {
+    "mtime": 1779733403.0,
+    "hash": "ad3d93853819cef55dbab35ea8fab670"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_01_15_000002_add_stat_performance_indexes.php": {
+    "mtime": 1779733403.0,
+    "hash": "c288cc98bca73b266acadf0dfb400ac6"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_01_16_142320_add_updated_at_index_to_v2_order_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "9e1f367009e97b711702ac2b1d256bcf"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_01_18_140511_create_plugins_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "03fb6fbf6d65bade8c5ae10cf5a4276c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_06_21_000001_optimize_v2_settings_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "761c901667fae781b6592f120079d4bc"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_06_21_000002_create_traffic_reset_logs_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "3a24e233f1de9f7d232eda5bd9463d29"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_06_21_000003_add_traffic_reset_fields_to_users.php": {
+    "mtime": 1779733403.0,
+    "hash": "514c9eed441957b590034b798b1942b5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_07_01_081556_add_tags_to_v2_plan_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "acef1c7b1b63f0d45c9ac2be8bc3cd1c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_07_01_122908_create_gift_card_tables.php": {
+    "mtime": 1779733403.0,
+    "hash": "04c1bd1bfc6d35926cbf5e4b8629f11e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_07_13_224539_add_column_rate_time_ranges_to_v2_server_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "9107c8c976489d29740320cdf31f8615"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_07_26_000001_add_type_to_plugins_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "28a3364b2b26593dc716c5a023a7cc04"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2025_07_27_000001_create_v2_subscribe_templates_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "50da78e08dd2ff475efa3c6f41d836b0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2026_03_11_000001_replace_v2_log_with_admin_audit_log.php": {
+    "mtime": 1779733403.0,
+    "hash": "cea0c4912f2df0106233b0b9d8288326"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2026_03_11_000002_add_stat_user_record_at_index.php": {
+    "mtime": 1779733403.0,
+    "hash": "99e807007e9bebf2b97b19ba14033cde"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2026_03_15_060035_add_custom_config_and_cert_to_v2_server_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "4fa304480ee4ac56af104dd0bbeb3ab1"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2026_03_28_161536_add_traffic_fields_to_servers.php": {
+    "mtime": 1779733403.0,
+    "hash": "597805a24d4fc01871332c530eb77e0b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2026_04_11_000001_add_machine_support.php": {
+    "mtime": 1779733403.0,
+    "hash": "3cc4b2eabf570d9d4395e3ed78db5ae0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2026_04_18_000001_add_network_to_machine_load_history.php": {
+    "mtime": 1779733403.0,
+    "hash": "b66e2237cbf867d2eb8dee1b78c7dcb5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2026_04_18_000001_make_server_enabled_nullable.php": {
+    "mtime": 1779733403.0,
+    "hash": "b6bb4d6a6e43fc634f37e9016ea7443e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2026_04_19_000001_backfill_users_next_reset_at.php": {
+    "mtime": 1779733403.0,
+    "hash": "34b7e9484feb768c6727e064523df85c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2026_04_19_235904_backfill_utls_for_legacy_servers.php": {
+    "mtime": 1779733403.0,
+    "hash": "ee5c007631dd2f22897922a300f1a567"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2026_04_20_000001_create_mail_templates_table.php": {
+    "mtime": 1779733403.0,
+    "hash": "a703843a3cb423a2b9bdad0153ce340b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2026_04_21_000001_fix_ticket_reply_status.php": {
+    "mtime": 1779733403.0,
+    "hash": "edfc62c92b71011da47a50517a2c7478"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\migrations\\2026_04_22_000001_normalize_trojan_tls_settings.php": {
+    "mtime": 1779733403.0,
+    "hash": "77b3bcd52baaeb8be549199d4f646ac3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\seeders\\DatabaseSeeder.php": {
+    "mtime": 1779733403.0,
+    "hash": "e7bd613e4d157d1bada8e3032dcb38d4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\database\\seeders\\OriginV2bMigrationsTableSeeder.php": {
+    "mtime": 1779733403.0,
+    "hash": "1b6e11c81e890fc3f45bb00c79c974de"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\AlipayF2f\\Plugin.php": {
+    "mtime": 1774468318.0,
+    "hash": "cb7c1a47f06776785065842c7dc75405"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\AlipayF2f\\library\\AlipayF2F.php": {
+    "mtime": 1774468318.0,
+    "hash": "6125ed61d837085a9652835b3b99e14e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\Btcpay\\Plugin.php": {
+    "mtime": 1774468318.0,
+    "hash": "794983ad5d06af62e3546825eb8a1c7e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\Coinbase\\Plugin.php": {
+    "mtime": 1774468318.0,
+    "hash": "5968c403398479fb93946b3674ea953c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\CoinPayments\\Plugin.php": {
+    "mtime": 1774468318.0,
+    "hash": "3080569ff9b55185ab11440a0a468306"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\CouponTracker\\Plugin.php": {
+    "mtime": 1779089769.2330039,
+    "hash": "50754909d3db17427120cb220a77c0c6"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\CouponTracker\\Controllers\\AdminController.php": {
+    "mtime": 1779093077.6064012,
+    "hash": "14b72a8066d8f8f2a29896535b8ef9f4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\CouponTracker\\Middleware\\InjectAdminScript.php": {
+    "mtime": 1779093063.6349945,
+    "hash": "45c8103a4786ec73728c9a40ea7da584"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\CouponTracker\\routes\\api.php": {
+    "mtime": 1779089769.235004,
+    "hash": "01d2db434eafb7157a85fcff13412ece"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\CustomApp\\Plugin.php": {
+    "mtime": 1779183594.1376717,
+    "hash": "0e98695a33ff368d466d6416a528d72c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\CustomApp\\Controllers\\Admin\\AppController.php": {
+    "mtime": 1779178408.802777,
+    "hash": "d7765f7552448fa97712af38e93dfdd1"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\CustomApp\\Middleware\\InjectAdminScript.php": {
+    "mtime": 1779180667.7921636,
+    "hash": "83c7b3ee2a5067265c70b724bd01d036"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\CustomApp\\routes\\api.php": {
+    "mtime": 1779178419.2510684,
+    "hash": "b859c537e13099226b16ac64b89323eb"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\CustomSubInfo\\Plugin.php": {
+    "mtime": 1779100343.7461343,
+    "hash": "239cc927f279447f1bf4bbe620d465fe"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\Epay\\Plugin.php": {
+    "mtime": 1774468318.0,
+    "hash": "c932c562f59d9586a7e14b3c5519462b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\Epayown\\Plugin.php": {
+    "mtime": 1774512221.9390192,
+    "hash": "1c21712e6d09f8b607b0131184b8db76"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\Plugin.php": {
+    "mtime": 1774514838.0,
+    "hash": "2f361ec82be0c9018d5bff13f35f609f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\Commands\\AutoConvertToTicket.php": {
+    "mtime": 1771921924.0,
+    "hash": "1dff7ce81e028b4194c51b5c58cc8363"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\Commands\\CheckAutoReply.php": {
+    "mtime": 1771912426.0,
+    "hash": "90fba70ec9adab918e33d42d289d7b99"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\Controllers\\AdminController.php": {
+    "mtime": 1778665393.2216294,
+    "hash": "fbfe045fc4f8a15d4d1e816d22756dc6"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\Controllers\\ClientController.php": {
+    "mtime": 1778665405.1657534,
+    "hash": "ba5be6d72030f0601b69179a9b0e718c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\Controllers\\TicketController.php": {
+    "mtime": 1771922674.0,
+    "hash": "db09428130eb7caea4b642366b7ee340"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\database\\migrations\\custom\\2025_02_18_000001_create_live_chat_sessions_table.php": {
+    "mtime": 1771408920.0,
+    "hash": "5c9ba734364e4dbda0fe9a4d81ec1723"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\database\\migrations\\custom\\2025_02_18_000002_create_live_chat_messages_table.php": {
+    "mtime": 1771408924.0,
+    "hash": "f2a630aeed7fdc1bb25aef59ba6de297"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\database\\migrations\\custom\\2026_05_13_000001_create_live_chat_suggestions_table.php": {
+    "mtime": 1778656696.385232,
+    "hash": "31014e6719d528530ae28b969a32fb55"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\database\\migrations\\custom\\2026_05_13_000002_create_live_chat_auto_rules_table.php": {
+    "mtime": 1778656716.9869702,
+    "hash": "526e9db00dbfbe91d14647ed4a0eebf9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\database\\migrations\\main\\2025_02_24_000001_add_image_url_to_ticket_message.php": {
+    "mtime": 1771912405.0,
+    "hash": "99bfc5ce43bf6064b199de7aaeaa099b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\Middleware\\AdminMiddleware.php": {
+    "mtime": 1774585555.0,
+    "hash": "8b8f0f5fd5934341dfeeeb31ec73f048"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\Middleware\\InjectAdminScript.php": {
+    "mtime": 1774586441.0,
+    "hash": "3130fc73580c8304f85e474a5573693d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\Models\\ChatAutoRule.php": {
+    "mtime": 1778656783.0467665,
+    "hash": "717e85471241f8bc02cc83610b6f9309"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\Models\\ChatMessage.php": {
+    "mtime": 1771408918.0,
+    "hash": "fbc858b01287ee5609e844bcd942734a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\Models\\ChatSession.php": {
+    "mtime": 1771408911.0,
+    "hash": "10ebff04404410ade5314e6df9dc3588"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\Models\\ChatSuggestion.php": {
+    "mtime": 1778656737.4262402,
+    "hash": "3fc2cc4212b8b730df77f8848d54c22b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\resources\\views\\manager.blade.php": {
+    "mtime": 1779087570.9436162,
+    "hash": "8453678b5af456f7809ef728f7aa4f86"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\routes\\api.php": {
+    "mtime": 1778665377.0677392,
+    "hash": "d0990d3fe5e1d8d293471e675b588553"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\routes\\web.php": {
+    "mtime": 1774512712.0,
+    "hash": "1140dcf8a67b27fa59970150ead30076"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\Services\\LiveChatService.php": {
+    "mtime": 1778656814.74122,
+    "hash": "0a8c81ab19ccb012061bcf9b21e3f841"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\Mgate\\Plugin.php": {
+    "mtime": 1774468318.0,
+    "hash": "5dca2b03182ca28ada68c2f77166468a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\SelfVerify\\Plugin.php": {
+    "mtime": 1779853996.588694,
+    "hash": "a3730912e928cd8debc4b7d208fff0ce"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\SelfVerify\\Controllers\\AdminController.php": {
+    "mtime": 1779854538.166564,
+    "hash": "465f0c64db6d47d7e8cdadafb07c9d26"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\SelfVerify\\Controllers\\UserController.php": {
+    "mtime": 1779854413.616718,
+    "hash": "c04c61c5eca8f91c5b0fe6fdb8c8302b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\SelfVerify\\Middleware\\InjectAdminScript.php": {
+    "mtime": 1779764919.374179,
+    "hash": "03d513fa569c76aa06fa61d98bdb86e8"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\SelfVerify\\routes\\api.php": {
+    "mtime": 1779764919.374179,
+    "hash": "06563f9215d83f0f5d20dd2db060bfbc"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\Staff\\Plugin.php": {
+    "mtime": 1771567232.505855,
+    "hash": "151c3d032fa44c916f2a4f8213d0f7d9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\Staff\\Controllers\\AuthController.php": {
+    "mtime": 1771567257.8482966,
+    "hash": "4a5c27fa110a2f74a8f871dcdf298894"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\Staff\\routes\\api.php": {
+    "mtime": 1771567259.9974911,
+    "hash": "8fe687dc5086e61e2d965282593f91cd"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\Telegram\\Plugin.php": {
+    "mtime": 1774468318.0,
+    "hash": "08410a1a160d7d2418bb0f3b2dfba92d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\TrafficReset\\Plugin.php": {
+    "mtime": 1752852567.0,
+    "hash": "33b64e5224d7aaa60d3ffc7489d210c4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins-core\\AlipayF2f\\Plugin.php": {
+    "mtime": 1779733403.0,
+    "hash": "cb7c1a47f06776785065842c7dc75405"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins-core\\AlipayF2f\\library\\AlipayF2F.php": {
+    "mtime": 1779733403.0,
+    "hash": "6125ed61d837085a9652835b3b99e14e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins-core\\Btcpay\\Plugin.php": {
+    "mtime": 1779733403.0,
+    "hash": "794983ad5d06af62e3546825eb8a1c7e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins-core\\Coinbase\\Plugin.php": {
+    "mtime": 1779733403.0,
+    "hash": "5968c403398479fb93946b3674ea953c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins-core\\CoinPayments\\Plugin.php": {
+    "mtime": 1779733403.0,
+    "hash": "3080569ff9b55185ab11440a0a468306"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins-core\\Epay\\Plugin.php": {
+    "mtime": 1779733403.0,
+    "hash": "c932c562f59d9586a7e14b3c5519462b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins-core\\Mgate\\Plugin.php": {
+    "mtime": 1779733403.0,
+    "hash": "5dca2b03182ca28ada68c2f77166468a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins-core\\Telegram\\Plugin.php": {
+    "mtime": 1779733403.0,
+    "hash": "4296429598f8cc8bd5419f6e3f0f0fd6"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\public\\index.php": {
+    "mtime": 1779733403.0,
+    "hash": "b9901d13f00ef92e0793e2d9fcd57431"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\js\\app.js": {
+    "mtime": 1779733403.0,
+    "hash": "54de6264756ace37980b93177b666732"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\js\\bootstrap.js": {
+    "mtime": 1779733403.0,
+    "hash": "2004966f8a34d720dfb10d00124ab2e5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\views\\admin.blade.php": {
+    "mtime": 1779733403.0,
+    "hash": "e340b1ad840232b48e899f185d571d20"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\views\\client\\subscribe.blade.php": {
+    "mtime": 1779733403.0,
+    "hash": "1e5abf9b52b4586215c8714ef4ca21d7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\views\\errors\\500.blade.php": {
+    "mtime": 1779733403.0,
+    "hash": "e76a6be0c5e09c7cc91d11d56a1abf04"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\views\\mail\\classic\\mailLogin.blade.php": {
+    "mtime": 1779733403.0,
+    "hash": "5ddfb1c56e2e6258ef43fbca0401e3c3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\views\\mail\\classic\\notify.blade.php": {
+    "mtime": 1779733403.0,
+    "hash": "f2b8be7dd54686c0f02c563556ac69fc"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\views\\mail\\classic\\remindExpire.blade.php": {
+    "mtime": 1779733403.0,
+    "hash": "daaf4dc1c775b44dbcdd062f640dad9c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\views\\mail\\classic\\remindTraffic.blade.php": {
+    "mtime": 1779733403.0,
+    "hash": "4887aa9f20908c7a311167bc9f48dbd5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\views\\mail\\classic\\verify.blade.php": {
+    "mtime": 1779733403.0,
+    "hash": "1e7c374ebc79b6e01cbfd0123d391bd1"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\views\\mail\\default\\mailLogin.blade.php": {
+    "mtime": 1779733403.0,
+    "hash": "7fdfc75349500a5c3b5e9fc64c97a115"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\views\\mail\\default\\notify.blade.php": {
+    "mtime": 1779733403.0,
+    "hash": "0d2cb65f3af7d2adada207ca896b124b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\views\\mail\\default\\remindExpire.blade.php": {
+    "mtime": 1779733403.0,
+    "hash": "ab31b94e387b7b011022607331f23735"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\views\\mail\\default\\remindTraffic.blade.php": {
+    "mtime": 1779733403.0,
+    "hash": "5cc890cc3ed8f8d93abbab6a1af99766"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\views\\mail\\default\\verify.blade.php": {
+    "mtime": 1779733403.0,
+    "hash": "8f1b3e71e258e80782247343b832b452"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\routes\\channels.php": {
+    "mtime": 1779733403.0,
+    "hash": "196bf10d7529fb000f4e0f1e2559b7c2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\routes\\console.php": {
+    "mtime": 1779733403.0,
+    "hash": "ce407ff5715c837d02b1aba7975bf512"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\routes\\web.php": {
+    "mtime": 1779733403.0,
+    "hash": "9c74455261910875043d23f40363e1b7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\tests\\Feature\\SelfVerifyRouteTest.php": {
+    "mtime": 1779853055.6058362,
+    "hash": "920bd13fa337dfc26b1879dcdede7b94"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\tests\\Feature\\Server\\ServerHandshakeTest.php": {
+    "mtime": 1779733403.0,
+    "hash": "80c86558ae992f5939e33a26b891bd8d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\tests\\Unit\\Services\\Auth\\LoginServiceTest.php": {
+    "mtime": 1779733403.0,
+    "hash": "b1df4eba619aca8c4e36a64ec33a55b8"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\tests\\Unit\\Services\\Auth\\RegisterServiceTest.php": {
+    "mtime": 1779733403.0,
+    "hash": "dbae28937259ee36fe6660908ca8294f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\babel.config.js": {
+    "mtime": 1778315300.0,
+    "hash": "28e92e3d194cd95ea4b74fca605a0efe"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\vite.config.js": {
+    "mtime": 1778315300.0,
+    "hash": "ae96125238c80ae0fb6e3dba301254d9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\App.vue": {
+    "mtime": 1778315300.0,
+    "hash": "1e2cba19e3dc00b648f94dec57390b03"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\appInit.js": {
+    "mtime": 1778315300.0,
+    "hash": "08ba132696218f4d63be5c71ab06fd16"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\main.js": {
+    "mtime": 1778315300.0,
+    "hash": "78fd04e56c8d079ecca8755492d64c14"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\auth.js": {
+    "mtime": 1778315300.0,
+    "hash": "029ecec70b0f4286c0d52643c56d4923"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\dashboard.js": {
+    "mtime": 1778315300.0,
+    "hash": "b014bb08f7ce62d95a6c75c5a2c3c7f4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\docs.js": {
+    "mtime": 1778315300.0,
+    "hash": "f244fb86b0bc15774e0e0b6f66c575de"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\invite.js": {
+    "mtime": 1778315300.0,
+    "hash": "e8729503fe0f83c742b9da34e89ddc07"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\orderlist.js": {
+    "mtime": 1778315300.0,
+    "hash": "cb1fe25d4f2e866ee79c2f6a2e9d8c73"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\request.js": {
+    "mtime": 1778315300.0,
+    "hash": "65758d898d365a1be10d26ce6fcc0d06"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\servers.js": {
+    "mtime": 1778315300.0,
+    "hash": "e292e1bd478c455bd664a1a6aae2063f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\shop.js": {
+    "mtime": 1778315300.0,
+    "hash": "5f5b19d1df3e4d3764734de6c40436cc"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\ticket.js": {
+    "mtime": 1778315300.0,
+    "hash": "c49fd8a4f972829f84734bd2bc9500d5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\trafficLog.js": {
+    "mtime": 1778315300.0,
+    "hash": "6ac84c174ce1a081bf2eaacfc547321f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\user.js": {
+    "mtime": 1778315300.0,
+    "hash": "5039813b7ccf48f656dfbcf931bd2d96"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\wallet.js": {
+    "mtime": 1778315300.0,
+    "hash": "517c33385d7b881baaef75aa52e50436"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\client\\errors.js": {
+    "mtime": 1778315300.0,
+    "hash": "8382c31774a95ef6488af512c35f543b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\client\\headers.js": {
+    "mtime": 1778315300.0,
+    "hash": "00c76db060b51d7bda8c14de57a2cc6d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\utils\\encryption.js": {
+    "mtime": 1778315300.0,
+    "hash": "17ec02e429bb689cf88eeff7838c9b8d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\api\\utils\\pathMapper.js": {
+    "mtime": 1778315300.0,
+    "hash": "205f0632cb3e23d45b4bcab3f328266a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\auth\\AuthPopup.vue": {
+    "mtime": 1778315300.0,
+    "hash": "11dfa8b720dbf4902da187c0032f0b6a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\common\\AppCard.vue": {
+    "mtime": 1778315300.0,
+    "hash": "22b3350d2c7b9f6c482e8811b8a42bfa"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\common\\AppDialog.vue": {
+    "mtime": 1778315300.0,
+    "hash": "8cdd975dc838d283ff2ed08f2396cd73"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\common\\BackToTop.vue": {
+    "mtime": 1778315300.0,
+    "hash": "8c355b6b285908a68d2b8322b8c09d0d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\common\\CrispEmbed.vue": {
+    "mtime": 1778315300.0,
+    "hash": "066727e08790d3b67478068926635731"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\common\\CustomContextMenu.vue": {
+    "mtime": 1778315300.0,
+    "hash": "29ff1a5707206debaec921d53bfd0ad1"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\common\\CustomerServiceIcon.vue": {
+    "mtime": 1778315300.0,
+    "hash": "6a8d56fbe1cae5f5504606da9531c32e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\common\\DomainAuthAlert.vue": {
+    "mtime": 1778315300.0,
+    "hash": "cd5e4e0b6de3225ae779d2958066a419"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\common\\LanguageSelector.vue": {
+    "mtime": 1778315300.0,
+    "hash": "ed91212fefda7acc49ecc19bdf52a5c0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\common\\LoadingSpinner.vue": {
+    "mtime": 1778315300.0,
+    "hash": "1159afa3225a77bf24122c4435f4f3d4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\common\\NodeDetailModal.vue": {
+    "mtime": 1778315300.0,
+    "hash": "b061399348e3c12581ce4e36d98766eb"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\common\\ResourcePreloader.vue": {
+    "mtime": 1778315300.0,
+    "hash": "c4f3b6f1619a5495ab609925179a0515"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\common\\SlideTabsNav.vue": {
+    "mtime": 1778315300.0,
+    "hash": "0af2d24bac3ef499b72d9b4adb36eab8"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\common\\ThemeToggle.vue": {
+    "mtime": 1778315300.0,
+    "hash": "139afbb9959357a9eef71bc0f04006a6"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\common\\Toast.vue": {
+    "mtime": 1778315300.0,
+    "hash": "adfc927fe5785f1cd886ed7d62337b98"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\common\\UserAvatar.vue": {
+    "mtime": 1778315300.0,
+    "hash": "93f685ea65cc0bc381bca9aaac382879"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconAccount.vue": {
+    "mtime": 1778315300.0,
+    "hash": "32a41c9c6a422d6f1841a21586c006b0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconAlipay.vue": {
+    "mtime": 1778315300.0,
+    "hash": "5bb4e4e7dbb909eab09c904875d68aa9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconArrowRight.vue": {
+    "mtime": 1778315300.0,
+    "hash": "5b137eb9806dc3a71021f068fb143d28"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconArrowUp.vue": {
+    "mtime": 1778315300.0,
+    "hash": "4a189ec080fa216801f7fa6a72e6d1ce"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconBox.vue": {
+    "mtime": 1778315300.0,
+    "hash": "47bd320f87dc0ad897a6f444b5656922"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconCalendar.vue": {
+    "mtime": 1778315300.0,
+    "hash": "ba5f1ceab1f4a97165e2b7eb60e930f7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconCheck.vue": {
+    "mtime": 1778315300.0,
+    "hash": "e52ffaa3d5b2205893ccd0a1b7f0ebd1"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconChevronDown.vue": {
+    "mtime": 1778315300.0,
+    "hash": "032a0d6841f101ca5e84b1388ff9558a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconClose.vue": {
+    "mtime": 1778315300.0,
+    "hash": "3c85e355d81fd899facf3c3a45dbaa86"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconCode.vue": {
+    "mtime": 1778315300.0,
+    "hash": "374661fd8753a7a3f0e9f79140358b67"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconCopy.vue": {
+    "mtime": 1778315300.0,
+    "hash": "12ce0b47719f8fa340e91578159777ed"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconCredit.vue": {
+    "mtime": 1778315300.0,
+    "hash": "b74f1b6808c21041826de6ee6fff198c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconCrown.vue": {
+    "mtime": 1778315300.0,
+    "hash": "5b83f4c92d6ec22f61606bb5fc892ff3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconDashboard.vue": {
+    "mtime": 1778315300.0,
+    "hash": "596eab90b6800bc90f704db78bbb0a9a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconDefinitions.vue": {
+    "mtime": 1778315300.0,
+    "hash": "a5553b56de61ab8b8d7df16730aa85f2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconDocument.vue": {
+    "mtime": 1778315300.0,
+    "hash": "b71e45cae344b239b1d5f2a94a1f4c3a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconEye.vue": {
+    "mtime": 1778315300.0,
+    "hash": "d3921c7405f13e50217502e468c87ceb"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconEyeOff.vue": {
+    "mtime": 1778315300.0,
+    "hash": "d2c3bd6870b4d5dd6cecccf9d806b2a5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconFacebook.vue": {
+    "mtime": 1778315300.0,
+    "hash": "63b285e4a363513298985d2dbdc44539"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconFileText.vue": {
+    "mtime": 1778315300.0,
+    "hash": "55c44e2986d027ab83ab1863bb15647a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconHelper.js": {
+    "mtime": 1778315300.0,
+    "hash": "30307c9a29962c1831de411d0e8a82d2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconInfo.vue": {
+    "mtime": 1778315300.0,
+    "hash": "dcf5555c0eb9094d00e2b6f8e5115fdf"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconInvite.vue": {
+    "mtime": 1778315300.0,
+    "hash": "3d2ca02e4c9e28f619e0cda71fcda0cb"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconLink.vue": {
+    "mtime": 1778315300.0,
+    "hash": "07cd27ea0d5a1dacdd048cd6029dba9a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconLock.vue": {
+    "mtime": 1778315300.0,
+    "hash": "36d1479528949c83d7e8c614153010e0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconLogout.vue": {
+    "mtime": 1778315300.0,
+    "hash": "0b1b18d935f9f76720766b0f6bbfd0a4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconMail.vue": {
+    "mtime": 1778315300.0,
+    "hash": "1168dfcff26de643b46b9e8d1f949676"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconMoney.vue": {
+    "mtime": 1778315300.0,
+    "hash": "0a50918a2a6082e5c1f172df9ec0d7b1"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconMore.vue": {
+    "mtime": 1778315300.0,
+    "hash": "5e479b0c8ef5eeac52d2f1645f59c8af"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconQRCode.vue": {
+    "mtime": 1778315300.0,
+    "hash": "75ec54a258e90d390bf4e253f10c66da"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconScan.vue": {
+    "mtime": 1778315300.0,
+    "hash": "124559e50287161574f2711934731c92"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconSend.vue": {
+    "mtime": 1778315300.0,
+    "hash": "25d554a7dc77ca04140926eb05a61762"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconSettings.vue": {
+    "mtime": 1778315300.0,
+    "hash": "38133b20238f86ca4affcfed6fa45801"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconShadow.vue": {
+    "mtime": 1778315300.0,
+    "hash": "2d4d5d7c71588273e91780af01d9d9da"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconShieldLock.vue": {
+    "mtime": 1778315300.0,
+    "hash": "2e0480acee180e46effadb0849d03162"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconShop.vue": {
+    "mtime": 1778315300.0,
+    "hash": "5231ddedc653f328290df58ad9b6f221"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconSpinner.vue": {
+    "mtime": 1778315300.0,
+    "hash": "2c33927f3ac21a490807cce1bde1fbe7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconStorage.vue": {
+    "mtime": 1778315300.0,
+    "hash": "a289a26b72f5578d29ab0b01292ea6d3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconSubscription.vue": {
+    "mtime": 1778315300.0,
+    "hash": "f7fc2329ab429efab6dfbb3960c2b246"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconSurfboard.vue": {
+    "mtime": 1778315300.0,
+    "hash": "730e39308b43ba644e3503a7461a2e3c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconSurge.vue": {
+    "mtime": 1778315300.0,
+    "hash": "92f1d53363a388bb1105947b25e7a0e4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconTemplate.vue": {
+    "mtime": 1778315300.0,
+    "hash": "e459d1c46d3dc59fa2fab782a3f70d1d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconTicket.vue": {
+    "mtime": 1778315300.0,
+    "hash": "7ccae4e8114c57e427839558253e4c6f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconTwitter.vue": {
+    "mtime": 1778315300.0,
+    "hash": "fb7675d1c3f92ee0e05cd4e4c4bbb250"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconUser.vue": {
+    "mtime": 1778315300.0,
+    "hash": "fe24f11bb0e664be71bfffa8385b683c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconUsers.vue": {
+    "mtime": 1778315300.0,
+    "hash": "80a1f58bcf96f01b74ce5e2d6bb4ef38"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconWallet.vue": {
+    "mtime": 1778315300.0,
+    "hash": "1fc78f07ac83b4b993c078e254a21fe9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\icons\\IconWechat.vue": {
+    "mtime": 1778315300.0,
+    "hash": "2a30882de8a4924ef9eb69b71be6a6a7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\popup\\CommonDialog.vue": {
+    "mtime": 1778315300.0,
+    "hash": "5b50fa00cebf686dda0406db21c08cf3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\shop\\ShopPopup.vue": {
+    "mtime": 1778315300.0,
+    "hash": "0a9e0c275c6d42654d25d5080e8080fb"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\components\\ticket\\TicketPopup.vue": {
+    "mtime": 1778315300.0,
+    "hash": "933b2bcd03528d37f5782b21a1459aad"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\composables\\useAuth.js": {
+    "mtime": 1778315300.0,
+    "hash": "443cf1b62fd44b83b0ff2e6ae0756d84"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\composables\\useNavigator.js": {
+    "mtime": 1778315300.0,
+    "hash": "fa773f7eb707af24ce48b604b4870c16"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\composables\\useTheme.js": {
+    "mtime": 1778315300.0,
+    "hash": "31c8a8983411c98a474626da78ed2db9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\composables\\useToast.js": {
+    "mtime": 1778315300.0,
+    "hash": "700e144f5a6cc113ac285878570d2899"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\config\\index.js": {
+    "mtime": 1778315300.0,
+    "hash": "60bb10e5f2a3b23b20c2cb18f94f7604"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\hooks\\useToast.js": {
+    "mtime": 1778315300.0,
+    "hash": "8ee7b5b78d0d36f174e57d777b83178e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\index.js": {
+    "mtime": 1778315300.0,
+    "hash": "8097980dbcb151d8842bb5cf58cef3fe"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\en-US.js": {
+    "mtime": 1778315300.0,
+    "hash": "378f53d0c35d5b37a14b9b5daea544ed"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\fa-IR.js": {
+    "mtime": 1778315300.0,
+    "hash": "9a152a2d71d828a61e44b3425b3fb6e4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\index.js": {
+    "mtime": 1778315300.0,
+    "hash": "2e6d316debcdbaad1e1560d85f205b62"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\ja-JP.js": {
+    "mtime": 1778315300.0,
+    "hash": "506962410298a5c6b93c38cd949d73bb"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\ko-KR.js": {
+    "mtime": 1778315300.0,
+    "hash": "f30c0b7bf7cb6a004bdaa4406a729ffd"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\ru-RU.js": {
+    "mtime": 1778315300.0,
+    "hash": "bb670a84564e73abdf62aeebd8a18917"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\vi-VN.js": {
+    "mtime": 1778315300.0,
+    "hash": "f4a0344eae2bad553c85fe7f8254cc29"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\zh-CN.js": {
+    "mtime": 1778315300.0,
+    "hash": "76e5bb82187aa381cc068f1b3a940920"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\zh-TW.js": {
+    "mtime": 1778315300.0,
+    "hash": "903e494cccf9816144d5550ad7c72873"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\auth\\en-US.js": {
+    "mtime": 1778315300.0,
+    "hash": "f13c37aec4b151779e15e84cb7a453ce"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\auth\\fa-IR.js": {
+    "mtime": 1778315300.0,
+    "hash": "8126463c259d64bd13771ebf6af93f91"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\auth\\index.js": {
+    "mtime": 1778315300.0,
+    "hash": "a6d4ddc942aede1053f8b4b3b7a20536"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\auth\\ja-JP.js": {
+    "mtime": 1778315300.0,
+    "hash": "b57b096fd4b9252ec0bb02f72085aa6f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\auth\\ko-KR.js": {
+    "mtime": 1778315300.0,
+    "hash": "3c8613f05037b1798b4ca217ca336517"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\auth\\ru-RU.js": {
+    "mtime": 1778315300.0,
+    "hash": "338673aca081e2995eb32df55b00377d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\auth\\vi-VN.js": {
+    "mtime": 1778315300.0,
+    "hash": "c8d719c969a88193e53d07b12b73041e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\auth\\zh-CN.js": {
+    "mtime": 1778315300.0,
+    "hash": "49126899756194867cf75e8bae5a377c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\i18n\\locales\\auth\\zh-TW.js": {
+    "mtime": 1778315300.0,
+    "hash": "08e4a440e89a6446033f3f40ae66b5c9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\router\\index.js": {
+    "mtime": 1778315300.0,
+    "hash": "e8e767e0c5c45bf8bf049e590f5a9b0e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\store\\index.js": {
+    "mtime": 1778315300.0,
+    "hash": "bbbd32d4253f14c7c72d5357855527b0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\store\\useLegacyStore.js": {
+    "mtime": 1778315300.0,
+    "hash": "fe3c4d8f35dc4daca0605374cf92a93d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\stores\\app.js": {
+    "mtime": 1778315300.0,
+    "hash": "f353e9f868d267c8de42e3fadd62cee5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\stores\\auth.js": {
+    "mtime": 1778315300.0,
+    "hash": "7fbbda113eec901a3f53058147dd235c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\stores\\index.js": {
+    "mtime": 1778315300.0,
+    "hash": "992798afbd3d3961bd31d14b3cf2a9b0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\stores\\theme.js": {
+    "mtime": 1778315300.0,
+    "hash": "d7b1295c46f6afde826ef5af38522b06"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\utils\\apiAvailabilityChecker.js": {
+    "mtime": 1778315300.0,
+    "hash": "8d5a7b03151edb6e9f848421442d9f50"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\utils\\authPopupState.js": {
+    "mtime": 1778315300.0,
+    "hash": "8e937c387ddf597c8ba52c8b6ad9f79d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\utils\\authUtils.js": {
+    "mtime": 1778315300.0,
+    "hash": "2902a63d9700d292689a31d0c31c826b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\utils\\baseConfig.js": {
+    "mtime": 1778315300.0,
+    "hash": "e826d7613d3ff3d61b82ec1736485606"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\utils\\componentLifecycle.js": {
+    "mtime": 1778315300.0,
+    "hash": "844b92fa951bd67dca6723b13805a615"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\utils\\domainChecker.js": {
+    "mtime": 1778315300.0,
+    "hash": "2ca7b9d30adb67b14f0ddf7f03966f34"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\utils\\exposeConfig.js": {
+    "mtime": 1778315300.0,
+    "hash": "d8e4640bb26352af6a14c921d0ade724"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\utils\\formatters.js": {
+    "mtime": 1778315300.0,
+    "hash": "a0f6b1eaf544e5615df6221af7475ba4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\utils\\notification.js": {
+    "mtime": 1778315300.0,
+    "hash": "b8a6eddf002109ac9cdd56334288127f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\utils\\pageCache.js": {
+    "mtime": 1778315300.0,
+    "hash": "c072ef0e23b4e88adac6f31c6fa39992"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\utils\\preloadManager.js": {
+    "mtime": 1778315300.0,
+    "hash": "7abef2c84b1047d2d84745473dd9dd32"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\utils\\redirectHandler.js": {
+    "mtime": 1778315300.0,
+    "hash": "0edd08d9758637fa29a2df40b4d28be0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\utils\\ticketPopupState.js": {
+    "mtime": 1778315300.0,
+    "hash": "159f32e7ae5ff02e394bf9cafda388ee"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\utils\\validators.js": {
+    "mtime": 1778315300.0,
+    "hash": "79d302900ac0e040774224e4c568aab0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\auth\\center\\Login.vue": {
+    "mtime": 1778315300.0,
+    "hash": "49c808548d63f45fa334f9c515d29ea4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\auth\\center\\Register.vue": {
+    "mtime": 1778315300.0,
+    "hash": "0f796451f0b11b959797f9961fdb59d4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\auth\\composables\\registerValidation.js": {
+    "mtime": 1778315300.0,
+    "hash": "e270df42116b126f5bc61ade7b7e76bd"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\auth\\split\\Login.vue": {
+    "mtime": 1778315300.0,
+    "hash": "d0f9dd2b05bdf5e6eead7c5100a8f8d0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\auth\\split\\Register.vue": {
+    "mtime": 1778315300.0,
+    "hash": "902dcdae7f871c611280abb62a696e55"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\dashboard\\Dashboard.vue": {
+    "mtime": 1778315300.0,
+    "hash": "637417d54b44254baed34ff1d8af050d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\dashboard\\composables\\dashboardMetrics.js": {
+    "mtime": 1778315300.0,
+    "hash": "c29ff7dd2394292007301a32a0a44e18"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\docs\\DocDetail.vue": {
+    "mtime": 1778315300.0,
+    "hash": "1be85333314626ac4819456aa762548a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\docs\\DocsPage.vue": {
+    "mtime": 1778315300.0,
+    "hash": "e73fe29ed1bed88596fe0def1d1b43ec"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\errors\\ApiValidation.vue": {
+    "mtime": 1778315300.0,
+    "hash": "3fdd4548056fe55be87b77f386063e87"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\errors\\BrowserRestricted.vue": {
+    "mtime": 1778315300.0,
+    "hash": "add6cdd2742adf01a3fb2b94b4295116"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\errors\\NotFound.vue": {
+    "mtime": 1778315300.0,
+    "hash": "7ebbb59c928e11e46d2e3ea518bbbbea"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\invite\\Invite.vue": {
+    "mtime": 1778315300.0,
+    "hash": "f384e9951e1a1682ee28112c14cdb187"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\invite\\composables\\invitePresentation.js": {
+    "mtime": 1778315300.0,
+    "hash": "21331fe4947964abcdfd0c88ae54f71a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\landing\\CustomLandingPage.vue": {
+    "mtime": 1778315300.0,
+    "hash": "7b71494d35d9cea3826b3f55369ca4d9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\landing\\LandingPage.vue": {
+    "mtime": 1778315300.0,
+    "hash": "38974be3f0f678fde29f579bbe6ba9e9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\layout\\MainBoard.vue": {
+    "mtime": 1778315300.0,
+    "hash": "2890fa12381625dd4a79b471e0659c4a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\more\\MoreOptions.vue": {
+    "mtime": 1778315300.0,
+    "hash": "8d4a635b9d9d486868f4920b109c78d7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\orders\\OrderList.vue": {
+    "mtime": 1778315300.0,
+    "hash": "d57799ded46a5217aae5a33e0878270f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\profile\\UserProfile.vue": {
+    "mtime": 1778315300.0,
+    "hash": "b7ef94b71e2cd011a7bc1a688af4bb0b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\profile\\composables\\profileDevice.js": {
+    "mtime": 1778315300.0,
+    "hash": "4c0c95f72c20b074040eddc132b14b04"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\servers\\NodeList.vue": {
+    "mtime": 1778315300.0,
+    "hash": "b545c2d9b9df3a03442f0e04ec938fdd"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\service\\CustomerService.vue": {
+    "mtime": 1778315300.0,
+    "hash": "e2534f9ead7d423f90c91a62b8f64fde"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\shop\\OrderConfirm.vue": {
+    "mtime": 1778315300.0,
+    "hash": "42361b9fcd607bf9df29549316587da5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\shop\\Payment.vue": {
+    "mtime": 1778315300.0,
+    "hash": "d43406b5726501d8656ab9bb4fcadcb9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\shop\\Shop.vue": {
+    "mtime": 1778315300.0,
+    "hash": "137d2c455f6904de42d7757340bf4ff9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\shop\\composables\\paymentFormatters.js": {
+    "mtime": 1778315300.0,
+    "hash": "3886b0f9a3e400c0387af47f7727c7d2"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\ticket\\MobileTicketList.vue": {
+    "mtime": 1778315300.0,
+    "hash": "e08fd87e4aee42fc0083034266bad54f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\ticket\\TicketList.vue": {
+    "mtime": 1778315300.0,
+    "hash": "e5c9269a77ed1515f8bcc845efad5853"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\ticket\\composables\\ticketPresentation.js": {
+    "mtime": 1778315300.0,
+    "hash": "950ff72663b71d80fc03a671c3b80a43"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\trafficLog\\TrafficLog.vue": {
+    "mtime": 1778315300.0,
+    "hash": "84d2bb30860359b06b8b142e2e197235"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\views\\wallet\\WalletDeposit.vue": {
+    "mtime": 1778315300.0,
+    "hash": "4012206fecfb84549f7cd5a96dc1ff36"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\dashboard.blade.php": {
+    "mtime": 1774468318.0,
+    "hash": "815b992b03d0caf52d7daf9dc2454ec0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\components.async.js": {
+    "mtime": 1774468318.0,
+    "hash": "82f8c7ef974bda468af0101e04110cd7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\env.example.js": {
+    "mtime": 1774468318.0,
+    "hash": "f20a86546220a63aabc7767dceeb4c3d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\umi.js": {
+    "mtime": 1774468318.0,
+    "hash": "9aecc712a52288a7901ebb6b4e91f9fd"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\vendors.async.js": {
+    "mtime": 1774468318.0,
+    "hash": "46c6281380ddb5a6cca8a1f124ac1e1c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\i18n\\en-US.js": {
+    "mtime": 1774468318.0,
+    "hash": "712a196b856194cb7d48348412966de0"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\i18n\\fa-IR.js": {
+    "mtime": 1774468318.0,
+    "hash": "168d4f1fa4ce9f42e9f5e916b61249eb"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\i18n\\ja-JP.js": {
+    "mtime": 1774468318.0,
+    "hash": "38c437ae46e1b8bd7aa85ce9a447ce7b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\i18n\\ko-KR.js": {
+    "mtime": 1774468318.0,
+    "hash": "9a939202ee7d914c02614a5fd666d786"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\i18n\\vi-VN.js": {
+    "mtime": 1774468318.0,
+    "hash": "0998a18aab2a93a847d8ae26f12db765"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\i18n\\zh-CN.js": {
+    "mtime": 1774468318.0,
+    "hash": "13b5925249ea63dc3ae1c90fe0b52a95"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\i18n\\zh-TW.js": {
+    "mtime": 1774468318.0,
+    "hash": "e894b924f164b892beb1db9af60f13f8"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\Xboard\\dashboard.blade.php": {
+    "mtime": 1779733403.0,
+    "hash": "27fc2f853210386b9281ba135332097a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\Xboard\\env.example.js": {
+    "mtime": 1779733403.0,
+    "hash": "8c4c96cc91ff3f433e4e85061f310b52"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\Xboard\\env.js": {
+    "mtime": 1779733403.0,
+    "hash": "518cbda991e3626154fa9190e8fbe535"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\Xboard\\assets\\umi.js": {
+    "mtime": 1779733403.0,
+    "hash": "027557b5613850988a557ea10f3687e4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\CLAUDE.md": {
+    "mtime": 1777883257.975806,
+    "hash": "2ed67c68f28bc1ef95ac24167431d7e8"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\compose.1panel.sample.yaml": {
+    "mtime": 1779733403.0,
+    "hash": "e1a9a4c4c080369ff71b3eb78ad40d20"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\compose.host.sample.yaml": {
+    "mtime": 1779733403.0,
+    "hash": "566901e82cdf831e11a1f17012c00b5e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\compose.sample.yaml": {
+    "mtime": 1779733403.0,
+    "hash": "c70fd227f352f16996e053a010d27316"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\compose.split.sample.yaml": {
+    "mtime": 1779733403.0,
+    "hash": "2ec43909dcbe4e0b215ce7a3c250574b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\GEMINI.md": {
+    "mtime": 1777883257.975806,
+    "hash": "2ed67c68f28bc1ef95ac24167431d7e8"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\README.md": {
+    "mtime": 1779733403.0,
+    "hash": "e6831ffbbe508ed8285caadd4c4ff230"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\api\\admin_api.md": {
+    "mtime": 1774939046.440158,
+    "hash": "923c684c2870251d15c04f01c33616f4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\api\\guest_api.md": {
+    "mtime": 1774939029.4833982,
+    "hash": "d3570d9696f7a16c07ffa9cee0aec0e3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\api\\user_api.md": {
+    "mtime": 1774939037.8017306,
+    "hash": "2dd375a4d05938f362f69af508f27e79"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\en\\development\\device-limit.md": {
+    "mtime": 1779733403.0,
+    "hash": "3db0e6374a50fb73ef6c3a814671244f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\en\\development\\performance.md": {
+    "mtime": 1779733403.0,
+    "hash": "ab78c4b57a4ca637064b342daf194683"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\en\\development\\plugin-development-guide.md": {
+    "mtime": 1779733403.0,
+    "hash": "9ddc5335a813a4b4a43a84067d54fe93"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\en\\installation\\1panel.md": {
+    "mtime": 1779733403.0,
+    "hash": "0b664243ea707ee96d2e37824bfb7250"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\en\\installation\\aapanel-docker.md": {
+    "mtime": 1779733403.0,
+    "hash": "a8885f496fb092293ccda3a3fac2f042"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\en\\installation\\aapanel.md": {
+    "mtime": 1779733403.0,
+    "hash": "8f9e4fdc9ff47238d72dbd73e563c4b1"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\en\\installation\\docker-compose.md": {
+    "mtime": 1779733403.0,
+    "hash": "a536b85490684a05c53d94c0beb7b0c6"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\en\\migration\\config.md": {
+    "mtime": 1779733403.0,
+    "hash": "9837c5ccc7ce749d031d318376b3efb3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\en\\migration\\v2board-1.7.3.md": {
+    "mtime": 1779733403.0,
+    "hash": "3960d09d158149eb2394a6d5022bba6a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\en\\migration\\v2board-1.7.4.md": {
+    "mtime": 1779733403.0,
+    "hash": "63b66fe6ff682b60e3547d32f4baa87c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\en\\migration\\v2board-dev.md": {
+    "mtime": 1779733403.0,
+    "hash": "a41eed9a90d8bcefde818078164c8c1a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\guide\\API_STRUCTURE_GUIDE.md": {
+    "mtime": 1777884037.2775705,
+    "hash": "a848839add2e2d80e3c66f43ea08477f"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\guide\\AUTH_GUIDE.md": {
+    "mtime": 1778061763.3370392,
+    "hash": "398d9523133fe953a448dcc1c921dbf9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\guide\\DESIGN_GUIDE.md": {
+    "mtime": 1777884253.9817708,
+    "hash": "d6c82cc2e5bc6885dc407d7caaffe9fb"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\LiveChat\\README.md": {
+    "mtime": 1779088406.6415963,
+    "hash": "4b4e9a8ae47774dea0dea5c1a794bbcc"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\SelfVerify\\readme-cli.md": {
+    "mtime": 1779854692.5805566,
+    "hash": "d6bb151800ffeac960952238dc134a26"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\SelfVerify\\README.md": {
+    "mtime": 1779854695.8164306,
+    "hash": "0ab0efeabf57fa68fa4e8025a3c2ccfe"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\Staff\\README.md": {
+    "mtime": 1771569088.7273402,
+    "hash": "310f7eae74552e0c5af31c949e6035d1"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\Telegram\\README.md": {
+    "mtime": 1774468318.0,
+    "hash": "dd5068bc4e97cb31cbc22c5b92346418"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins\\TrafficReset\\README.md": {
+    "mtime": 1752852272.0,
+    "hash": "3a578c785a74f0af263b57bf593881e3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\plugins-core\\Telegram\\README.md": {
+    "mtime": 1779733403.0,
+    "hash": "dd5068bc4e97cb31cbc22c5b92346418"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\public\\robots.txt": {
+    "mtime": 1779733403.0,
+    "hash": "b6216d61c03e6ce0c9aea6ca7808f7ca"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\rules\\app.clash.yaml": {
+    "mtime": 1779733403.0,
+    "hash": "56131606f2b6847a409a93b7ead1af73"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\rules\\custom.egern.yaml": {
+    "mtime": 1779246391.468153,
+    "hash": "b9e79ede22281e8ee8cc24e2691575ac"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\rules\\default.clash.yaml": {
+    "mtime": 1779733403.0,
+    "hash": "ca54592802590a3ae116ff3b550ef52d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\resources\\rules\\default.egern.yaml": {
+    "mtime": 1779203053.2149558,
+    "hash": "212b028201a9e8008720fd99facef85a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\sample\\HomieFroxy.yaml": {
+    "mtime": 1779200920.073514,
+    "hash": "f50819e6582819fc84cf9d082e26a3bb"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\index.html": {
+    "mtime": 1778315300.0,
+    "hash": "b4859bcaa9ba10708869b1a4d6c30516"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\README.md": {
+    "mtime": 1778315300.0,
+    "hash": "2f2dfd605ba5c0f93c1307a000735933"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\docs\\note.md": {
+    "mtime": 1779099554.6148844,
+    "hash": "8befbe3cb3469ac0f221cbc2c8375525"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\docs\\structure.md": {
+    "mtime": 1779099678.0743523,
+    "hash": "fe2f215709470b9c5f9f7dddafa66317"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\public\\index.html": {
+    "mtime": 1778315300.0,
+    "hash": "8f93610c065dad472ef65808671fd5a7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\public\\landingpage.html": {
+    "mtime": 1778315300.0,
+    "hash": "ba278c7ceed1a4ba815f7f488fb06783"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\Xboard\\index.html": {
+    "mtime": 1779733403.0,
+    "hash": "729a3e76686c7dcea204c1a3163069de"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\images\\admin.png": {
+    "mtime": 1779733403.0,
+    "hash": "7280bd0b65d47c0e64d18df5160edef5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\docs\\images\\user.png": {
+    "mtime": 1779733403.0,
+    "hash": "68ca6ffc60cc5a328bba17a0c6af1018"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\public\\images\\background.jpg": {
+    "mtime": 1778315300.0,
+    "hash": "0dd44b6295945fb316fdf5a63a9dbdd7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\public\\images\\logo.png": {
+    "mtime": 1778315300.0,
+    "hash": "91489ef966bd76d6dd231898d2907d80"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\i18N\\CN.svg": {
+    "mtime": 1778315300.0,
+    "hash": "26187a64e5a2e0e7ba5ac4a8d78d80ea"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\i18N\\GB.svg": {
+    "mtime": 1778315300.0,
+    "hash": "0d6fb97218684bb1e3215cee2b42547a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\i18N\\HK.svg": {
+    "mtime": 1778315300.0,
+    "hash": "ccc5b972c6f52405c2749ad2a927b0e3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\i18N\\IR.svg": {
+    "mtime": 1778315300.0,
+    "hash": "a582aec526921f936dce09a526124cb7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\i18N\\JP.svg": {
+    "mtime": 1778315300.0,
+    "hash": "b4dbf8d28cc3aa8fc5a763ec7127e0d8"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\i18N\\KR.svg": {
+    "mtime": 1778315300.0,
+    "hash": "d12043193f908be10784d586453be25d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\i18N\\RU.svg": {
+    "mtime": 1778315300.0,
+    "hash": "14814a48e7284c087eaa9c44fb581302"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\i18N\\VN.svg": {
+    "mtime": 1778315300.0,
+    "hash": "bda7a3b187ed985bcb66a37cd18c14ad"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-android\\clash.png": {
+    "mtime": 1778315300.0,
+    "hash": "b21af85afaead384575a2b084fd5235d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-android\\clashmeta.png": {
+    "mtime": 1778315300.0,
+    "hash": "baa5eeb44e60414e7da067695dc0bbaf"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-android\\hiddify.png": {
+    "mtime": 1778315300.0,
+    "hash": "7208e5e838b8d56ff572f8b584a1e3dc"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-android\\nekobox.png": {
+    "mtime": 1778315300.0,
+    "hash": "530ef1244b79db24f82d5376bb4c65d9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-android\\singbox.png": {
+    "mtime": 1778315300.0,
+    "hash": "1cfac89ae335d45c125538c6a5a16eb5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-android\\surfboard.png": {
+    "mtime": 1778315300.0,
+    "hash": "345c87bba865a5b7d661a783ff147a3b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-android\\v2rayng.png": {
+    "mtime": 1778315300.0,
+    "hash": "73dca3873880a7b40631ef5ddf44f069"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-ios\\loon.png": {
+    "mtime": 1778315300.0,
+    "hash": "9f169fe7bd3b4496369b299281d55a29"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-ios\\quantumultx.png": {
+    "mtime": 1778315300.0,
+    "hash": "90525623468f0944dd3fa7769e777575"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-ios\\shadowrocket.png": {
+    "mtime": 1778315300.0,
+    "hash": "2c8304dc43a623ecb84d7b12e932bef3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-ios\\singbox.png": {
+    "mtime": 1778315300.0,
+    "hash": "1cfac89ae335d45c125538c6a5a16eb5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-ios\\stash.png": {
+    "mtime": 1778315300.0,
+    "hash": "6463d997ef56de204ca72480a380e288"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-ios\\Surge.png": {
+    "mtime": 1778315300.0,
+    "hash": "e41f9f57757d8f5d0410a12876b0326e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-macos\\clashmetax.png": {
+    "mtime": 1778315300.0,
+    "hash": "6e1d2b5dfda330f2e1b6c8b180bdc8d5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-macos\\clashx.png": {
+    "mtime": 1778315300.0,
+    "hash": "fcba36ba06532cd5ad23c3168473ddcb"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-macos\\hiddify.png": {
+    "mtime": 1778315300.0,
+    "hash": "7208e5e838b8d56ff572f8b584a1e3dc"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-macos\\quantumultx.png": {
+    "mtime": 1778315300.0,
+    "hash": "90525623468f0944dd3fa7769e777575"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-macos\\shadowrocket.png": {
+    "mtime": 1778315300.0,
+    "hash": "2c8304dc43a623ecb84d7b12e932bef3"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-macos\\singbox.png": {
+    "mtime": 1778315300.0,
+    "hash": "1cfac89ae335d45c125538c6a5a16eb5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-macos\\stash.png": {
+    "mtime": 1778315300.0,
+    "hash": "6463d997ef56de204ca72480a380e288"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-macos\\Surge.png": {
+    "mtime": 1778315300.0,
+    "hash": "e41f9f57757d8f5d0410a12876b0326e"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-windows\\clash.png": {
+    "mtime": 1778315300.0,
+    "hash": "b21af85afaead384575a2b084fd5235d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-windows\\clashverge.png": {
+    "mtime": 1778315300.0,
+    "hash": "268d8f13e6fbde7f33168e7b5e19667c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-windows\\flclash.png": {
+    "mtime": 1778315300.0,
+    "hash": "2693d7fb46b8fb17cddc7369afa35c25"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-windows\\hiddify.png": {
+    "mtime": 1778315300.0,
+    "hash": "7208e5e838b8d56ff572f8b584a1e3dc"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-windows\\nekoray.png": {
+    "mtime": 1778315300.0,
+    "hash": "530ef1244b79db24f82d5376bb4c65d9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\client-img-windows\\singbox.png": {
+    "mtime": 1778315300.0,
+    "hash": "1cfac89ae335d45c125538c6a5a16eb5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\EZ_THEME\\src\\assets\\images\\ticket\\preview.svg": {
+    "mtime": 1778315300.0,
+    "hash": "4cd5ed50a96edd841f6aa3295bc26172"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\images\\icon\\Clash For Android.png": {
+    "mtime": 1774468318.0,
+    "hash": "29b47df5d0bc3cd6be4997d304ba39d4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\images\\icon\\Clash For Windows.png": {
+    "mtime": 1774468318.0,
+    "hash": "29b47df5d0bc3cd6be4997d304ba39d4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\images\\icon\\Clash Meta For Android.png": {
+    "mtime": 1774468318.0,
+    "hash": "51b6a2c65aaaf5174339ed3fdce52c44"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\images\\icon\\Clash Verge.png": {
+    "mtime": 1774468318.0,
+    "hash": "dad8482b457b8d274d6caed2f905a862"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\images\\icon\\Clashx Meta.png": {
+    "mtime": 1774468318.0,
+    "hash": "51b6a2c65aaaf5174339ed3fdce52c44"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\images\\icon\\ClashX.png": {
+    "mtime": 1774468318.0,
+    "hash": "d8abda4fcdb7809d065535c84ac8c118"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\images\\icon\\Hysteria2.svg": {
+    "mtime": 1774468318.0,
+    "hash": "0333d5aa43e961af025bb98c77fa3cb4"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\images\\icon\\NekoBox.png": {
+    "mtime": 1774468318.0,
+    "hash": "5ca84a096626c47ba8721309566c57a9"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\images\\icon\\QuantumultX.png": {
+    "mtime": 1774468318.0,
+    "hash": "55fa8c6ffa04fc0eeaae298bea66897c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\images\\icon\\Shadowrocket.png": {
+    "mtime": 1774468318.0,
+    "hash": "07327987cee295fb8f2b3eae61da526d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\images\\icon\\Stash.png": {
+    "mtime": 1774468318.0,
+    "hash": "8f5d08744ac941533b02492e16f09fdb"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\images\\icon\\Surfboard.png": {
+    "mtime": 1774468318.0,
+    "hash": "a8ae84a2c33d46fea153b8905e438d0c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\images\\icon\\Surge.png": {
+    "mtime": 1774468318.0,
+    "hash": "1cd20ad3cc144ae358dc79bda39f4ee5"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\images\\icon\\Vless.png": {
+    "mtime": 1774468318.0,
+    "hash": "c89bec203def58ceb5e77bc2739c8ec7"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\static\\fa-brands-400.91fd86e5.svg": {
+    "mtime": 1774468318.0,
+    "hash": "91fd86e514a44b931d067f90577f0a7d"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\static\\fa-regular-400.6b5ed912.svg": {
+    "mtime": 1774468318.0,
+    "hash": "6b5ed9124d152f1759473d173b7f896b"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\static\\fa-solid-900.649208f1.svg": {
+    "mtime": 1774468318.0,
+    "hash": "649208f1bbfe17afbc9d470bb823f20c"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\v2board\\assets\\static\\Simple-Line-Icons.ed67e5a3.svg": {
+    "mtime": 1774468318.0,
+    "hash": "ed67e5a3ad6c6e54279f6c24ebd9190a"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\Xboard-master\\theme\\Xboard\\assets\\images\\background.svg": {
+    "mtime": 1779733403.0,
+    "hash": "e5b7e212b2142323fb9d4dce9b3325da"
+  }
+}

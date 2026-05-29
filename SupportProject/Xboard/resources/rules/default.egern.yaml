@@ -1,0 +1,57 @@
+auto_update:
+    url: $subs_link
+    interval: 86400
+ipv6: false
+vif_only: false
+dns: {}
+proxies:
+$proxies
+policy_groups:
+- select:
+    name: PROXY
+    policies:
+    - 自动切换
+    - 回退
+$proxy_group
+    hidden: false
+- auto_test:
+    name: 自动切换
+    policies:
+$proxy_group
+    interval: 3600
+    tolerance: 100
+    timeout: 5
+    hidden: false
+- fallback:
+    name: 回退
+    policies:
+$proxy_group
+    interval: 3600
+    timeout: 5
+    hidden: false
+rules:
+- ip_cidr:
+    match: 192.168.0.0/16
+    policy: DIRECT
+- ip_cidr:
+    match: 10.0.0.0/8
+    policy: DIRECT
+- ip_cidr:
+    match: 127.0.0.0/8
+    policy: DIRECT
+- ip_cidr:
+    match: 172.16.0.0/12
+    policy: DIRECT
+- ip_cidr:
+    match: 192.128.0.0/16
+    policy: DIRECT
+- ip_cidr:
+    match: 224.0.0.0/24
+    policy: DIRECT
+- geoip:
+    match: CN
+    policy: DIRECT
+- default:
+    policy: PROXY
+mitm:
+  enabled: true

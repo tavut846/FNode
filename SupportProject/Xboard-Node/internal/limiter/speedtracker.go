@@ -4,7 +4,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/cedar2025/xboard-node/internal/panel"
+	"github.com/cedar2025/xboard-node/internal/model"
 	"golang.org/x/time/rate"
 )
 
@@ -43,11 +43,9 @@ func (t *SpeedTracker) SetLogCallback(f SpeedTrackerLogCallback) {
 	t.logFunc = f
 }
 
-// UpdateBuckets performs an incremental update of rate limiter buckets.
-// It reuses existing rate.Limiter instances to avoid burst resets and
-// minimizes memory allocations.
+// UpdateBuckets updates the UUID→userID mapping and syncs existing limiters.
 func (t *SpeedTracker) UpdateBuckets() {
-	currentUsers := make([]panel.User, 0, 32)
+	currentUsers := make([]model.UserSpec, 0, 32)
 	t.limiter.mu.RLock()
 	for _, u := range t.limiter.users {
 		currentUsers = append(currentUsers, u)
@@ -67,28 +65,23 @@ func (t *SpeedTracker) UpdateBuckets() {
 				newUUIDMap[user.UUID] = user.ID
 			}
 
-			if user.SpeedLimit <= 0 {
-				delete(t.buckets, user.ID)
-				continue
-			}
-
-			bytesPerSec := int(user.SpeedLimit) * 1_000_000 / 8
-			burst := bytesPerSec
-			if burst < 64*1024 {
-				burst = 64 * 1024
-			}
-			if cap4s := bytesPerSec * 4; cap4s > 64*1024 && burst > cap4s {
-				burst = cap4s
-			}
-
-			if existing, ok := t.buckets[user.ID]; ok {
-				existing.SetLimit(rate.Limit(bytesPerSec))
-				existing.SetBurst(burst)
-			} else {
-				t.buckets[user.ID] = rate.NewLimiter(rate.Limit(bytesPerSec), burst)
+			// Update existing limiter if speed changed
+			if lim, ok := t.buckets[user.ID]; ok {
+				if user.SpeedLimit > 0 {
+					bytesPerSec := int(user.SpeedLimit) * 1_000_000 / 8
+					burst := bytesPerSec
+					if burst < 64*1024 {
+						burst = 64 * 1024
+					}
+					lim.SetLimit(rate.Limit(bytesPerSec))
+					lim.SetBurst(burst)
+				} else {
+					delete(t.buckets, user.ID)
+				}
 			}
 		}
 
+		// Clean up buckets for removed users
 		for id := range t.buckets {
 			if _, ok := activeIDs[id]; !ok {
 				delete(t.buckets, id)
@@ -105,15 +98,53 @@ func (t *SpeedTracker) UpdateBuckets() {
 }
 
 // GetLimiter returns the rate limiter for the given user UUID, or nil if
-// no limit applies. This is called by ConnTracker for every new connection.
+// no limit applies. Creates limiter on-demand if not exists.
 // Thread-safe.
 func (t *SpeedTracker) GetLimiter(user string) *rate.Limiter {
-	if !t.hasLimits.Load() {
+	t.mu.RLock()
+	uid, exists := t.uuidMap[user]
+	if !exists {
+		t.mu.RUnlock()
 		return nil
 	}
-	t.mu.RLock()
-	defer t.mu.RUnlock()
-	return t.buckets[t.uuidMap[user]]
+	if lim, ok := t.buckets[uid]; ok {
+		t.mu.RUnlock()
+		return lim
+	}
+	t.mu.RUnlock()
+
+	// Get user info from limiter
+	t.limiter.mu.RLock()
+	u, userExists := t.limiter.users[uid]
+	t.limiter.mu.RUnlock()
+
+	if !userExists || u.SpeedLimit <= 0 {
+		return nil
+	}
+
+	// Create limiter on-demand
+	bytesPerSec := int(u.SpeedLimit) * 1_000_000 / 8
+	burst := bytesPerSec
+	if burst < 64*1024 {
+		burst = 64 * 1024
+	}
+	if cap4s := bytesPerSec * 4; cap4s > 64*1024 && burst > cap4s {
+		burst = cap4s
+	}
+
+	lim := rate.NewLimiter(rate.Limit(bytesPerSec), burst)
+
+	t.mu.Lock()
+	// Double-check after acquiring write lock
+	if existing, ok := t.buckets[uid]; ok {
+		t.mu.Unlock()
+		return existing
+	}
+	t.buckets[uid] = lim
+	t.hasLimits.Store(true)
+	t.mu.Unlock()
+
+	return lim
 }
 
 // HasLimits returns true if any user currently has a speed limit configured.

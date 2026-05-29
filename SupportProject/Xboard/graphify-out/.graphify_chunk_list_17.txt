@@ -1,0 +1,22 @@
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\docs\en\installation\aapanel-docker.md
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\docs\en\installation\aapanel.md
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\docs\en\installation\docker-compose.md
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\docs\en\migration\config.md
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\docs\en\migration\v2board-1.7.3.md
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\docs\en\migration\v2board-1.7.4.md
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\docs\en\migration\v2board-dev.md
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\plugins\LiveChat\README.md
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\plugins\Staff\README.md
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\plugins\Telegram\README.md
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\public\robots.txt
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\resources\rules\app.clash.yaml
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\resources\rules\default.clash.yaml
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\Xboard\index.html
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\docs\images\admin.png
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\docs\images\user.png
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\images\icon\Clash For Android.png
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\images\icon\Clash For Windows.png
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\images\icon\Clash Meta For Android.png
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\images\icon\Clash Verge.png
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\images\icon\Clashx Meta.png
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\images\icon\ClashX.png

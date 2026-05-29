@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Keanghour\\\\Documents\\\\GitHub\\\\FNode\\\\Xboard-master\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Find \"C:\\\\Users\\\\Keanghour\\\\Documents\\\\GitHub\\\\FNode\\\\Xboard-master\\\\routes\" -type f -name \"*.php\")",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\Keanghour\\\\Documents\\\\GitHub\\\\FNode\\\\Xboard-master\\\\plugins\\\\SelfVerify\\\\Controllers\")",
+      "Bash(Out-Null)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\Keanghour\\\\Documents\\\\GitHub\\\\FNode\\\\Xboard-master\\\\plugins\\\\SelfVerify\\\\routes\")",
+      "Bash(Write-Host \"Directories ready\")",
+      "Bash(xargs grep -l \"admin.*user\\\\|user.*list\\\\|fetch.*user\")",
+      "Bash(xargs grep -l \"comm.*config\\\\|config.*comm\\\\|admin.*config\")"
+    ]
+  }
+}

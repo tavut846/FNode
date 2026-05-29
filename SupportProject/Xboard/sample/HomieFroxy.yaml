@@ -1,0 +1,501 @@
+auto_update:
+  url: https://myboard.316293.xyz/lks3hbn/684ae485e88d7172287baafe6fda8e49
+  interval: 86400
+
+# Inherited from Clash Verge 'ipv6: true'
+ipv6: true
+vif_only: false
+
+# Inherited from Clash Verge 'nameserver' list
+dns:
+  servers:
+    - 119.29.29.29
+    - 223.5.5.5
+    - system
+    - https://1.1.1.1/dns-query
+    - https://1.0.0.1/dns-query
+    - https://dns.google/dns-query
+    - https://dns.alidns.com/dns-query
+
+proxies:
+- hysteria2:
+    name: Remaining Data⚠️：435.17 GB
+    server: us004.969693.xyz
+    port: 22295
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: us004.969693.xyz
+    skip_cert_verify: false
+- hysteria2:
+    name: Reset in⚠️：5 day(s)
+    server: us004.969693.xyz
+    port: 22295
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: us004.969693.xyz
+    skip_cert_verify: false
+- hysteria2:
+    name: Expiry⚠️：2026-09-23
+    server: us004.969693.xyz
+    port: 22295
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: us004.969693.xyz
+    skip_cert_verify: false
+- hysteria2:
+    name: 🇺🇸Homiefroxy.com
+    server: us004.969693.xyz
+    port: 22295
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: us004.969693.xyz
+    skip_cert_verify: false
+- anytls:
+    name: 🇺🇸US-LA02
+    server: us-k32bc3.432252.xyz
+    port: 53664
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: us-k32bc3.432252.xyz
+    skip_cert_verify: false
+    udp_relay: true
+- anytls:
+    name: 🇺🇸US-LA03
+    server: us-h10nsr.432252.xyz
+    port: 53657
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: us-h10nsr.432252.xyz
+    skip_cert_verify: false
+    udp_relay: true
+- hysteria2:
+    name: 🇺🇸US-PH01
+    server: us01.bmmsdn.tk
+    port: 23318
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: us01.bmmsdn.tk
+    skip_cert_verify: true
+- vless:
+    name: 🇺🇸US-PH01v6
+    server: us-j21bnv6.666633.best
+    port: 20443
+    uuid: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    udp_relay: true
+    flow: xtls-rprx-vision
+    tls: true
+    sni: cms-assets.unrealengine.com
+    reality:
+        public_key: qJWgI5emeSaFNvGD7sek77lbIC4aAVQi_t_5kDtfKTo
+        short_id: b383377c60
+- hysteria2:
+    name: 🇺🇸US-WA01
+    server: us03.bmmsdn.tk
+    port: 22782
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    skip_cert_verify: false
+- vless:
+    name: 🇩🇪DE-Germany
+    server: de001.666633.best
+    port: 20443
+    uuid: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    udp_relay: true
+    flow: xtls-rprx-vision
+    tls: true
+    sni: de001.666633.best
+    reality:
+        public_key: -192e15YmxJR8SoNAwlBR3331INsVhF5BTbYl3e7Rj0
+        short_id: ba58b8ee
+- hysteria2:
+    name: 🇩🇪DE-Germany-UDP
+    server: de001.666633.best
+    port: 23162
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: de001.666633.best
+    skip_cert_verify: false
+- hysteria2:
+    name: 🇻🇳Vietnam-01-YT-AdsFree
+    server: th001.bmmsdn.tk
+    port: 23594
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: th001.bmmsdn.tk
+    skip_cert_verify: false
+- anytls:
+    name: 🇻🇳Vietnam-02-YT-AdsFree
+    server: th-s10sjwn.432252.xyz
+    port: 53664
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: th-s10sjwn.432252.xyz
+    skip_cert_verify: true
+    udp_relay: true
+- anytls:
+    name: 🇻🇳Vietnam-03-YT-AdsFree
+    server: vn-lk0m3c.432252.xyz
+    port: 53664
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: vn-lk0m3c.432252.xyz
+    skip_cert_verify: false
+    udp_relay: true
+- hysteria2:
+    name: Taiwan-01
+    server: tw001.969693.xyz
+    port: 22007
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: tw001.969693.xyz
+    skip_cert_verify: false
+- anytls:
+    name: Taiwan-02
+    server: tw-l31na.432252.xyz
+    port: 53664
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: tw-l31na.432252.xyz
+    skip_cert_verify: false
+    udp_relay: true
+- anytls:
+    name: 🇭🇰Hongkong-01
+    server: hk-d32f6.432252.xyz
+    port: 53664
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: hk-d32f6.432252.xyz
+    skip_cert_verify: true
+    udp_relay: true
+- anytls:
+    name: 🇭🇰Hongkong-01v6
+    server: hk-d32f6v6.432252.xyz
+    port: 53664
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: hk-d32f6.432252.xyz
+    skip_cert_verify: true
+    udp_relay: true
+- hysteria2:
+    name: 🇭🇰Hongkong-02v6-UDP
+    server: mnb512v6-hk.969693.xyz
+    port: 23785
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: mnb512-hk.969693.xyz
+    skip_cert_verify: true
+- hysteria2:
+    name: 🇭🇰Hongkong-02-UDP
+    server: mnb512-hk.969693.xyz
+    port: 23319
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: mnb512-hk.969693.xyz
+    skip_cert_verify: false
+- anytls:
+    name: 🇭🇰Hongkong-03
+    server: hk-m34vc.432252.xyz
+    port: 53664
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: hk-m34vc.432252.xyz
+    skip_cert_verify: false
+    udp_relay: true
+- anytls:
+    name: 🇸🇬Singapore-01
+    server: sg-k23po4c.432252.xyz
+    port: 53664
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: sg-k23po4c.432252.xyz
+    skip_cert_verify: false
+    udp_relay: true
+- anytls:
+    name: 🇸🇬Singapore-02
+    server: sg-k43jn1.432252.xyz
+    port: 53664
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: sg-k43jn1.432252.xyz
+    skip_cert_verify: false
+    udp_relay: true
+- anytls:
+    name: 🇸🇬Singapore-02v6
+    server: sg-k43jn1v6.432252.xyz
+    port: 53664
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: sg-k43jn1.432252.xyz
+    skip_cert_verify: true
+    udp_relay: true
+- anytls:
+    name: 🇯🇵Japan
+    server: jp-5s431c.432252.xyz
+    port: 50256
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: jp-5s431c.432252.xyz
+    skip_cert_verify: true
+    udp_relay: true
+- vless:
+    name: 🇯🇵Japan-v6
+    server: jp-5s431cv6.888833.best
+    port: 20443
+    uuid: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    udp_relay: true
+    flow: xtls-rprx-vision
+    tls: true
+    sni: speed.coe.ad.jp.prod.hosts.ooklaserver.net
+    reality:
+        public_key: s9wNMey25yJn6bg9z89rNd7DOY1o-AqpoiSkiFLe_ks
+        short_id: 1f850abe
+- hysteria2:
+    name: 🇯🇵Japan-01
+    server: jp001.969693.xyz
+    port: 22125
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: jp001.969693.xyz
+    skip_cert_verify: false
+- hysteria2:
+    name: 🇯🇵Japan-01v6
+    server: jp001v6.969693.xyz
+    port: 23222
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: jp001v6.969693.xyz
+    skip_cert_verify: true
+- anytls:
+    name: 🇯🇵Japan-YTAdsFree
+    server: jp-j35c.432252.xyz
+    port: 50256
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: jp-j35c.432252.xyz
+    skip_cert_verify: true
+    udp_relay: true
+- hysteria2:
+    name: 🇯🇵Japan-02
+    server: j287s-jp.969693.xyz
+    port: 22264
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: j287s-jp.969693.xyz
+    skip_cert_verify: false
+- hysteria2:
+    name: 🇯🇵Japan-02v6
+    server: j287sv6-jp.969693.xyz
+    port: 22338
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: j287s-jp.969693.xyz
+    skip_cert_verify: true
+- anytls:
+    name: 🇯🇵Japan-03
+    server: jp-j287s.432252.xyz
+    port: 50256
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: jp-j287s.432252.xyz
+    skip_cert_verify: true
+    udp_relay: true
+- anytls:
+    name: 🇯🇵Japan-03v6
+    server: jp-j287sv6.432252.xyz
+    port: 50256
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: jp-j287s.432252.xyz
+    skip_cert_verify: true
+    udp_relay: true
+- hysteria2:
+    name: 🇮🇳For downloadx0.1
+    server: in02.bmmsdn.tk
+    port: 22049
+    password: d2bd8bb3-aa56-4ad5-9b6c-c9be5cc86e86
+    sni: in02.bmmsdn.tk
+    skip_cert_verify: false
+
+policy_groups:
+- select:
+    name: PROXY
+    policies:
+    - Auto
+    - Failover
+    - Remaining Data⚠️：435.17 GB
+    - Reset in⚠️：5 day(s)
+    - Expiry⚠️：2026-09-23
+    - 🇺🇸Homiefroxy.com
+    - 🇺🇸US-LA02
+    - 🇺🇸US-LA03
+    - 🇺🇸US-PH01
+    - 🇺🇸US-PH01v6
+    - 🇺🇸US-WA01
+    - 🇩🇪DE-Germany
+    - 🇩🇪DE-Germany-UDP
+    - 🇻🇳Vietnam-01-YT-AdsFree
+    - 🇻🇳Vietnam-02-YT-AdsFree
+    - 🇻🇳Vietnam-03-YT-AdsFree
+    - Taiwan-01
+    - Taiwan-02
+    - 🇭🇰Hongkong-01
+    - 🇭🇰Hongkong-01v6
+    - 🇭🇰Hongkong-02v6-UDP
+    - 🇭🇰Hongkong-02-UDP
+    - 🇭🇰Hongkong-03
+    - 🇸🇬Singapore-01
+    - 🇸🇬Singapore-02
+    - 🇸🇬Singapore-02v6
+    - 🇯🇵Japan
+    - 🇯🇵Japan-v6
+    - 🇯🇵Japan-01
+    - 🇯🇵Japan-01v6
+    - 🇯🇵Japan-YTAdsFree
+    - 🇯🇵Japan-02
+    - 🇯🇵Japan-02v6
+    - 🇯🇵Japan-03
+    - 🇯🇵Japan-03v6
+    - 🇮🇳For downloadx0.1
+    hidden: false
+
+# Inherited from Clash Verge '♻️ Auto'
+- auto_test:
+    name: Auto
+    policies:
+    - Remaining Data⚠️：435.17 GB
+    - Reset in⚠️：5 day(s)
+    - Expiry⚠️：2026-09-23
+    - 🇺🇸Homiefroxy.com
+    - 🇺🇸US-LA02
+    - 🇺🇸US-LA03
+    - 🇺🇸US-PH01
+    - 🇺🇸US-PH01v6
+    - 🇺🇸US-WA01
+    - 🇩🇪DE-Germany
+    - 🇩🇪DE-Germany-UDP
+    - 🇻🇳Vietnam-01-YT-AdsFree
+    - 🇻🇳Vietnam-02-YT-AdsFree
+    - 🇻🇳Vietnam-03-YT-AdsFree
+    - Taiwan-01
+    - Taiwan-02
+    - 🇭🇰Hongkong-01
+    - 🇭🇰Hongkong-01v6
+    - 🇭🇰Hongkong-02v6-UDP
+    - 🇭🇰Hongkong-02-UDP
+    - 🇭🇰Hongkong-03
+    - 🇸🇬Singapore-01
+    - 🇸🇬Singapore-02
+    - 🇸🇬Singapore-02v6
+    - 🇯🇵Japan
+    - 🇯🇵Japan-v6
+    - 🇯🇵Japan-01
+    - 🇯🇵Japan-01v6
+    - 🇯🇵Japan-YTAdsFree
+    - 🇯🇵Japan-02
+    - 🇯🇵Japan-02v6
+    - 🇯🇵Japan-03
+    - 🇯🇵Japan-03v6
+    - 🇮🇳For downloadx0.1
+    url: https://cp.cloudflare.com/generate_204
+    interval: 300
+    tolerance: 100
+    timeout: 5
+    hidden: false
+
+# Inherited from Clash Verge '🔮 Failover'
+- fallback:
+    name: Failover
+    policies:
+    - Remaining Data⚠️：435.17 GB
+    - Reset in⚠️：5 day(s)
+    - Expiry⚠️：2026-09-23
+    - 🇺🇸Homiefroxy.com
+    - 🇺🇸US-LA02
+    - 🇺🇸US-LA03
+    - 🇺🇸US-PH01
+    - 🇺🇸US-PH01v6
+    - 🇺🇸US-WA01
+    - 🇩🇪DE-Germany
+    - 🇩🇪DE-Germany-UDP
+    - 🇻🇳Vietnam-01-YT-AdsFree
+    - 🇻🇳Vietnam-02-YT-AdsFree
+    - 🇻🇳Vietnam-03-YT-AdsFree
+    - Taiwan-01
+    - Taiwan-02
+    - 🇭🇰Hongkong-01
+    - 🇭🇰Hongkong-01v6
+    - 🇭🇰Hongkong-02v6-UDP
+    - 🇭🇰Hongkong-02-UDP
+    - 🇭🇰Hongkong-03
+    - 🇸🇬Singapore-01
+    - 🇸🇬Singapore-02
+    - 🇸🇬Singapore-02v6
+    - 🇯🇵Japan
+    - 🇯🇵Japan-v6
+    - 🇯🇵Japan-01
+    - 🇯🇵Japan-01v6
+    - 🇯🇵Japan-YTAdsFree
+    - 🇯🇵Japan-02
+    - 🇯🇵Japan-02v6
+    - 🇯🇵Japan-03
+    - 🇯🇵Japan-03v6
+    - 🇮🇳For downloadx0.1
+    url: https://cp.cloudflare.com/generate_204
+    interval: 1800
+    timeout: 5
+    hidden: false
+
+rules:
+# --- Domain Suffix Rules ---
+- domain_suffix:
+    match: services.googleapis.cn
+    policy: PROXY
+- domain_suffix:
+    match: xn--ngstr-lra8j.com
+    policy: PROXY
+- domain_suffix:
+    match: bing.com
+    policy: PROXY
+- domain_suffix:
+    match: com.tencent.mm
+    policy: DIRECT
+
+# --- Rule Sets (Mapped directly from Clash rule-providers) ---
+- rule_set:
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/private.mrs
+    policy: DIRECT
+- rule_set:
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs
+    policy: DIRECT
+
+# --- Additional Domain Suffix Rules ---
+- domain_suffix:
+    match: qichiyu.com
+    policy: PROXY
+- domain_suffix:
+    match: linkedin.com
+    policy: PROXY
+
+# --- Additional Rule Sets ---
+- rule_set:
+    url: https://raw.githubusercontent.com/qichiyuhub/rule/refs/heads/main/rules/proxy.list
+    policy: PROXY
+- rule_set:
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ai-!cn.mrs
+    policy: PROXY
+- rule_set:
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs
+    policy: PROXY
+- rule_set:
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.mrs
+    policy: DIRECT
+- rule_set:
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs
+    policy: DIRECT
+- rule_set:
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs
+    policy: DIRECT
+
+# --- Standard Egern Template IPs ---
+- ip_cidr:
+    match: 192.168.0.0/16
+    policy: DIRECT
+- ip_cidr:
+    match: 10.0.0.0/8
+    policy: DIRECT
+- ip_cidr:
+    match: 127.0.0.0/8
+    policy: DIRECT
+- ip_cidr:
+    match: 172.16.0.0/12
+    policy: DIRECT
+- ip_cidr:
+    match: 192.128.0.0/16
+    policy: DIRECT
+- ip_cidr:
+    match: 224.0.0.0/24
+    policy: DIRECT
+- geoip:
+    match: CN
+    policy: DIRECT
+
+# --- Match / Default ---
+- default:
+    policy: PROXY
+
+# --- MITM / Sniffer exclusions ---
+mitm:
+  enabled: true
+  hostnames:
+    - "-Mijia Cloud"
+    - "-*.push.apple.com"

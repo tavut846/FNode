@@ -1,0 +1,13 @@
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\images\icon\Hysteria2.svg
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\images\icon\NekoBox.png
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\images\icon\QuantumultX.png
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\images\icon\Shadowrocket.png
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\images\icon\Stash.png
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\images\icon\Surfboard.png
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\images\icon\Surge.png
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\images\icon\Vless.png
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\static\fa-brands-400.91fd86e5.svg
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\static\fa-regular-400.6b5ed912.svg
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\static\fa-solid-900.649208f1.svg
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\v2board\assets\static\Simple-Line-Icons.ed67e5a3.svg
+C:\Users\Keanghour\Documents\GitHub\FNode\Xboard-master\theme\Xboard\assets\images\background.svg

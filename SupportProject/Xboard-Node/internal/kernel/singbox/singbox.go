@@ -1,6 +1,7 @@
 package singbox
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -19,8 +20,8 @@ import (
 
 	"github.com/cedar2025/xboard-node/internal/config"
 	"github.com/cedar2025/xboard-node/internal/kernel"
+	"github.com/cedar2025/xboard-node/internal/model"
 	"github.com/cedar2025/xboard-node/internal/nlog"
-	"github.com/cedar2025/xboard-node/internal/panel"
 )
 
 // drainTimeout is how long stop() waits for in-flight connections to finish
@@ -35,15 +36,14 @@ const drainTimeout = 5 * time.Second
 type SingBox struct {
 	cfg config.KernelConfig
 
-	mu     sync.Mutex
+	mu     sync.RWMutex
 	box    *box.Box
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	users      []panel.User
-	nodeConfig *panel.NodeConfig
-	certFile   string
-	keyFile    string
+	users      []model.UserSpec
+	nodeConfig *model.NodeSpec
+	tls        kernel.TLSCert
 
 	// connTracker is our lightweight in-process byte/IP tracker.
 	// Created fresh on every Start (full restart).
@@ -71,18 +71,29 @@ var _ kernel.Kernel = (*SingBox)(nil)
 
 func (s *SingBox) Name() string { return "sing-box" }
 
-func (s *SingBox) Protocols() []string {
-	return []string{
-		"vmess", "vless", "trojan", "shadowsocks",
-		"hysteria2", "tuic", "naive", "socks", "http", "anytls", "mieru",
+func (s *SingBox) Capabilities() kernel.Capabilities {
+	return kernel.Capabilities{
+		PerUserSpeedLimit:    true,
+		DeviceLimit:          true,
+		BuiltInTrafficStats:  false,
+		AliveIPTracking:      true,
+		ForceCloseConnection: false,
+		ForceCloseUser:       true,
 	}
 }
 
-func (s *SingBox) Start(nodeConfig *panel.NodeConfig, users []panel.User, certFile, keyFile string) error {
+func (s *SingBox) Protocols() []string {
+	return []string{
+		"vmess", "vless", "trojan", "shadowsocks",
+		"hysteria", "hysteria2", "tuic", "naive", "socks", "http", "anytls", "mieru",
+	}
+}
+
+func (s *SingBox) Start(nodeConfig *model.NodeSpec, users []model.UserSpec, tls kernel.TLSCert) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	cfgMap := buildConfig(s.cfg, nodeConfig, users, certFile, keyFile)
+	cfgMap := buildConfig(s.cfg, nodeConfig, users, tls)
 	data, err := json.Marshal(cfgMap)
 	if err != nil {
 		return fmt.Errorf("marshal config: %w", err)
@@ -126,8 +137,7 @@ func (s *SingBox) Start(nodeConfig *panel.NodeConfig, users []panel.User, certFi
 	s.cancel = cancel
 	s.users = users
 	s.nodeConfig = nodeConfig
-	s.certFile = certFile
-	s.keyFile = keyFile
+	s.tls = tls
 
 	// Fresh tracker on full restart.
 	s.connTracker = NewConnTracker(0)
@@ -182,7 +192,7 @@ func recycleOldBox(oldBox *box.Box, oldCancel context.CancelFunc, oldCtx context
 // Reload hot-swaps the inbound users and routing rules without restarting the box.
 // Routes, outbounds, and the connTracker stay alive so in-flight connections
 // continue to be tracked correctly.
-func (s *SingBox) Reload(nodeConfig *panel.NodeConfig, users []panel.User, certFile, keyFile string) error {
+func (s *SingBox) Reload(nodeConfig *model.NodeSpec, users []model.UserSpec, tls kernel.TLSCert) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -190,7 +200,7 @@ func (s *SingBox) Reload(nodeConfig *panel.NodeConfig, users []panel.User, certF
 		return fmt.Errorf("not running")
 	}
 
-	cfgMap := buildConfig(s.cfg, nodeConfig, users, certFile, keyFile)
+	cfgMap := buildConfig(s.cfg, nodeConfig, users, tls)
 	data, err := json.Marshal(cfgMap)
 	if err != nil {
 		return fmt.Errorf("marshal config: %w", err)
@@ -221,7 +231,8 @@ func (s *SingBox) Reload(nodeConfig *panel.NodeConfig, users []panel.User, certF
 	nopFactory := singLog.NewNOPFactory()
 
 	// Configuration hash check for inbound reconstruction
-	configChanged := s.nodeConfig == nil || kernel.ComputeHash(nodeConfig, users) != kernel.ComputeHash(s.nodeConfig, s.users)
+	tlsChanged := !bytes.Equal(s.tls.CertPEM, tls.CertPEM) || !bytes.Equal(s.tls.KeyPEM, tls.KeyPEM)
+	configChanged := tlsChanged || s.nodeConfig == nil || kernel.ComputeHash(nodeConfig, users) != kernel.ComputeHash(s.nodeConfig, s.users)
 
 	for _, inb := range opts.Inbounds {
 		tag := inb.Tag
@@ -255,6 +266,10 @@ func (s *SingBox) Reload(nodeConfig *panel.NodeConfig, users []panel.User, certF
 					}
 				case adapter.UpdatableInbound[option.AnyTLSUser]:
 					if opts, ok := inb.Options.(*option.AnyTLSInboundOptions); ok {
+						err = v.UpdateUsers(opts.Users)
+					}
+				case adapter.UpdatableInbound[option.MieruUser]:
+					if opts, ok := inb.Options.(*option.MieruInboundOptions); ok {
 						err = v.UpdateUsers(opts.Users)
 					}
 				case adapter.UpdatableInbound[auth.User]:
@@ -295,8 +310,7 @@ func (s *SingBox) Reload(nodeConfig *panel.NodeConfig, users []panel.User, certF
 	nlog.Core().Debug("sing-box reloaded", "users", len(users))
 	s.users = users
 	s.nodeConfig = nodeConfig
-	s.certFile = certFile
-	s.keyFile = keyFile
+	s.tls = tls
 	return nil
 }
 
@@ -392,10 +406,28 @@ func (s *SingBox) SetDeviceLimitFunc(fn func(uuid string) (int, bool)) {
 	}
 }
 
+// UpdateGlobalDevices updates the global device state from panel (for multi-node).
+func (s *SingBox) UpdateGlobalDevices(users map[int][]string) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.connTracker != nil {
+		s.connTracker.UpdateGlobalDevices(users)
+	}
+}
+
+// ClearGlobalDevices clears the global device state (on WS disconnect).
+func (s *SingBox) ClearGlobalDevices() {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.connTracker != nil {
+		s.connTracker.ClearGlobalDevices()
+	}
+}
+
 // ─── User management (non-disruptive) ───────────────────────────────────────
 
 // AddUsers hot-swaps users into running inbounds. Zero connection disruption.
-func (s *SingBox) AddUsers(users []panel.User) (int, error) {
+func (s *SingBox) AddUsers(users []model.UserSpec) (int, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -407,7 +439,7 @@ func (s *SingBox) AddUsers(users []panel.User) (int, error) {
 	for _, u := range s.users {
 		existing[u.ID] = struct{}{}
 	}
-	var toAdd []panel.User
+	var toAdd []model.UserSpec
 	for _, u := range users {
 		if _, dup := existing[u.ID]; !dup {
 			toAdd = append(toAdd, u)
@@ -417,7 +449,7 @@ func (s *SingBox) AddUsers(users []panel.User) (int, error) {
 		return 0, nil
 	}
 
-	merged := append(append([]panel.User{}, s.users...), toAdd...)
+	merged := append(append([]model.UserSpec{}, s.users...), toAdd...)
 	if err := s.reloadInboundsLocked(merged); err != nil {
 		return 0, err
 	}
@@ -427,7 +459,7 @@ func (s *SingBox) AddUsers(users []panel.User) (int, error) {
 
 // RemoveUsers hot-swaps users out of running inbounds. Zero connection disruption
 // for remaining users.
-func (s *SingBox) RemoveUsers(users []panel.User) (int, error) {
+func (s *SingBox) RemoveUsers(users []model.UserSpec) (int, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -439,7 +471,7 @@ func (s *SingBox) RemoveUsers(users []panel.User) (int, error) {
 	for _, u := range users {
 		removeSet[u.ID] = struct{}{}
 	}
-	var kept []panel.User
+	var kept []model.UserSpec
 	removed := 0
 	for _, u := range s.users {
 		if _, rm := removeSet[u.ID]; rm {
@@ -460,7 +492,7 @@ func (s *SingBox) RemoveUsers(users []panel.User) (int, error) {
 }
 
 // UpdateUsers replaces the entire user set atomically via hot-swap.
-func (s *SingBox) UpdateUsers(users []panel.User) (added, removed int, err error) {
+func (s *SingBox) UpdateUsers(users []model.UserSpec) (added, removed int, err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -489,8 +521,8 @@ func (s *SingBox) UpdateUsers(users []panel.User) (added, removed int, err error
 
 // reloadInboundsLocked hot-swaps inbound users using UpdatableInbound.
 // Must be called with s.mu held.
-func (s *SingBox) reloadInboundsLocked(users []panel.User) error {
-	cfgMap := buildConfig(s.cfg, s.nodeConfig, users, s.certFile, s.keyFile)
+func (s *SingBox) reloadInboundsLocked(users []model.UserSpec) error {
+	cfgMap := buildConfig(s.cfg, s.nodeConfig, users, s.tls)
 	data, err := json.Marshal(cfgMap)
 	if err != nil {
 		return fmt.Errorf("marshal config: %w", err)
@@ -544,6 +576,10 @@ func (s *SingBox) reloadInboundsLocked(users []panel.User) error {
 				}
 			case adapter.UpdatableInbound[option.AnyTLSUser]:
 				if opts, ok := inb.Options.(*option.AnyTLSInboundOptions); ok {
+					err = v.UpdateUsers(opts.Users)
+				}
+			case adapter.UpdatableInbound[option.MieruUser]:
+				if opts, ok := inb.Options.(*option.MieruInboundOptions); ok {
 					err = v.UpdateUsers(opts.Users)
 				}
 			case adapter.UpdatableInbound[auth.User]:
@@ -612,7 +648,7 @@ func (s *SingBox) CloseUserConnections(_ context.Context, uuid string) error {
 // buildUserMap creates a UUID→userID mapping used by ConnTracker to attribute
 // connections to the correct user. All sing-box protocols use the user's UUID
 // as the inbound name/username, so this covers every protocol.
-func buildUserMap(users []panel.User) map[string]int {
+func buildUserMap(users []model.UserSpec) map[string]int {
 	m := make(map[string]int, len(users))
 	for _, u := range users {
 		m[u.UUID] = u.ID

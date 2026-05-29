@@ -1,0 +1,154 @@
+{
+  "entities": [
+    {
+      "name": "Admin API",
+      "type": "documentation",
+      "description": "API endpoints available to administrators for system configuration, user management, statistics, and server management.",
+      "attributes": {
+        "endpoints": [
+          "GET /api/v2/admin/config/fetch",
+          "POST /api/v2/admin/config/save",
+          "ANY /api/v2/admin/user/fetch",
+          "POST /api/v2/admin/user/dumpCSV",
+          "GET /api/v2/admin/stat/getOverride",
+          "GET /api/v2/admin/server/manage/getNodes"
+        ]
+      }
+    },
+    {
+      "name": "Guest API",
+      "type": "documentation",
+      "description": "API endpoints available to unauthenticated users for registration, login, and public information retrieval.",
+      "attributes": {
+        "endpoints": [
+          "POST /api/v1/passport/auth/register",
+          "POST /api/v1/passport/auth/login",
+          "GET /api/v1/guest/plan/fetch",
+          "GET /api/v1/client/app/getVersion"
+        ]
+      }
+    },
+    {
+      "name": "User API",
+      "type": "documentation",
+      "description": "API endpoints available to authenticated users for profile management, subscriptions, and usage statistics.",
+      "attributes": {
+        "endpoints": [
+          "GET /api/v1/user/info",
+          "GET /api/v1/user/getSubscribe",
+          "GET /api/v1/user/server/fetch",
+          "POST /api/v1/user/order/save"
+        ]
+      }
+    },
+    {
+      "name": "Plugin System",
+      "type": "feature",
+      "description": "Extensible system allowing developers to add functionality via a standard directory structure and hook-based architecture.",
+      "attributes": {
+        "structure": [
+          "Plugin.php",
+          "config.json",
+          "routes/api.php",
+          "Controllers/",
+          "Commands/"
+        ],
+        "hooks": [
+          "user.register.before",
+          "order.cancel.after",
+          "payment.notify.verified",
+          "guest_comm_config"
+        ]
+      }
+    },
+    {
+      "name": "Device Limit",
+      "type": "feature",
+      "description": "Mechanism to control the number of online devices per user using Redis for tracking and identification via hashes.",
+      "attributes": {
+        "identification": "md5(user_id + User-Agent + IP)",
+        "storage": "Redis hash (user:{userId}:devices)"
+      }
+    },
+    {
+      "name": "1Panel Deployment",
+      "type": "process",
+      "description": "Guide for deploying Xboard using 1Panel, OpenResty, MySQL, and Docker Compose.",
+      "attributes": {
+        "components": [
+          "OpenResty",
+          "MySQL 5.7",
+          "Redis 7-alpine",
+          "Xboard Docker Image"
+        ],
+        "ports": [
+          "7001 (Web)",
+          "8076 (WS Server)"
+        ]
+      }
+    },
+    {
+      "name": "Performance Report",
+      "type": "documentation",
+      "description": "Comparison showing ~48% response time improvement in Xboard compared to previous versions.",
+      "attributes": {
+        "login_avg_rt": "156ms",
+        "dashboard_avg_rt": "89ms",
+        "nodes_avg_rt": "134ms"
+      }
+    },
+    {
+      "name": "Xboard Application",
+      "type": "software",
+      "description": "A modern panel system built on Laravel 11/12 with React/Vue frontends and high-performance Octane support.",
+      "attributes": {
+        "backend": "Laravel 11 + Octane",
+        "admin_frontend": "React + Shadcn UI",
+        "user_frontend": "Vue3 + TypeScript + NaiveUI",
+        "version": "0.1.1-dev"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "source": "Xboard Application",
+      "target": "Admin API",
+      "type": "provides"
+    },
+    {
+      "source": "Xboard Application",
+      "target": "Guest API",
+      "type": "provides"
+    },
+    {
+      "source": "Xboard Application",
+      "target": "User API",
+      "type": "provides"
+    },
+    {
+      "source": "Xboard Application",
+      "target": "Plugin System",
+      "type": "supports"
+    },
+    {
+      "source": "Xboard Application",
+      "target": "Device Limit",
+      "type": "implements"
+    },
+    {
+      "source": "Plugin System",
+      "target": "Admin API",
+      "type": "extends_via_hooks"
+    },
+    {
+      "source": "Device Limit",
+      "target": "1Panel Deployment",
+      "type": "configured_in"
+    },
+    {
+      "source": "Xboard Application",
+      "target": "Performance Report",
+      "type": "validated_by"
+    }
+  ]
+}

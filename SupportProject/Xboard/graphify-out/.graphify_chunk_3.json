@@ -1,0 +1,225 @@
+{
+  "nodes": [
+    {
+      "id": "App\\Http\\Controllers\\V2\\Admin\\StatController",
+      "label": "StatController",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Controllers\\V2\\Admin",
+        "methods": ["__construct", "getOverride", "getOrder", "getServerLastRank", "getServerYesterdayRank", "getStatUser", "getStatRecord", "getStats", "getTrafficRank"]
+      }
+    },
+    {
+      "id": "App\\Http\\Controllers\\V2\\Admin\\SystemController",
+      "label": "SystemController",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Controllers\\V2\\Admin",
+        "methods": ["getSystemStatus", "getQueueWorkload", "getQueueStats", "getAuditLog", "getHorizonFailedJobs"]
+      }
+    },
+    {
+      "id": "App\\Http\\Controllers\\V2\\Admin\\ThemeController",
+      "label": "ThemeController",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Controllers\\V2\\Admin",
+        "methods": ["__construct", "upload", "delete", "getThemes", "switchTheme", "getThemeConfig", "saveThemeConfig"]
+      }
+    },
+    {
+      "id": "App\\Http\\Controllers\\V2\\Admin\\TicketController",
+      "label": "TicketController",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Controllers\\V2\\Admin",
+        "methods": ["fetch", "reply", "close", "show"]
+      }
+    },
+    {
+      "id": "App\\Http\\Controllers\\V2\\Admin\\TrafficResetController",
+      "label": "TrafficResetController",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Controllers\\V2\\Admin",
+        "methods": ["__construct", "logs", "stats", "resetUser", "userHistory"]
+      }
+    },
+    {
+      "id": "App\\Http\\Controllers\\V2\\Admin\\UpdateController",
+      "label": "UpdateController",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Controllers\\V2\\Admin",
+        "methods": ["__construct", "checkUpdate", "executeUpdate"]
+      }
+    },
+    {
+      "id": "App\\Http\\Controllers\\V2\\Admin\\UserController",
+      "label": "UserController",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Controllers\\V2\\Admin",
+        "methods": ["resetSecret", "fetch", "getUserInfoById", "update", "dumpCSV", "generate", "sendMail", "ban", "destroy"]
+      }
+    },
+    {
+      "id": "App\\Http\\Controllers\\V2\\Admin\\Server\\GroupController",
+      "label": "GroupController",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Controllers\\V2\\Admin\\Server",
+        "methods": ["fetch", "save", "drop"]
+      }
+    },
+    {
+      "id": "App\\Http\\Controllers\\V2\\Admin\\Server\\ManageController",
+      "label": "ManageController",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Controllers\\V2\\Admin\\Server",
+        "methods": ["getNodes", "sort", "save", "update", "drop", "copy"]
+      }
+    },
+    {
+      "id": "App\\Http\\Controllers\\V2\\Admin\\Server\\RouteController",
+      "label": "RouteController",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Controllers\\V2\\Admin\\Server",
+        "methods": ["fetch", "save", "drop"]
+      }
+    },
+    {
+      "id": "App\\Http\\Controllers\\V2\\Client\\AppController",
+      "label": "AppController",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Controllers\\V2\\Client",
+        "methods": ["getConfig", "getVersion"]
+      }
+    },
+    {
+      "id": "App\\Http\\Controllers\\V2\\Server\\ServerController",
+      "label": "ServerController",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Controllers\\V2\\Server",
+        "methods": ["handshake", "report"]
+      }
+    },
+    {
+      "id": "App\\Http\\Middleware\\Admin",
+      "label": "Admin",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Middleware",
+        "methods": ["handle"]
+      }
+    },
+    {
+      "id": "App\\Http\\Middleware\\ApplyRuntimeSettings",
+      "label": "ApplyRuntimeSettings",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Middleware",
+        "methods": ["handle"]
+      }
+    },
+    {
+      "id": "App\\Http\\Middleware\\Authenticate",
+      "label": "Authenticate",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Middleware",
+        "methods": ["redirectTo"]
+      }
+    },
+    {
+      "id": "App\\Http\\Middleware\\CheckForMaintenanceMode",
+      "label": "CheckForMaintenanceMode",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Middleware"
+      }
+    },
+    {
+      "id": "App\\Http\\Middleware\\Client",
+      "label": "Client",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Middleware",
+        "methods": ["handle"]
+      }
+    },
+    {
+      "id": "App\\Http\\Middleware\\EncryptCookies",
+      "label": "EncryptCookies",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Middleware"
+      }
+    },
+    {
+      "id": "App\\Http\\Middleware\\EnsureTransactionState",
+      "label": "EnsureTransactionState",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Middleware",
+        "methods": ["handle"]
+      }
+    },
+    {
+      "id": "App\\Http\\Middleware\\ForceJson",
+      "label": "ForceJson",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Middleware",
+        "methods": ["handle"]
+      }
+    },
+    {
+      "id": "App\\Http\\Middleware\\InitializePlugins",
+      "label": "InitializePlugins",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Middleware",
+        "methods": ["__construct", "handle"]
+      }
+    },
+    {
+      "id": "App\\Http\\Middleware\\Language",
+      "label": "Language",
+      "type": "class",
+      "properties": {
+        "namespace": "App\\Http\\Middleware",
+        "methods": ["handle"]
+      }
+    }
+  ],
+  "edges": [
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\StatController", "target": "App\\Services\\StatisticalService", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\StatController", "target": "App\\Models\\Order", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\StatController", "target": "App\\Models\\User", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\StatController", "target": "App\\Models\\Server", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\SystemController", "target": "App\\Models\\AdminAuditLog", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\ThemeController", "target": "App\\Services\\ThemeService", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\TicketController", "target": "App\\Models\\Ticket", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\TicketController", "target": "App\\Services\\TicketService", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\TicketController", "target": "App\\Http\\Controllers\\V2\\Admin\\UserController", "label": "calls" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\TrafficResetController", "target": "App\\Services\\TrafficResetService", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\TrafficResetController", "target": "App\\Models\\TrafficResetLog", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\UpdateController", "target": "App\\Services\\UpdateService", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\UserController", "target": "App\\Models\\User", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\UserController", "target": "App\\Services\\UserService", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\Server\\GroupController", "target": "App\\Models\\ServerGroup", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\Server\\ManageController", "target": "App\\Models\\Server", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\Server\\ManageController", "target": "App\\Services\\ServerService", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Admin\\Server\\RouteController", "target": "App\\Models\\ServerRoute", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Server\\ServerController", "target": "App\\Services\\ServerService", "label": "uses" },
+    { "source": "App\\Http\\Controllers\\V2\\Server\\ServerController", "target": "App\\Services\\UserService", "label": "uses" },
+    { "source": "App\\Http\\Middleware\\Admin", "target": "App\\Models\\User", "label": "uses" },
+    { "source": "App\\Http\\Middleware\\Client", "target": "App\\Models\\User", "label": "uses" },
+    { "source": "App\\Http\\Middleware\\InitializePlugins", "target": "App\\Services\\Plugin\\PluginManager", "label": "uses" }
+  ]
+}

@@ -1,0 +1,278 @@
+{
+  "nodes": [
+    {
+      "id": "public/index.php",
+      "type": "file",
+      "name": "index.php",
+      "properties": {
+        "path": "public/index.php",
+        "package": "Laravel"
+      }
+    },
+    {
+      "id": "resources/js/app.js",
+      "type": "file",
+      "name": "app.js",
+      "properties": {
+        "path": "resources/js/app.js"
+      }
+    },
+    {
+      "id": "resources/js/bootstrap.js",
+      "type": "file",
+      "name": "bootstrap.js",
+      "properties": {
+        "path": "resources/js/bootstrap.js"
+      }
+    },
+    {
+      "id": "resources/views/admin.blade.php",
+      "type": "file",
+      "name": "admin.blade.php",
+      "properties": {
+        "path": "resources/views/admin.blade.php"
+      }
+    },
+    {
+      "id": "resources/views/client/subscribe.blade.php",
+      "type": "file",
+      "name": "subscribe.blade.php",
+      "properties": {
+        "path": "resources/views/client/subscribe.blade.php"
+      }
+    },
+    {
+      "id": "resources/views/errors/500.blade.php",
+      "type": "file",
+      "name": "500.blade.php",
+      "properties": {
+        "path": "resources/views/errors/500.blade.php"
+      }
+    },
+    {
+      "id": "resources/views/mail/classic/mailLogin.blade.php",
+      "type": "file",
+      "name": "mailLogin.blade.php",
+      "properties": {
+        "path": "resources/views/mail/classic/mailLogin.blade.php",
+        "style": "classic"
+      }
+    },
+    {
+      "id": "resources/views/mail/classic/notify.blade.php",
+      "type": "file",
+      "name": "notify.blade.php",
+      "properties": {
+        "path": "resources/views/mail/classic/notify.blade.php",
+        "style": "classic"
+      }
+    },
+    {
+      "id": "resources/views/mail/classic/remindExpire.blade.php",
+      "type": "file",
+      "name": "remindExpire.blade.php",
+      "properties": {
+        "path": "resources/views/mail/classic/remindExpire.blade.php",
+        "style": "classic"
+      }
+    },
+    {
+      "id": "resources/views/mail/classic/remindTraffic.blade.php",
+      "type": "file",
+      "name": "remindTraffic.blade.php",
+      "properties": {
+        "path": "resources/views/mail/classic/remindTraffic.blade.php",
+        "style": "classic"
+      }
+    },
+    {
+      "id": "resources/views/mail/classic/verify.blade.php",
+      "type": "file",
+      "name": "verify.blade.php",
+      "properties": {
+        "path": "resources/views/mail/classic/verify.blade.php",
+        "style": "classic"
+      }
+    },
+    {
+      "id": "resources/views/mail/default/mailLogin.blade.php",
+      "type": "file",
+      "name": "mailLogin.blade.php",
+      "properties": {
+        "path": "resources/views/mail/default/mailLogin.blade.php",
+        "style": "default"
+      }
+    },
+    {
+      "id": "resources/views/mail/default/notify.blade.php",
+      "type": "file",
+      "name": "notify.blade.php",
+      "properties": {
+        "path": "resources/views/mail/default/notify.blade.php",
+        "style": "default"
+      }
+    },
+    {
+      "id": "resources/views/mail/default/remindExpire.blade.php",
+      "type": "file",
+      "name": "remindExpire.blade.php",
+      "properties": {
+        "path": "resources/views/mail/default/remindExpire.blade.php",
+        "style": "default"
+      }
+    },
+    {
+      "id": "resources/views/mail/default/remindTraffic.blade.php",
+      "type": "file",
+      "name": "remindTraffic.blade.php",
+      "properties": {
+        "path": "resources/views/mail/default/remindTraffic.blade.php",
+        "style": "default"
+      }
+    },
+    {
+      "id": "resources/views/mail/default/verify.blade.php",
+      "type": "file",
+      "name": "verify.blade.php",
+      "properties": {
+        "path": "resources/views/mail/default/verify.blade.php",
+        "style": "default"
+      }
+    },
+    {
+      "id": "routes/channels.php",
+      "type": "file",
+      "name": "channels.php",
+      "properties": {
+        "path": "routes/channels.php"
+      }
+    },
+    {
+      "id": "routes/console.php",
+      "type": "file",
+      "name": "console.php",
+      "properties": {
+        "path": "routes/console.php"
+      }
+    },
+    {
+      "id": "routes/web.php",
+      "type": "file",
+      "name": "web.php",
+      "properties": {
+        "path": "routes/web.php"
+      }
+    },
+    {
+      "id": "theme/v2board/dashboard.blade.php",
+      "type": "file",
+      "name": "dashboard.blade.php",
+      "properties": {
+        "path": "theme/v2board/dashboard.blade.php"
+      }
+    },
+    {
+      "id": "theme/v2board/assets/components.async.js",
+      "type": "file",
+      "name": "components.async.js",
+      "properties": {
+        "path": "theme/v2board/assets/components.async.js"
+      }
+    },
+    {
+      "id": "theme/v2board/assets/env.example.js",
+      "type": "file",
+      "name": "env.example.js",
+      "properties": {
+        "path": "theme/v2board/assets/env.example.js"
+      }
+    },
+    {
+      "id": "route:/",
+      "type": "route",
+      "name": "/",
+      "properties": {
+        "method": "GET"
+      }
+    },
+    {
+      "id": "route:/{admin_path}",
+      "type": "route",
+      "name": "/{admin_path}",
+      "properties": {
+        "method": "GET"
+      }
+    },
+    {
+      "id": "route:/s/{token}",
+      "type": "route",
+      "name": "/{subscribe_path}/{token}",
+      "properties": {
+        "method": "GET",
+        "name": "client.subscribe"
+      }
+    },
+    {
+      "id": "channel:App.User.{id}",
+      "type": "broadcast_channel",
+      "name": "App.User.{id}"
+    },
+    {
+      "id": "command:inspire",
+      "type": "console_command",
+      "name": "inspire"
+    }
+  ],
+  "edges": [
+    {
+      "source": "public/index.php",
+      "target": "bootstrap/app.php",
+      "type": "requires"
+    },
+    {
+      "source": "resources/js/app.js",
+      "target": "resources/js/bootstrap.js",
+      "type": "requires"
+    },
+    {
+      "source": "routes/web.php",
+      "target": "route:/",
+      "type": "defines"
+    },
+    {
+      "source": "routes/web.php",
+      "target": "route:/{admin_path}",
+      "type": "defines"
+    },
+    {
+      "source": "routes/web.php",
+      "target": "route:/s/{token}",
+      "type": "defines"
+    },
+    {
+      "source": "route:/",
+      "target": "theme/v2board/dashboard.blade.php",
+      "type": "renders"
+    },
+    {
+      "source": "route:/{admin_path}",
+      "target": "resources/views/admin.blade.php",
+      "type": "renders"
+    },
+    {
+      "source": "routes/channels.php",
+      "target": "channel:App.User.{id}",
+      "type": "defines"
+    },
+    {
+      "source": "routes/console.php",
+      "target": "command:inspire",
+      "type": "defines"
+    },
+    {
+      "source": "resources/views/admin.blade.php",
+      "target": "public/assets/admin/manifest.json",
+      "type": "reads"
+    }
+  ]
+}

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Server;
+use App\Models\ServerMachine;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +14,7 @@ class NodeSyncService
     /**
      * Check if node has active WS connection
      */
-    private static function isNodeOnline(int $nodeId): bool
+    public static function isNodeOnline(int $nodeId): bool
     {
         return (bool) Cache::get("node_ws_alive:{$nodeId}");
     }
@@ -29,7 +30,6 @@ class NodeSyncService
         $node = Server::find($nodeId);
         if (!$node)
             return;
-
 
         self::push($nodeId, 'sync.config', ['config' => ServerService::buildNodeConfig($node)]);
     }
@@ -123,9 +123,31 @@ class NodeSyncService
     }
 
     /**
+     * Notify machine that its node set has changed.
+     * Always publishes via Redis so the WS process can update its in-memory registry.
+     */
+    public static function notifyMachineNodesChanged(int $machineId): void
+    {
+        $machine = ServerMachine::find($machineId);
+
+        $nodeList = [];
+        if ($machine) {
+            $nodes = ServerService::getMachineNodes($machine);
+            $nodeList = $nodes->map(fn($n) => [
+                'id' => $n->id,
+                'type' => $n->type,
+                'name' => $n->name,
+            ])->values()->toArray();
+        }
+
+        // Always publish via Redis so the WS process can update its in-memory registry
+        self::pushMachine($machineId, 'sync.nodes', ['nodes' => $nodeList]);
+    }
+
+    /**
      * Publish a push command to Redis — picked up by the Workerman WS server
      */
-    private static function push(int $nodeId, string $event, array $data): void
+    public static function push(int $nodeId, string $event, array $data): void
     {
         try {
             Redis::publish('node:push', json_encode([
@@ -136,6 +158,25 @@ class NodeSyncService
         } catch (\Throwable $e) {
             Log::warning("[NodePush] Redis publish failed: {$e->getMessage()}", [
                 'node_id' => $nodeId,
+                'event' => $event,
+            ]);
+        }
+    }
+
+    /**
+     * Publish a machine-level push command to Redis — picked up by the Workerman WS server
+     */
+    public static function pushMachine(int $machineId, string $event, array $data): void
+    {
+        try {
+            Redis::publish('node:push', json_encode([
+                'machine_id' => $machineId,
+                'event' => $event,
+                'data' => $data,
+            ]));
+        } catch (\Throwable $e) {
+            Log::warning("[NodePush] Redis machine publish failed: {$e->getMessage()}", [
+                'machine_id' => $machineId,
                 'event' => $event,
             ]);
         }
