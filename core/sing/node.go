@@ -464,14 +464,7 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 				}
 			}
 		}
-		if info.Type == "hysteria2-fnode" {
-			tls.MinVersion = "1.3"
-			tls.CipherSuites = []string{
-				"TLS_AES_128_GCM_SHA256",
-				"TLS_AES_256_GCM_SHA384",
-				"TLS_CHACHA20_POLY1305_SHA256",
-			}
-		}
+
 		in.Options = &option.Hysteria2InboundOptions{
 			ListenOptions:         listen,
 			UpMbps:                int(info.Hysteria2.UpMbps),
