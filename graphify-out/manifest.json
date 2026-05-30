@@ -4,16 +4,16 @@
     "hash": "88005c57750c3e289ef49c2587ad221b"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\api\\panel\\node.go": {
-    "mtime": 1774349392.659629,
-    "hash": "f73320a90432b81b92867919b1034cf6"
+    "mtime": 1780107847.2679234,
+    "hash": "638ef4c928963f4d34f4725b9de3fa81"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\api\\panel\\node_test.go": {
     "mtime": 1774255859.6024432,
     "hash": "0d32a02a81e0c2606722a0852fce25f6"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\api\\panel\\panel.go": {
-    "mtime": 1774255859.6065342,
-    "hash": "8b7c1dcafb8526b3090a74b381218dcd"
+    "mtime": 1780107845.5044537,
+    "hash": "25177a52fbfae8b218bc90e3e4715eda"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\api\\panel\\user.go": {
     "mtime": 1774255859.614324,
@@ -148,7 +148,7 @@
     "hash": "7c0077d04fd9763aaa1c429dd90194f3"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\conf\\limit.go": {
-    "mtime": 1774255859.757044,
+    "mtime": 1780107014.7254531,
     "hash": "03cd1696f3f53122184734d32d99013c"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\conf\\log.go": {
@@ -184,20 +184,20 @@
     "hash": "d91178048e328c6e384f40e8850ea6ca"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\core\\sing\\hook.go": {
-    "mtime": 1774255859.7933984,
+    "mtime": 1780107014.7268305,
     "hash": "a944aedd3d04915112944ec7c55460a7"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\core\\sing\\node.go": {
-    "mtime": 1774423060.0508146,
-    "hash": "5d6bab2dfc65e01ed2987baad0010eeb"
+    "mtime": 1780107940.564606,
+    "hash": "aa5627a7a7c70eae0910ca54354eb80c"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\core\\sing\\sing.go": {
     "mtime": 1774421882.814476,
     "hash": "b0b27b866cd78cfb6a6c42a4216395cb"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\core\\sing\\user.go": {
-    "mtime": 1774419260.4429398,
-    "hash": "6c7f03bdafbe769a0a18b135d83ad712"
+    "mtime": 1780107933.848207,
+    "hash": "221071d98aea6c7137acc55df00db91d"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\core\\sing\\utils.go": {
     "mtime": 1774255859.8190756,
@@ -208,7 +208,7 @@
     "hash": "f6211d5cc7a63058d5940ec911bdd287"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\limiter\\limiter.go": {
-    "mtime": 1774255859.8319912,
+    "mtime": 1780107014.7302186,
     "hash": "591aa422cb33328a27107f860ebce721"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\limiter\\rule.go": {
@@ -224,8 +224,8 @@
     "hash": "fa2abb397e77e77715faada95ae967a4"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\node\\controller.go": {
-    "mtime": 1774255859.8524277,
-    "hash": "56b787999f6ce84a52e4a69c0b54cbd3"
+    "mtime": 1780107931.9942367,
+    "hash": "466e2fe76f9bf4521e260dc16c385048"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\node\\lego.go": {
     "mtime": 1774255859.862358,
@@ -6034,6 +6034,10 @@
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\CLAUDE.md": {
     "mtime": 1778482944.3894114,
     "hash": "685da306809d71f6c3c861a7c1ba15ed"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\GEMINI.md": {
+    "mtime": 1780063081.2815824,
+    "hash": "2ed67c68f28bc1ef95ac24167431d7e8"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\README.md": {
     "mtime": 1774495527.5778594,
