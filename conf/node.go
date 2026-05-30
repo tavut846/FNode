@@ -116,6 +116,7 @@ type Options struct {
 	RawOptions             json.RawMessage `json:"RawOptions"`
 	SingOptions            *SingOptions    `json:"SingOptions"`
 	CertConfig             *CertConfig     `json:"CertConfig"`
+	Masquerade             string          `json:"Masquerade"`
 }
 
 func (o *Options) UnmarshalJSON(data []byte) error {

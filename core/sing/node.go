@@ -416,19 +416,25 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 		in.Type = "hysteria2"
 		tls.ALPN = append(tls.ALPN, "h3")
 		var obfs *option.Hysteria2Obfs
-		if info.Hysteria2.ObfsType != "" && info.Hysteria2.ObfsPassword != "" {
-			obfs = &option.Hysteria2Obfs{
-				Type:     info.Hysteria2.ObfsType,
-				Password: info.Hysteria2.ObfsPassword,
-			}
-		} else if info.Hysteria2.ObfsType != "" {
-			obfs = &option.Hysteria2Obfs{
-				Type:     "salamander",
-				Password: info.Hysteria2.ObfsType,
+		obfsType := strings.ToLower(info.Hysteria2.ObfsType)
+		if obfsType != "" && obfsType != "plain" {
+			if info.Hysteria2.ObfsPassword != "" {
+				obfs = &option.Hysteria2Obfs{
+					Type:     obfsType,
+					Password: info.Hysteria2.ObfsPassword,
+				}
+			} else {
+				obfs = &option.Hysteria2Obfs{
+					Type:     "salamander",
+					Password: info.Hysteria2.ObfsType,
+				}
 			}
 		}
 		var masquerade *option.Hysteria2Masquerade
 		target := info.Hysteria2.Masquerade
+		if target == "" && c.Masquerade != "" {
+			target = c.Masquerade
+		}
 		if info.Type == "hysteria2-fnode" && target == "" {
 			target = "https://www.bing.com"
 		}
@@ -464,6 +470,23 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 				}
 			}
 		}
+		if info.Type == "hysteria2-fnode" {
+			// Securely shuffle curve preferences using crypto/rand to alter TLS ServerHello fingerprint
+			curves := []option.CurvePreference{
+				option.X25519,
+				option.CurveP256,
+				option.CurveP384,
+				option.CurveP521,
+			}
+			b := make([]byte, len(curves))
+			_, _ = rand.Read(b)
+			for i := len(curves) - 1; i > 0; i-- {
+				j := int(b[i]) % (i + 1)
+				curves[i], curves[j] = curves[j], curves[i]
+			}
+			tls.CurvePreferences = curves
+		}
+
 
 		in.Options = &option.Hysteria2InboundOptions{
 			ListenOptions:         listen,

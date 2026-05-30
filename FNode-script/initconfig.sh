@@ -56,6 +56,14 @@ add_node_config() {
         istls="y"
     fi
 
+    masquerade_target=""
+    if [ "$NodeType" == "hysteria2-fnode" ]; then
+        read -rp "请输入 Hysteria2-FNode 伪装网页地址 (默认: https://www.bing.com): " masquerade_target
+        if [ -z "$masquerade_target" ]; then
+            masquerade_target="https://www.bing.com"
+        fi
+    fi
+
     if [[ "$isreality" != "y" && "$isreality" != "Y" &&  "$istls" != "y" ]]; then
         read -rp "请选择是否进行TLS配置？(y/n)" istls
     fi
@@ -97,6 +105,7 @@ add_node_config() {
             "MinReportTraffic": 0,
             "TCPFastOpen": $fastopen,
             "SniffEnabled": true,
+            "Masquerade": "$masquerade_target",
             "CertConfig": {
                 "CertMode": "$certmode",
                 "RejectUnknownSni": false,
