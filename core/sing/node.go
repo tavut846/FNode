@@ -402,6 +402,7 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 		}
 	case "hysteria":
 		in.Type = "hysteria"
+		tls.ALPN = append(tls.ALPN, "h3")
 		in.Options = &option.HysteriaInboundOptions{
 			ListenOptions: listen,
 			UpMbps:        info.Hysteria.UpMbps,
@@ -413,6 +414,7 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 		}
 	case "hysteria2", "hysteria2-fnode":
 		in.Type = "hysteria2"
+		tls.ALPN = append(tls.ALPN, "h3")
 		var obfs *option.Hysteria2Obfs
 		if info.Hysteria2.ObfsType != "" && info.Hysteria2.ObfsPassword != "" {
 			obfs = &option.Hysteria2Obfs{
