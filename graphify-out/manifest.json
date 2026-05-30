@@ -188,8 +188,8 @@
     "hash": "a944aedd3d04915112944ec7c55460a7"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\core\\sing\\node.go": {
-    "mtime": 1780107940.564606,
-    "hash": "aa5627a7a7c70eae0910ca54354eb80c"
+    "mtime": 1780114194.4582915,
+    "hash": "ed1cec0885a3e1702c509a458769dd9c"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\core\\sing\\sing.go": {
     "mtime": 1774421882.814476,
@@ -246,6 +246,10 @@
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\node\\user.go": {
     "mtime": 1774255859.8810797,
     "hash": "57920745685499372c180c49ac07adde"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\scratch\\check.go": {
+    "mtime": 1780114141.1710613,
+    "hash": "8aa43940d73856e7c6568540f04acd2b"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\SupportProject\\sing-box\\box.go": {
     "mtime": 1778742669.0,
@@ -6038,6 +6042,10 @@
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\GEMINI.md": {
     "mtime": 1780063081.2815824,
     "hash": "2ed67c68f28bc1ef95ac24167431d7e8"
+  },
+  "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\implementation_plan.md": {
+    "mtime": 1780107692.1110432,
+    "hash": "9dca65f9889a049627de4b01036115fd"
   },
   "C:\\Users\\Keanghour\\Documents\\GitHub\\FNode\\FNode\\README.md": {
     "mtime": 1774495527.5778594,

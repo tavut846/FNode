@@ -425,22 +425,26 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 				Password: info.Hysteria2.ObfsType,
 			}
 		}
-		var masquerade *option.Hysteria2MasqueradeOptions
+		var masquerade *option.Hysteria2Masquerade
 		target := info.Hysteria2.Masquerade
 		if info.Type == "hysteria2-fnode" && target == "" {
 			target = "https://www.bing.com"
 		}
 		if target != "" {
 			if strings.HasPrefix(target, "file://") {
-				masquerade = &option.Hysteria2MasqueradeOptions{
-					Type:      "file",
-					Directory: strings.TrimPrefix(target, "file://"),
+				masquerade = &option.Hysteria2Masquerade{
+					Type: "file",
+					FileOptions: option.Hysteria2MasqueradeFile{
+						Directory: strings.TrimPrefix(target, "file://"),
+					},
 				}
 			} else {
-				masquerade = &option.Hysteria2MasqueradeOptions{
-					Type:        "proxy",
-					URL:         target,
-					RewriteHost: true,
+				masquerade = &option.Hysteria2Masquerade{
+					Type: "proxy",
+					ProxyOptions: option.Hysteria2MasqueradeProxy{
+						URL:         target,
+						RewriteHost: true,
+					},
 				}
 			}
 		}
