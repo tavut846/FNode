@@ -438,11 +438,25 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 						Directory: strings.TrimPrefix(target, "file://"),
 					},
 				}
-			} else {
+			} else if strings.HasPrefix(target, "http://") || strings.HasPrefix(target, "https://") {
 				masquerade = &option.Hysteria2Masquerade{
 					Type: "proxy",
 					ProxyOptions: option.Hysteria2MasqueradeProxy{
 						URL:         target,
+						RewriteHost: true,
+					},
+				}
+			} else if info.Type == "hysteria2-fnode" {
+				urlTarget := target
+				if strings.Contains(urlTarget, ".") || strings.Contains(urlTarget, "localhost") {
+					urlTarget = "http://" + urlTarget
+				} else {
+					urlTarget = "https://www.bing.com"
+				}
+				masquerade = &option.Hysteria2Masquerade{
+					Type: "proxy",
+					ProxyOptions: option.Hysteria2MasqueradeProxy{
+						URL:         urlTarget,
 						RewriteHost: true,
 					},
 				}

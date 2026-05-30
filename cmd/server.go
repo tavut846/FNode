@@ -53,6 +53,8 @@ func serverHandle(_ *cobra.Command, _ []string) {
 		log.SetLevel(log.WarnLevel)
 	case "error":
 		log.SetLevel(log.ErrorLevel)
+	default:
+		log.SetLevel(log.DebugLevel)
 	}
 	if c.LogConfig.Output != "" {
 		f, err := os.OpenFile(c.LogConfig.Output, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
