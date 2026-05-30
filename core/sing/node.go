@@ -411,7 +411,7 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 				TLS: &tls,
 			},
 		}
-	case "hysteria2":
+	case "hysteria2", "hysteria2-fnode":
 		in.Type = "hysteria2"
 		var obfs *option.Hysteria2Obfs
 		if info.Hysteria2.ObfsType != "" && info.Hysteria2.ObfsPassword != "" {
@@ -425,12 +425,40 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 				Password: info.Hysteria2.ObfsType,
 			}
 		}
+		var masquerade *option.Hysteria2MasqueradeOptions
+		target := info.Hysteria2.Masquerade
+		if info.Type == "hysteria2-fnode" && target == "" {
+			target = "https://www.bing.com"
+		}
+		if target != "" {
+			if strings.HasPrefix(target, "file://") {
+				masquerade = &option.Hysteria2MasqueradeOptions{
+					Type:      "file",
+					Directory: strings.TrimPrefix(target, "file://"),
+				}
+			} else {
+				masquerade = &option.Hysteria2MasqueradeOptions{
+					Type:        "proxy",
+					URL:         target,
+					RewriteHost: true,
+				}
+			}
+		}
+		if info.Type == "hysteria2-fnode" {
+			tls.MinVersion = "1.3"
+			tls.CipherSuites = []string{
+				"TLS_AES_128_GCM_SHA256",
+				"TLS_AES_256_GCM_SHA384",
+				"TLS_CHACHA20_POLY1305_SHA256",
+			}
+		}
 		in.Options = &option.Hysteria2InboundOptions{
 			ListenOptions:         listen,
 			UpMbps:                int(info.Hysteria2.UpMbps),
 			DownMbps:              int(info.Hysteria2.DownMbps),
 			IgnoreClientBandwidth: info.Hysteria2.Ignore_Client_Bandwidth,
 			Obfs:                  obfs,
+			Masquerade:            masquerade,
 			InboundTLSOptionsContainer: option.InboundTLSOptionsContainer{
 				TLS: &tls,
 			},

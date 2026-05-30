@@ -79,6 +79,9 @@ func (c *Controller) Start() error {
 		}
 	}
 	// Add new tag
+	if c.apiClient.NodeType == "hysteria2-fnode" {
+		node.Type = "hysteria2-fnode"
+	}
 	err = c.server.AddNode(c.tag, node, c.Options)
 	if err != nil {
 		return fmt.Errorf("add new node error: %s", err)

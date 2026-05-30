@@ -146,7 +146,7 @@ func (b *Sing) updateInboundUsers(tag string) error {
 		if u, ok := in.(adapter.UpdatableInbound[option.HysteriaUser]); ok {
 			return u.UpdateUsers(us)
 		}
-	case "hysteria2":
+	case "hysteria2", "hysteria2-fnode":
 		us := make([]option.Hysteria2User, len(users))
 		for i := range users {
 			us[i] = option.Hysteria2User{

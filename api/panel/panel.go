@@ -59,6 +59,8 @@ func New(c *conf.ApiConfig) (*Client, error) {
 	switch c.NodeType {
 	case "v2ray":
 		c.NodeType = "vmess"
+	case "hysteria2-fnode":
+		// Allowed local type
 	case
 		"vmess",
 		"trojan",
@@ -71,9 +73,13 @@ func New(c *conf.ApiConfig) (*Client, error) {
 	default:
 		return nil, fmt.Errorf("unsupported Node type: %s", c.NodeType)
 	}
+	apiNodeType := c.NodeType
+	if c.NodeType == "hysteria2-fnode" {
+		apiNodeType = "hysteria2"
+	}
 	// set params
 	client.SetQueryParams(map[string]string{
-		"node_type": c.NodeType,
+		"node_type": apiNodeType,
 		"node_id":   strconv.Itoa(c.NodeID),
 		"token":     c.Key,
 	})
