@@ -1,0 +1,1 @@
+{"Email":"test@test.com","Registration":{"body":{"status":"valid"},"uri":"https://acme-v02.api.letsencrypt.org/acme/acct/3715142526"},"Key":"-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIEH1fUKoYRDA+RpjvR+F0m/VxyrgyhK9/qDGgcB+Jgc7oAoGCCqGSM49\nAwEHoUQDQgAE6/N2mGjaSQNLrkXgUQA0Mp4+uz1ikvj1Du0bjppgQzEeJFkJdRFv\n7w6zOievLs+wmhuIq6AOOd318VH6zDHpVg==\n-----END EC PRIVATE KEY-----\n"}
