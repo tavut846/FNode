@@ -5,9 +5,36 @@ import (
 )
 
 type SingConfig struct {
-	LogConfig    SingLogConfig `json:"Log"`
-	NtpConfig    SingNtpConfig `json:"NTP"`
-	OriginalPath string        `json:"OriginalPath"`
+	LogConfig        SingLogConfig     `json:"Log"`
+	NtpConfig        SingNtpConfig     `json:"NTP"`
+	OriginalPath     string            `json:"OriginalPath"`
+	ConnectTimeout   int               `json:"ConnectTimeout"` // dial timeout in seconds, default 5s
+	DomainStrategy   string            `json:"DomainStrategy"` // "prefer_ipv4", "ipv4_only", "prefer_ipv6", "ipv6_only"
+	DisableIPv6      bool              `json:"DisableIPv6"`    // block ipv6 traffic immediately to avoid timeouts on IPv4-only hosts
+	CustomOutbounds  []map[string]any  `json:"CustomOutbounds"`
+	CustomRouteRules []CustomRouteRule `json:"CustomRouteRules"`
+}
+
+type CustomRouteRule struct {
+	Name     string            `json:"name,omitempty"`
+	Disabled bool              `json:"disabled,omitempty"`
+	Match    CustomRouteMatch  `json:"match"`
+	Action   CustomRouteAction `json:"action"`
+}
+
+type CustomRouteMatch struct {
+	Domains        []string `json:"domains,omitempty"`
+	DomainSuffixes []string `json:"domain_suffixes,omitempty"`
+	IPCIDRs        []string `json:"ip_cidrs,omitempty"`
+	Ports          []string `json:"ports,omitempty"`
+	Networks       []string `json:"networks,omitempty"`
+	SourceCIDRs    []string `json:"source_cidrs,omitempty"`
+	SourcePorts    []string `json:"source_ports,omitempty"`
+}
+
+type CustomRouteAction struct {
+	Type   string `json:"type"`             // "direct", "block", "route"
+	Target string `json:"target,omitempty"` // outbound tag when type is "route"
 }
 
 type SingLogConfig struct {
@@ -28,6 +55,8 @@ func NewSingConfig() *SingConfig {
 			Server:     "time.apple.com",
 			ServerPort: 0,
 		},
+		ConnectTimeout: 5,
+		DomainStrategy: "prefer_ipv4",
 	}
 }
 
@@ -39,6 +68,8 @@ type SingOptions struct {
 	DomainStrategy           option.DomainStrategy  `json:"DomainStrategy"`
 	FallBackConfigs          *FallBackConfigForSing `json:"FallBackConfigs"`
 	Multiplex                *MultiplexConfig       `json:"MultiplexConfig"`
+	DisableIPv6              bool                   `json:"DisableIPv6"`
+	ConnectTimeout           int                    `json:"ConnectTimeout"`
 }
 
 type SingNtpConfig struct {

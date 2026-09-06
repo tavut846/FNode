@@ -34,7 +34,10 @@ type Sing struct {
 	users                     *UserMap
 	inboundUsers              map[string][]panel.UserInfo
 	inboundInfo               map[string]*panel.NodeInfo
+	inboundConfig             map[string]*conf.Options
 	nodeReportMinTrafficBytes map[string]int64
+	coreConfig                *conf.CoreConfig
+	mu                        sync.RWMutex
 }
 
 type UserMap struct {
@@ -74,6 +77,44 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 			ServerPort: c.SingConfig.NtpConfig.ServerPort,
 		},
 	}
+
+	// 1. Build default outbounds (direct with 5s timeout & prefer_ipv4 to prevent hangs on IPv4-only hosts)
+	connectTimeout := 5 * time.Second
+	if c.SingConfig.ConnectTimeout > 0 {
+		connectTimeout = time.Duration(c.SingConfig.ConnectTimeout) * time.Second
+	}
+	domainStrategy := ConvertStrategy(c.SingConfig.DomainStrategy)
+
+	if len(options.Outbounds) == 0 {
+		rawOutbounds := BuildDefaultOutbounds(connectTimeout, domainStrategy, "", c.SingConfig.CustomOutbounds)
+		outboundsData, err := json.Marshal(rawOutbounds)
+		if err != nil {
+			return nil, fmt.Errorf("marshal default outbounds error: %s", err)
+		}
+		options.Outbounds, err = json.UnmarshalExtendedContext[[]option.Outbound](ctx, outboundsData)
+		if err != nil {
+			return nil, fmt.Errorf("unmarshal default outbounds error: %s", err)
+		}
+	}
+
+	// 2. Build default routing rules (anti-SSRF and IPv6 disable if configured)
+	if options.Route == nil {
+		options.Route = &option.RouteOptions{
+			Final: "direct",
+		}
+	}
+	if len(options.Route.Rules) == 0 {
+		rawRules := CompileRouteRules(c.SingConfig.DisableIPv6, nil, c.SingConfig.CustomRouteRules)
+		rulesData, err := json.Marshal(rawRules)
+		if err != nil {
+			return nil, fmt.Errorf("marshal default rules error: %s", err)
+		}
+		options.Route.Rules, err = json.UnmarshalExtendedContext[[]option.Rule](ctx, rulesData)
+		if err != nil {
+			return nil, fmt.Errorf("unmarshal default rules error: %s", err)
+		}
+	}
+
 	os.Setenv("SING_DNS_PATH", "")
 	b, err := box.New(box.Options{
 		Context: ctx,
@@ -87,18 +128,69 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 	}
 	b.Router().AppendTracker(hs)
 	return &Sing{
-		ctx:        ctx,
-		box:        b,
-		hookServer: hs,
-		router:     b.Router(),
-		logFactory: b.LogFactory(),
+		ctx:                       ctx,
+		box:                       b,
+		hookServer:                hs,
+		router:                    b.Router(),
+		logFactory:                b.LogFactory(),
 		users: &UserMap{
 			uidMap: make(map[string]int),
 		},
 		inboundUsers:              make(map[string][]panel.UserInfo),
 		inboundInfo:               make(map[string]*panel.NodeInfo),
+		inboundConfig:             make(map[string]*conf.Options),
 		nodeReportMinTrafficBytes: make(map[string]int64),
+		coreConfig:                c,
 	}, nil
+}
+
+func (b *Sing) UpdateRouterRules() error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	var allPanelRoutes []panel.Route
+	disableIPv6 := false
+	if b.coreConfig != nil && b.coreConfig.SingConfig.DisableIPv6 {
+		disableIPv6 = true
+	}
+
+	for _, info := range b.inboundInfo {
+		if info != nil && info.Common != nil {
+			allPanelRoutes = append(allPanelRoutes, info.Common.Routes...)
+		}
+	}
+
+	for _, cfg := range b.inboundConfig {
+		if cfg != nil {
+			if cfg.DisableIPv6 || (cfg.SingOptions != nil && cfg.SingOptions.DisableIPv6) {
+				disableIPv6 = true
+			}
+		}
+	}
+
+	var customRules []conf.CustomRouteRule
+	if b.coreConfig != nil {
+		customRules = b.coreConfig.SingConfig.CustomRouteRules
+	}
+
+	rawRules := CompileRouteRules(disableIPv6, allPanelRoutes, customRules)
+	rulesData, err := json.Marshal(rawRules)
+	if err != nil {
+		return fmt.Errorf("marshal route rules error: %w", err)
+	}
+
+	rules, err := json.UnmarshalExtendedContext[[]option.Rule](b.ctx, rulesData)
+	if err != nil {
+		return fmt.Errorf("unmarshal route rules error: %w", err)
+	}
+
+	type updatableRouter interface {
+		UpdateRules(rules []option.Rule, ruleSets []option.RuleSet) error
+	}
+	if ur, ok := b.router.(updatableRouter); ok {
+		return ur.UpdateRules(rules, nil)
+	}
+	return nil
 }
 
 func (b *Sing) Start() error {

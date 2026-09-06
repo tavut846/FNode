@@ -9,6 +9,7 @@ import (
 	"github.com/tavut846/FNode/core"
 	"github.com/sagernet/sing-box/adapter"
 	"github.com/sagernet/sing-box/option"
+	F "github.com/sagernet/sing/common/format"
 )
 
 func (b *Sing) AddUsers(p *core.AddUsersParams) (added int, err error) {
@@ -166,10 +167,31 @@ func (b *Sing) updateInboundUsers(tag string) error {
 			}
 		}
 		if u, ok := in.(adapter.UpdatableInbound[option.AnyTLSUser]); ok {
-			return u.UpdateUsers(us)
+			if err := u.UpdateUsers(us); err == nil {
+				return nil
+			}
 		}
+		return b.recreateInbound(tag, info)
 	}
 	return errors.New("unsupported inbound type for dynamic users or inbound does not support UpdatableInbound")
+}
+
+func (b *Sing) recreateInbound(tag string, info *panel.NodeInfo) error {
+	in := b.box.Inbound()
+	_ = in.Remove(tag)
+	cfg := b.inboundConfig[tag]
+	c, err := b.getInboundOptions(tag, info, cfg)
+	if err != nil {
+		return err
+	}
+	return in.Create(
+		b.ctx,
+		b.box.Router(),
+		b.logFactory.NewLogger(F.ToString("inbound/", c.Type, "[", tag, "]")),
+		tag,
+		c.Type,
+		c.Options,
+	)
 }
 
 func (b *Sing) GetUserTraffic(tag, uuid string, reset bool) (up int64, down int64) {

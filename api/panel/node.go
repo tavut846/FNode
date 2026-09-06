@@ -77,13 +77,64 @@ type VAllssNode struct {
 }
 
 type TlsSettings struct {
-	ServerName  string `json:"server_name"`
-	Dest        string `json:"dest"`
-	ServerPort  string `json:"server_port"`
-	ShortId     string `json:"short_id"`
-	PrivateKey  string `json:"private_key"`
-	Mldsa65Seed string `json:"mldsa65Seed"`
-	Xver        uint64 `json:"xver,string"`
+	ServerName  string   `json:"server_name"`
+	Dest        string   `json:"dest"`
+	ServerPort  string   `json:"server_port"`
+	ShortId     string   `json:"-"`
+	ShortIds    []string `json:"-"`
+	PrivateKey  string   `json:"private_key"`
+	Mldsa65Seed string   `json:"mldsa65Seed"`
+	Xver        uint64   `json:"xver,string"`
+}
+
+func (t *TlsSettings) UnmarshalJSON(data []byte) error {
+	type Alias TlsSettings
+	aux := struct {
+		*Alias
+		RawShortID json.RawMessage `json:"short_id"`
+	}{
+		Alias: (*Alias)(t),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	if len(aux.RawShortID) > 0 {
+		var single string
+		if err := json.Unmarshal(aux.RawShortID, &single); err == nil {
+			t.ShortId = single
+			if single != "" {
+				if strings.Contains(single, ",") {
+					for _, s := range strings.Split(single, ",") {
+						s = strings.TrimSpace(s)
+						if s != "" {
+							t.ShortIds = append(t.ShortIds, s)
+						}
+					}
+				} else {
+					t.ShortIds = []string{single}
+				}
+			}
+		} else {
+			var list []string
+			if err := json.Unmarshal(aux.RawShortID, &list); err == nil {
+				t.ShortIds = list
+				if len(list) > 0 {
+					t.ShortId = list[0]
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (t *TlsSettings) GetShortIds() []string {
+	if len(t.ShortIds) > 0 {
+		return t.ShortIds
+	}
+	if t.ShortId != "" {
+		return []string{t.ShortId}
+	}
+	return nil
 }
 
 type EncSettings struct {
@@ -121,6 +172,38 @@ type TuicNode struct {
 type AnyTlsNode struct {
 	CommonNode
 	PaddingScheme []string `json:"padding_scheme,omitempty"`
+}
+
+func (a *AnyTlsNode) UnmarshalJSON(data []byte) error {
+	type Alias AnyTlsNode
+	aux := struct {
+		*Alias
+		RawPadding json.RawMessage `json:"padding_scheme"`
+	}{
+		Alias: (*Alias)(a),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	if len(aux.RawPadding) > 0 {
+		var single string
+		if err := json.Unmarshal(aux.RawPadding, &single); err == nil {
+			if single != "" {
+				for _, line := range strings.Split(single, "\n") {
+					line = strings.TrimSpace(line)
+					if line != "" {
+						a.PaddingScheme = append(a.PaddingScheme, line)
+					}
+				}
+			}
+		} else {
+			var list []string
+			if err := json.Unmarshal(aux.RawPadding, &list); err == nil {
+				a.PaddingScheme = list
+			}
+		}
+	}
+	return nil
 }
 
 type HysteriaNode struct {

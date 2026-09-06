@@ -57,7 +57,7 @@ type XhttpNetworkConfig struct {
 	Extra json.RawMessage `json:"extra"`
 }
 
-func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (option.Inbound, error) {
+func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (option.Inbound, error) {
 	addr, err := netip.ParseAddr(c.ListenIP)
 	if err != nil {
 		return option.Inbound{}, fmt.Errorf("the listen ip not vail")
@@ -97,8 +97,11 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 	case panel.Reality:
 		tls.Enabled = true
 		v := info.VAllss
-		tls.ServerName = v.TlsSettings.ServerName
+		mtd, _ := time.ParseDuration(v.RealityConfig.MaxTimeDiff)
 		port, _ := strconv.Atoi(v.TlsSettings.ServerPort)
+		if port == 0 {
+			port = 443
+		}
 		var dest string
 		if v.TlsSettings.Dest != "" {
 			dest = v.TlsSettings.Dest
@@ -106,10 +109,9 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 			dest = tls.ServerName
 		}
 
-		mtd, _ := time.ParseDuration(v.RealityConfig.MaxTimeDiff)
 		tls.Reality = &option.InboundRealityOptions{
 			Enabled:    true,
-			ShortID:    []string{v.TlsSettings.ShortId},
+			ShortID:    v.TlsSettings.GetShortIds(),
 			PrivateKey: v.TlsSettings.PrivateKey,
 			// Xver:       uint8(v.TlsSettings.Xver), // Xver is not supported in cedar2025 fork
 			Handshake: option.InboundRealityHandshakeOptions{
@@ -393,13 +395,27 @@ func getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (optio
 		}
 	case "anytls":
 		in.Type = "anytls"
-		in.Options = &option.AnyTLSInboundOptions{
+		anytlsOpt := &option.AnyTLSInboundOptions{
 			ListenOptions: listen,
 			PaddingScheme: info.AnyTls.PaddingScheme,
 			InboundTLSOptionsContainer: option.InboundTLSOptionsContainer{
 				TLS: &tls,
 			},
 		}
+		if b != nil {
+			b.users.mapLock.RLock()
+			if uList, ok := b.inboundUsers[tag]; ok && len(uList) > 0 {
+				anytlsOpt.Users = make([]option.AnyTLSUser, len(uList))
+				for i, u := range uList {
+					anytlsOpt.Users[i] = option.AnyTLSUser{
+						Name:     u.Uuid,
+						Password: u.Uuid,
+					}
+				}
+			}
+			b.users.mapLock.RUnlock()
+		}
+		in.Options = anytlsOpt
 	case "hysteria":
 		in.Type = "hysteria"
 		tls.ALPN = append(tls.ALPN, "h3")
@@ -507,11 +523,12 @@ func (b *Sing) AddNode(tag string, info *panel.NodeInfo, config *conf.Options) e
 	b.nodeReportMinTrafficBytes[tag] = config.ReportMinTraffic * 1024
 	b.users.mapLock.Lock()
 	b.inboundInfo[tag] = info
+	b.inboundConfig[tag] = config
 	if _, ok := b.inboundUsers[tag]; !ok {
 		b.inboundUsers[tag] = make([]panel.UserInfo, 0)
 	}
 	b.users.mapLock.Unlock()
-	c, err := getInboundOptions(tag, info, config)
+	c, err := b.getInboundOptions(tag, info, config)
 	if err != nil {
 		return err
 	}
@@ -528,6 +545,7 @@ func (b *Sing) AddNode(tag string, info *panel.NodeInfo, config *conf.Options) e
 	if err != nil {
 		return fmt.Errorf("add inbound error: %s", err)
 	}
+	_ = b.UpdateRouterRules()
 	return nil
 }
 
@@ -535,11 +553,13 @@ func (b *Sing) DelNode(tag string) error {
 	b.users.mapLock.Lock()
 	delete(b.inboundInfo, tag)
 	delete(b.inboundUsers, tag)
+	delete(b.inboundConfig, tag)
 	b.users.mapLock.Unlock()
 	in := b.box.Inbound()
 	err := in.Remove(tag)
 	if err != nil {
 		return fmt.Errorf("delete inbound error: %s", err)
 	}
+	_ = b.UpdateRouterRules()
 	return nil
 }

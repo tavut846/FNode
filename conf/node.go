@@ -110,6 +110,8 @@ type Options struct {
 	CoreName               string          `json:"CoreName"`
 	ListenIP               string          `json:"ListenIP"`
 	SendIP                 string          `json:"SendIP"`
+	DisableIPv6            bool            `json:"DisableIPv6"`
+	ConnectTimeout         int             `json:"ConnectTimeout"`
 	DeviceOnlineMinTraffic int64           `json:"DeviceOnlineMinTraffic"`
 	ReportMinTraffic       int64           `json:"ReportMinTraffic"`
 	LimitConfig            LimitConfig     `json:"LimitConfig"`
