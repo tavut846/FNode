@@ -9,7 +9,6 @@ import (
 	"github.com/tavut846/FNode/conf"
 	C "github.com/sagernet/sing-box/constant"
 	"github.com/sagernet/sing-box/option"
-	"github.com/sagernet/sing/common/json/badoption"
 )
 
 var PrivateIPv4CIDR = []string{
@@ -48,7 +47,7 @@ func BuildDefaultOutbounds(connectTimeout time.Duration, domainStrategy option.D
 			"tag":  "direct",
 		}
 		if connectTimeout > 0 {
-			directM["connect_timeout"] = badoption.Duration(connectTimeout).String()
+			directM["connect_timeout"] = connectTimeout.String()
 		} else {
 			directM["connect_timeout"] = "5s"
 		}

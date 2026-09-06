@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/sagernet/sing-box/include"
 	"github.com/sagernet/sing-box/log"
