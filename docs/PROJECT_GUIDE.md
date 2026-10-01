@@ -285,6 +285,18 @@ GOEXPERIMENT=jsonv2 go build -v -o build_assets/FNode \
   -ldflags "-X 'github.com/tavut846/FNode/cmd.version=v1.0.0' -s -w -buildid=" .
 ```
 
+### 6.4 Automated CI/CD & Version Tagging Strategy
+
+FNode uses GitHub Actions (`.github/workflows/release.yml`) for automated multi-platform builds and releases:
+- **`master` / `main` Branch**:
+  - Automatically determines the next incremental stable patch version from the highest semantic tag (e.g. `0.0.1` -> `0.0.2`, `0.0.12` -> `0.0.13`).
+  - Creates the upgraded version tag and publishes a full GitHub Release marked as **Latest** (`make_latest: true`).
+- **`dev` / `dev_new` Branches**:
+  - Automatically formats the tag in pre-release form: `<upgraded_version>-pre-<commit_number>` (e.g. `0.0.2-pre-1`, `0.0.13-pre-9`), where `<commit_number>` tracks commits since the last stable release.
+  - Publishes a GitHub Release marked as **Pre-release** (`prerelease: true`, `make_latest: false`).
+- **Verification Gate**:
+  - Every release workflow automatically runs the complete test suite (`GOEXPERIMENT=jsonv2 go test -v -tags "with_utls" ./...`) before any release artifact is built or published.
+
 ---
 
 ## 7. Guidelines for AI Assistants & Contributors

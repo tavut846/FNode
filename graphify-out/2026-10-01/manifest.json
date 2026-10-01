@@ -6,15 +6,15 @@
     "semantic_hash": ""
   },
   "api/panel/node.go": {
-    "mtime": 1790830821.3589685,
-    "seen": 1790831336.6774957,
-    "ast_hash": "61ddea37b0e3fe6c95acd815714f4c5d",
+    "mtime": 1790842408.3492346,
+    "seen": 1790842791.8132029,
+    "ast_hash": "af27314a8b5449aca3e3c2a9ca21520b",
     "semantic_hash": ""
   },
   "api/panel/node_test.go": {
-    "mtime": 1788687349.5788314,
-    "seen": 1790827664.2657673,
-    "ast_hash": "1a902b24482ef6fb4a683efbd8016d01",
+    "mtime": 1790842453.469273,
+    "seen": 1790842791.8132064,
+    "ast_hash": "f8d6d334da98dc517923df3d6b7e918d",
     "semantic_hash": ""
   },
   "api/panel/panel.go": {
@@ -282,9 +282,9 @@
     "semantic_hash": ""
   },
   "core/sing/node.go": {
-    "mtime": 1790830878.444929,
-    "seen": 1790831336.6775758,
-    "ast_hash": "b40454460caa4af3437a2fc11c4972fb",
+    "mtime": 1790842424.418003,
+    "seen": 1790842791.8132808,
+    "ast_hash": "dbb911e8d258ca57a793a8ea8a29a83d",
     "semantic_hash": ""
   },
   "core/sing/sing.go": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1790839938.7235096,
-    "seen": 1790840235.1932325,
-    "ast_hash": "b16a95311ee88edc72f226ca26de8696",
+    "mtime": 1790842574.212195,
+    "seen": 1790842791.8138323,
+    "ast_hash": "c57a1713dc72c14cdaf2fc4b9d9425c1",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10272,9 +10272,15 @@
     "semantic_hash": ""
   },
   "docs/COMMUNICATION_FLOW_LOGIC.md": {
-    "mtime": 1790839905.2999885,
-    "seen": 1790840235.1932309,
-    "ast_hash": "6da6e1b6d1d5ef87db8482cdd32e4903",
+    "mtime": 1790842586.048465,
+    "seen": 1790842791.8138306,
+    "ast_hash": "016db2946f3e2f5b752c6a66588ec7d6",
+    "semantic_hash": ""
+  },
+  "core/sing/node_test.go": {
+    "mtime": 1790842513.5939407,
+    "seen": 1790842791.8132827,
+    "ast_hash": "206dfedc2256181fe84b03a63d34badf",
     "semantic_hash": ""
   }
 }

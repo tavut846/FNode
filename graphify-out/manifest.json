@@ -7764,15 +7764,15 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1790839989.281987,
-    "seen": 1790840235.1927388,
-    "ast_hash": "14bae1f8119297813e0b4eb450cc0d38",
+    "mtime": 1790844132.6269202,
+    "seen": 1790844564.0049179,
+    "ast_hash": "c5b77c97db9363b6a925334d584acf3d",
     "semantic_hash": ""
   },
   "GEMINI.md": {
-    "mtime": 1790839960.7496328,
-    "seen": 1790840235.1927452,
-    "ast_hash": "166c65730327295d8ef630f091dd4be5",
+    "mtime": 1790844126.4910269,
+    "seen": 1790844564.004933,
+    "ast_hash": "b9aa2b9b7a2715ae40a2a7e1cde4153a",
     "semantic_hash": ""
   },
   "README.md": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1790842574.212195,
-    "seen": 1790842791.8138323,
-    "ast_hash": "c57a1713dc72c14cdaf2fc4b9d9425c1",
+    "mtime": 1790844150.7402644,
+    "seen": 1790844564.0065012,
+    "ast_hash": "48c80c4c99408fa3dc01fcb54a0af5bd",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10266,9 +10266,9 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1790840001.1837976,
-    "seen": 1790840235.192736,
-    "ast_hash": "e0ac70c7f8e5a4ed65e3d76041631a77",
+    "mtime": 1790844114.7087867,
+    "seen": 1790844564.0049121,
+    "ast_hash": "61ae52e3d5b172c495ae4fa2dbc421df",
     "semantic_hash": ""
   },
   "docs/COMMUNICATION_FLOW_LOGIC.md": {
@@ -10281,6 +10281,12 @@
     "mtime": 1790842513.5939407,
     "seen": 1790842791.8132827,
     "ast_hash": "206dfedc2256181fe84b03a63d34badf",
+    "semantic_hash": ""
+  },
+  ".agents/rules/testing.md": {
+    "mtime": 1790844243.541548,
+    "seen": 1790844564.0048823,
+    "ast_hash": "450aa181a9c204bbd1600b4b7e9ad2d9",
     "semantic_hash": ""
   }
 }

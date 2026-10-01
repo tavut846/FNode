@@ -2,9 +2,15 @@ name: Build and Release
 
 on:
   workflow_dispatch:
+    inputs:
+      override_version:
+        description: "Optional manual version override (e.g. 0.0.13 or 0.0.13-pre-1)"
+        required: false
+        type: string
   push:
     branches:
       - master
+      - dev
       - dev_new
     tags:
       - "*"
@@ -14,7 +20,10 @@ on:
       - "go.sum"
       - ".github/workflows/release.yml"
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - master
+      - dev
+      - dev_new
     paths:
       - "**/*.go"
       - "go.mod"
@@ -27,7 +36,143 @@ permissions:
   contents: write
 
 jobs:
+  version:
+    name: Determine Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.calc.outputs.version }}
+      tag_name: ${{ steps.calc.outputs.tag_name }}
+      is_prerelease: ${{ steps.calc.outputs.is_prerelease }}
+      is_latest: ${{ steps.calc.outputs.is_latest }}
+      release_title: ${{ steps.calc.outputs.release_title }}
+      commit: ${{ steps.calc.outputs.commit }}
+      buildDate: ${{ steps.calc.outputs.buildDate }}
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate release version and metadata
+        id: calc
+        shell: bash
+        run: |
+          OVERRIDE_VER="${{ inputs.override_version }}"
+          EVENT_NAME="${{ github.event_name }}"
+          REF_NAME="${{ github.ref_name }}"
+          REF="${{ github.ref }}"
+          COMMIT_SHA="${{ github.sha }}"
+          SHORT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "${COMMIT_SHA:0:7}")
+          BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          echo "Event: $EVENT_NAME, Ref: $REF, Ref Name: $REF_NAME"
+
+          # 1. Locate latest stable tag (e.g., 0.0.12)
+          LATEST_STABLE_TAG=$(git tag -l | grep -E '^[vV]?[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)
+          if [ -z "$LATEST_STABLE_TAG" ]; then
+            LATEST_STABLE_TAG="0.0.1"
+          fi
+          CLEAN_STABLE="${LATEST_STABLE_TAG#v}"
+
+          # 2. Compute next upgraded patch version (e.g., 0.0.1 -> 0.0.2, 0.0.12 -> 0.0.13)
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CLEAN_STABLE"
+          NEXT_PATCH=$((PATCH + 1))
+          UPGRADED_VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}"
+
+          # 3. Compute commit number since last stable tag
+          COMMITS_SINCE=$(git rev-list --count "${LATEST_STABLE_TAG}..HEAD" 2>/dev/null || echo 1)
+          if [ -z "$COMMITS_SINCE" ] || [ "$COMMITS_SINCE" -le 0 ]; then
+            COMMITS_SINCE=1
+          fi
+
+          if [ -n "$OVERRIDE_VER" ]; then
+            VERSION="${OVERRIDE_VER#v}"
+            TAG_NAME="$VERSION"
+            if [[ "$VERSION" =~ -pre- ]] || [[ "$VERSION" =~ - ]]; then
+              IS_PRERELEASE="true"
+              IS_LATEST="false"
+              RELEASE_TITLE="FNode $TAG_NAME (Pre-release)"
+            else
+              IS_PRERELEASE="false"
+              IS_LATEST="true"
+              RELEASE_TITLE="FNode $TAG_NAME"
+            fi
+          elif [ "$EVENT_NAME" = "release" ] || [[ "$REF" == refs/tags/* ]]; then
+            VERSION="${REF_NAME#v}"
+            TAG_NAME="$VERSION"
+            if [[ "$VERSION" =~ -pre- ]] || [[ "$VERSION" =~ - ]]; then
+              IS_PRERELEASE="true"
+              IS_LATEST="false"
+              RELEASE_TITLE="FNode $TAG_NAME (Pre-release)"
+            else
+              IS_PRERELEASE="false"
+              IS_LATEST="true"
+              RELEASE_TITLE="FNode $TAG_NAME"
+            fi
+          elif [[ "$REF_NAME" == "master" || "$REF_NAME" == "main" ]]; then
+            # Master update latest version
+            TAG_ON_COMMIT=$(git tag --points-at HEAD | grep -E '^[vV]?[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)
+            if [ -n "$TAG_ON_COMMIT" ]; then
+              VERSION="${TAG_ON_COMMIT#v}"
+            else
+              VERSION="$UPGRADED_VERSION"
+            fi
+            TAG_NAME="$VERSION"
+            IS_PRERELEASE="false"
+            IS_LATEST="true"
+            RELEASE_TITLE="FNode $TAG_NAME"
+          elif [[ "$REF_NAME" == "dev" || "$REF_NAME" == "dev_new" || "$REF_NAME" == dev/* ]]; then
+            # Dev update through pre-release: <upgraded_version>-pre-<commit_number>
+            TAG_NAME="${UPGRADED_VERSION}-pre-${COMMITS_SINCE}"
+            VERSION="$TAG_NAME"
+            IS_PRERELEASE="true"
+            IS_LATEST="false"
+            RELEASE_TITLE="FNode $TAG_NAME (Pre-release)"
+          else
+            # Default / PR / other branches
+            TAG_NAME="${UPGRADED_VERSION}-pre-${COMMITS_SINCE}"
+            VERSION="$TAG_NAME"
+            IS_PRERELEASE="true"
+            IS_LATEST="false"
+            RELEASE_TITLE="FNode $TAG_NAME (Pre-release)"
+          fi
+
+          echo "Calculated metadata:"
+          echo "  version: $VERSION"
+          echo "  tag_name: $TAG_NAME"
+          echo "  is_prerelease: $IS_PRERELEASE"
+          echo "  is_latest: $IS_LATEST"
+          echo "  release_title: $RELEASE_TITLE"
+          echo "  commit: $SHORT_COMMIT"
+          echo "  buildDate: $BUILD_DATE"
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+          echo "is_latest=$IS_LATEST" >> $GITHUB_OUTPUT
+          echo "release_title=$RELEASE_TITLE" >> $GITHUB_OUTPUT
+          echo "commit=$SHORT_COMMIT" >> $GITHUB_OUTPUT
+          echo "buildDate=$BUILD_DATE" >> $GITHUB_OUTPUT
+
+  test:
+    name: Run Verification Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.x'
+
+      - name: Run verification test suite
+        run: |
+          GOEXPERIMENT=jsonv2 go test -v -tags "with_utls" ./...
+
   build:
+    name: Build (${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm }}${{ matrix.gomips }})
+    needs: [version, test]
     strategy:
       matrix:
         goos: [linux, windows, freebsd, darwin]
@@ -94,27 +239,6 @@ jobs:
     steps:
       - name: Checkout codebase
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get version and metadata
-        run: |
-          if [ "${{ github.event_name }}" = "release" ]; then
-            VERSION="${{ github.ref_name }}"
-          else
-            # Try to get tag on current commit
-            TAG_ON_COMMIT=$(git tag --points-at HEAD | head -n 1)
-            if [ -n "$TAG_ON_COMMIT" ]; then
-              VERSION="$TAG_ON_COMMIT"
-            else
-              VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "${{ github.sha }}" | cut -c1-8)
-            fi
-          fi
-          # Strip leading 'v' if present
-          VERSION="${VERSION#v}"
-          echo "version=$VERSION" >> $GITHUB_ENV
-          echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          echo "buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
 
       - name: Show workflow information
         id: get_filename
@@ -136,9 +260,9 @@ jobs:
 
       - name: Build FNode
         run: |
-          echo "version: ${{ env.version }}, commit: ${{ env.commit }}, buildDate: ${{ env.buildDate }}"
+          echo "version: ${{ needs.version.outputs.version }}, commit: ${{ needs.version.outputs.commit }}, buildDate: ${{ needs.version.outputs.buildDate }}"
           mkdir -p build_assets
-          GOEXPERIMENT=jsonv2 go build -v -o build_assets/FNode -tags "sing with_quic with_grpc with_utls with_wireguard with_acme with_gvisor" -trimpath -ldflags "-X 'github.com/tavut846/FNode/cmd.version=${{ env.version }}' -X 'github.com/tavut846/FNode/cmd.commit=${{ env.commit }}' -X 'github.com/tavut846/FNode/cmd.buildDate=${{ env.buildDate }}' -s -w -buildid="
+          GOEXPERIMENT=jsonv2 go build -v -o build_assets/FNode -tags "sing with_quic with_grpc with_utls with_wireguard with_acme with_gvisor" -trimpath -ldflags "-X 'github.com/tavut846/FNode/cmd.version=${{ needs.version.outputs.version }}' -X 'github.com/tavut846/FNode/cmd.commit=${{ needs.version.outputs.commit }}' -X 'github.com/tavut846/FNode/cmd.buildDate=${{ needs.version.outputs.buildDate }}' -s -w -buildid="
 
       - name: Rename Windows FNode
         if: matrix.goos == 'windows'
@@ -182,39 +306,33 @@ jobs:
             ./FNode-${{ steps.get_filename.outputs.ASSET_NAME }}.zip*
 
   publish:
-    needs: build
+    name: Publish Release
+    needs: [version, build]
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.event_name == 'push'
+    if: github.event_name != 'pull_request'
     steps:
       - name: Checkout codebase
         uses: actions/checkout@v4
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
           pattern: FNode-*
           merge-multiple: true
+
       - name: Display downloaded files
         run: ls -lh ./artifacts
 
-      - name: Create Draft Release
-        if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
-        run: |
-          gh release create \
-            "draft-$(git rev-parse --short HEAD 2>/dev/null || echo ${{ github.sha }} | cut -c1-8)-${{ github.run_number }}" \
-            artifacts/* \
-            --target ${{ github.sha }} \
-            --draft \
-            --title "Build #${{ github.run_number }}" \
-            --notes "Automated build from commit ${{ github.sha }} on ${{ github.ref_name }}"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish Tagged Release
-        if: github.event_name == 'release'
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/*
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ needs.version.outputs.tag_name }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ needs.version.outputs.release_title }}
+          prerelease: ${{ needs.version.outputs.is_prerelease == 'true' }}
+          make_latest: ${{ needs.version.outputs.is_latest == 'true' }}
+          files: ./artifacts/*
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
