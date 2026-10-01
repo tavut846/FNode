@@ -21,9 +21,13 @@ The FNode deployment system consists of three main parts:
 -   **Service Setup**: Generates and registers a systemd unit (or OpenRC init script for Alpine) to enable auto-start on boot.
 -   **Management Link**: Downloads the management script and creates a symlink at `/usr/bin/fnode` for easy access.
 
-### 2. Management Logic (`FNode.sh`)
+### 2. Management Logic (`FNode.sh` & `initconfig.sh`)
 -   **Service Control**: Wraps `systemctl` commands to provide a user-friendly menu for starting, stopping, and restarting the service.
--   **Configuration Generator**: Contains a built-in wizard to generate `config.json` specifically for the **sing-box** core. It prunes non-essential options to ensure a streamlined setup.
+-   **Configuration Generator**: Contains a built-in wizard to generate `config.json` specifically for the **sing-box** core. It prunes non-essential options to ensure a streamlined setup. Supports TLS modes: `http`, `dns`, `self`, and `file`.
+-   **Caddy & Reverse Proxy Integration**:
+    -   Option to install Caddy with the Cloudflare DNS module (`caddy-dns/cloudflare`).
+    -   Automated configuration of `/etc/caddy/Caddyfile` with reverse proxy camouflage and Cloudflare DNS-01 ACME certificate issuance.
+    -   Auto-detection of Caddy certificates under `/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/<domain>/` for seamless binding in FNode with `CertMode: "file"`.
 -   **Update Mechanism**: Allows one-click updates to the latest backend version without losing configuration.
 
 ## Installation on a VPS
@@ -43,9 +47,11 @@ Once installed, you can manage the service by simply typing:
 ```bash
 fnode
 ```
-This will open the management menu where you can generate certificates, update the core, or check service logs.
+This will open the management menu where you can generate configurations, install Caddy, configure reverse proxy with Cloudflare TLS, update the core, or check service logs.
 
 ## Directory Structure (Standard Installation)
 -   **Binary directory**: `/usr/local/FNode/`
 -   **Configuration directory**: `/etc/FNode/`
 -   **Management script**: `/usr/bin/FNode`
+-   **Caddy configuration**: `/etc/caddy/Caddyfile`, `/etc/caddy/caddy.env`
+-   **Caddy certificates**: `/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/`

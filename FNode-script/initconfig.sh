@@ -70,20 +70,50 @@ add_node_config() {
 
     certmode="none"
     certdomain="example.com"
+    certfile="/etc/FNode/fullchain.cer"
+    keyfile="/etc/FNode/cert.key"
     if [[ "$isreality" != "y" && "$isreality" != "Y" && ( "$istls" == "y" || "$istls" == "Y" ) ]]; then
         echo -e "${yellow}请选择证书申请模式：${plain}"
         echo -e "${green}1. http模式自动申请，节点域名已正确解析${plain}"
         echo -e "${green}2. dns模式自动申请，需填入正确域名服务商API参数${plain}"
-        echo -e "${green}3. self模式，自签证书或提供已有证书文件${plain}"
+        echo -e "${green}3. self模式，自签证书${plain}"
+        echo -e "${green}4. file模式，使用已有证书文件 (支持自动检测 Caddy 证书)${plain}"
         read -rp "请输入：" certmode
         case "$certmode" in
             1 ) certmode="http" ;;
             2 ) certmode="dns" ;;
             3 ) certmode="self" ;;
+            4 ) certmode="file" ;;
+            * ) certmode="none" ;;
         esac
-        read -rp "请输入节点证书域名(example.com)：" certdomain
-        if [ "$certmode" != "http" ]; then
-            echo -e "${red}请手动修改配置文件后重启FNode！${plain}"
+
+        caddy_base_dir="/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory"
+        if [ "$certmode" == "file" ]; then
+            if [ -d "$caddy_base_dir" ]; then
+                echo -e "${green}检测到 Caddy 证书目录存在，发现以下已申请证书的域名：${plain}"
+                ls -1 "$caddy_base_dir" 2>/dev/null
+            fi
+            read -rp "请输入节点证书域名 (例如: domain.com)：" certdomain
+            caddy_cert="${caddy_base_dir}/${certdomain}/${certdomain}.crt"
+            caddy_key="${caddy_base_dir}/${certdomain}/${certdomain}.key"
+            if [ -f "$caddy_cert" ] && [ -f "$caddy_key" ]; then
+                echo -e "${green}已成功检测并匹配到 Caddy 证书与私钥！${plain}"
+                echo -e "${green}CertFile: ${caddy_cert}${plain}"
+                echo -e "${green}KeyFile:  ${caddy_key}${plain}"
+                certfile="$caddy_cert"
+                keyfile="$caddy_key"
+            else
+                echo -e "${yellow}未在标准 Caddy 目录下检测到该域名的证书文件，请手动输入路径或使用默认路径：${plain}"
+                read -rp "请输入证书文件路径 (默认: ${caddy_cert}): " input_certfile
+                read -rp "请输入私钥文件路径 (默认: ${caddy_key}): " input_keyfile
+                certfile="${input_certfile:-$caddy_cert}"
+                keyfile="${input_keyfile:-$caddy_key}"
+            fi
+        else
+            read -rp "请输入节点证书域名(example.com)：" certdomain
+            if [ "$certmode" != "http" ]; then
+                echo -e "${red}请手动修改配置文件后重启FNode！${plain}"
+            fi
         fi
     fi
     ipv6_support=$(check_ipv6_support)
@@ -110,8 +140,8 @@ add_node_config() {
                 "CertMode": "$certmode",
                 "RejectUnknownSni": false,
                 "CertDomain": "$certdomain",
-                "CertFile": "/etc/FNode/fullchain.cer",
-                "KeyFile": "/etc/FNode/cert.key",
+                "CertFile": "$certfile",
+                "KeyFile": "$keyfile",
                 "Email": "fnode@github.com",
                 "Provider": "cloudflare",
                 "DNSEnv": {

@@ -475,20 +475,50 @@ add_node_config() {
 
     certmode="none"
     certdomain="example.com"
+    certfile="/etc/FNode/fullchain.cer"
+    keyfile="/etc/FNode/cert.key"
     if [[ "$isreality" != "y" && "$isreality" != "Y" && ( "$istls" == "y" || "$istls" == "Y" ) ]]; then
         echo -e "${yellow}请选择证书申请模式：${plain}"
         echo -e "${green}1. http模式自动申请，节点域名已正确解析${plain}"
         echo -e "${green}2. dns模式自动申请，需填入正确域名服务商API参数${plain}"
-        echo -e "${green}3. self模式，自签证书或提供已有证书文件${plain}"
+        echo -e "${green}3. self模式，自签证书${plain}"
+        echo -e "${green}4. file模式，使用已有证书文件 (支持自动检测 Caddy 证书)${plain}"
         read -rp "请输入：" certmode
         case "$certmode" in
             1 ) certmode="http" ;;
             2 ) certmode="dns" ;;
             3 ) certmode="self" ;;
+            4 ) certmode="file" ;;
+            * ) certmode="none" ;;
         esac
-        read -rp "请输入节点证书域名(example.com)：" certdomain
-        if [ "$certmode" != "http" ]; then
-            echo -e "${red}请手动修改配置文件后重启FNode！${plain}"
+
+        caddy_base_dir="/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory"
+        if [ "$certmode" == "file" ]; then
+            if [ -d "$caddy_base_dir" ]; then
+                echo -e "${green}检测到 Caddy 证书目录存在，发现以下已申请证书的域名：${plain}"
+                ls -1 "$caddy_base_dir" 2>/dev/null
+            fi
+            read -rp "请输入节点证书域名 (例如: domain.com)：" certdomain
+            caddy_cert="${caddy_base_dir}/${certdomain}/${certdomain}.crt"
+            caddy_key="${caddy_base_dir}/${certdomain}/${certdomain}.key"
+            if [ -f "$caddy_cert" ] && [ -f "$caddy_key" ]; then
+                echo -e "${green}已成功检测并匹配到 Caddy 证书与私钥！${plain}"
+                echo -e "${green}CertFile: ${caddy_cert}${plain}"
+                echo -e "${green}KeyFile:  ${caddy_key}${plain}"
+                certfile="$caddy_cert"
+                keyfile="$caddy_key"
+            else
+                echo -e "${yellow}未在标准 Caddy 目录下检测到该域名的证书文件，请手动输入路径或使用默认路径：${plain}"
+                read -rp "请输入证书文件路径 (默认: ${caddy_cert}): " input_certfile
+                read -rp "请输入私钥文件路径 (默认: ${caddy_key}): " input_keyfile
+                certfile="${input_certfile:-$caddy_cert}"
+                keyfile="${input_keyfile:-$caddy_key}"
+            fi
+        else
+            read -rp "请输入节点证书域名(example.com)：" certdomain
+            if [ "$certmode" != "http" ]; then
+                echo -e "${red}请手动修改配置文件后重启FNode！${plain}"
+            fi
         fi
     fi
     ipv6_support=$(check_ipv6_support)
@@ -516,8 +546,8 @@ add_node_config() {
                 "CertMode": "$certmode",
                 "RejectUnknownSni": false,
                 "CertDomain": "$certdomain",
-                "CertFile": "/etc/FNode/fullchain.cer",
-                "KeyFile": "/etc/FNode/cert.key",
+                "CertFile": "$certfile",
+                "KeyFile": "$keyfile",
                 "Email": "fnode@github.com",
                 "Provider": "cloudflare",
                 "DNSEnv": {
@@ -796,6 +826,168 @@ open_ports() {
     echo -e "${green}放开防火墙端口成功！${plain}"
 }
 
+# 安装 Caddy (集成 Cloudflare DNS 模块)
+install_caddy() {
+    echo -e "${green}开始安装 Caddy (包含 Cloudflare DNS 模块)...${plain}"
+    caddy_arch="amd64"
+    if [[ $arch == "arm64-v8a" || $arch == "arm64" || $(uname -m) == "aarch64" ]]; then
+        caddy_arch="arm64"
+    elif [[ $arch == "s390x" ]]; then
+        caddy_arch="s390x"
+    else
+        caddy_arch="amd64"
+    fi
+
+    mkdir -p /etc/caddy
+    echo -e "正在从官方获取集成 Cloudflare DNS 模块的 Caddy 二进制文件..."
+    curl -o /usr/bin/caddy -L "https://caddyserver.com/api/download?os=linux&arch=${caddy_arch}&p=github.com%2Fcaddy-dns%2Fcloudflare"
+    if [[ $? -ne 0 || ! -s /usr/bin/caddy ]]; then
+        echo -e "${red}下载带 Cloudflare 模块的 Caddy 失败，尝试标准 Caddy 安装...${plain}"
+        if [[ x"${release}" == x"debian" || x"${release}" == x"ubuntu" ]]; then
+            apt update -y >/dev/null 2>&1
+            apt install -y debian-keyring debian-archive-keyring apt-transport-https curl >/dev/null 2>&1
+            curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg --yes >/dev/null 2>&1
+            curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list >/dev/null 2>&1
+            apt update -y >/dev/null 2>&1
+            apt install -y caddy >/dev/null 2>&1
+        elif [[ x"${release}" == x"centos" ]]; then
+            yum install -y yum-plugin-copr >/dev/null 2>&1
+            yum copr enable -y @caddy/caddy >/dev/null 2>&1
+            yum install -y caddy >/dev/null 2>&1
+        fi
+    else
+        chmod +x /usr/bin/caddy
+    fi
+
+    if [[ x"${release}" == x"alpine" ]]; then
+        cat <<EOF > /etc/init.d/caddy
+#!/sbin/openrc-run
+
+name="caddy"
+description="Caddy web server"
+
+command="/usr/bin/caddy"
+command_args="run --config /etc/caddy/Caddyfile"
+command_user="root"
+pidfile="/run/caddy.pid"
+command_background="yes"
+
+depend() {
+    need net
+}
+EOF
+        chmod +x /etc/init.d/caddy
+        rc-update add caddy default >/dev/null 2>&1
+    else
+        cat <<EOF > /etc/systemd/system/caddy.service
+[Unit]
+Description=Caddy
+Documentation=https://caddyserver.com/docs/
+After=network.target network-online.target
+Requires=network-online.target
+
+[Service]
+Type=notify
+User=root
+Group=root
+EnvironmentFile=-/etc/caddy/caddy.env
+ExecStart=/usr/bin/caddy run --environ --config /etc/caddy/Caddyfile
+ExecReload=/usr/bin/caddy reload --config /etc/caddy/Caddyfile --force
+TimeoutStopSec=5s
+LimitNOFILE=1048576
+PrivateTmp=true
+ProtectSystem=full
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        systemctl daemon-reload
+        systemctl enable caddy >/dev/null 2>&1
+    fi
+    echo -e "${green}Caddy 安装并配置服务完成！${plain}"
+}
+
+# 配置 Caddy 反向代理与证书申请
+setup_caddy_reverse_proxy() {
+    if ! command -v caddy &>/dev/null; then
+        echo -e "${yellow}未检测到 Caddy，正在为您自动安装 Caddy...${plain}"
+        install_caddy
+    fi
+
+    echo -e "${yellow}===== Caddy 反向代理与 Cloudflare DNS 证书配置向导 =====${plain}"
+    read -rp "请输入需要配置的域名 (例如: domain.com): " caddy_domain
+    if [ -z "$caddy_domain" ]; then
+        echo -e "${red}域名不能为空！${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    read -rp "请输入 Cloudflare API Token (用于 DNS-01 验证申请证书): " cf_token
+    if [ -z "$cf_token" ]; then
+        echo -e "${red}Cloudflare API Token 不能为空！${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    read -rp "请输入反向代理伪装目标网站 (默认: https://simulate-news.316293.xyz): " proxy_dest
+    if [ -z "$proxy_dest" ]; then
+        proxy_dest="https://simulate-news.316293.xyz"
+    fi
+
+    # 提取目标网站的 Host (如 simulate-news.316293.xyz)
+    target_host=$(echo "$proxy_dest" | sed -e 's|^[^/]*//||' -e 's|/.*$||')
+
+    mkdir -p /etc/caddy
+    echo "CLOUDFLARE_API_TOKEN=${cf_token}" > /etc/caddy/caddy.env
+    chmod 600 /etc/caddy/caddy.env
+
+    cat <<EOF > /etc/caddy/Caddyfile
+${caddy_domain} {
+    encode gzip
+
+    tls {
+        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+        protocols tls1.2 tls1.3
+    }
+
+    reverse_proxy ${proxy_dest} {
+        header_up Host ${target_host}
+        header_up X-Real-IP {http.request.remote}
+        header_up X-Forwarded-Proto https
+        header_up Cache-Control "no-cache, no-store, must-revalidate"
+        header_up Pragma "no-cache"
+        header_up Expires "0"
+
+        header_down Cache-Control "no-cache, no-store, must-revalidate"
+        header_down Pragma "no-cache"
+        header_down Expires "0"
+    }
+}
+EOF
+
+    echo -e "${green}正在启动 Caddy 服务并申请证书...${plain}"
+    if [[ x"${release}" == x"alpine" ]]; then
+        service caddy restart
+    else
+        systemctl restart caddy
+        sleep 2
+        systemctl status caddy --no-pager
+    fi
+
+    echo -e "${green}========================================${plain}"
+    echo -e "${green}Caddy 反向代理已成功配置！${plain}"
+    echo -e "域名: ${caddy_domain}"
+    echo -e "伪装反代目标: ${proxy_dest}"
+    echo -e "证书存储目录预期为:"
+    echo -e "/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${caddy_domain}/"
+    echo -e "${green}现在你可以运行 FNode 生成配置，并选择 'file' 模式自动对接该证书！${plain}"
+    echo -e "${green}========================================${plain}"
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+
 show_usage() {
     echo "FNode 管理脚本使用方法: "
     echo "------------------------------------------"
@@ -813,6 +1005,7 @@ show_usage() {
     echo "FNode update x.x.x - 安装 FNode 指定版本"
     echo "FNode install      - 安装 FNode"
     echo "FNode uninstall    - 卸载 FNode"
+    echo "FNode caddy        - 安装/配置 Caddy (支持 Cloudflare DNS 反代与证书)"
     echo "FNode version      - 查看 FNode 版本"
     echo "------------------------------------------"
 }
@@ -846,11 +1039,12 @@ show_menu() {
   ${green}14.${plain} 升级 FNode 维护脚本
   ${green}15.${plain} 生成 FNode 配置文件
   ${green}16.${plain} 放行 VPS 的所有网络端口
-  ${green}17.${plain} 退出脚本
+  ${green}17.${plain} 安装/配置 Caddy 反代与证书
+  ${green}18.${plain} 退出脚本
  "
  #后续更新可加入上方字符串中
     show_status
-    echo && read -rp "请输入选择 [0-17]: " num
+    echo && read -rp "请输入选择 [0-18]: " num
 
     case "${num}" in
         0) config ;;
@@ -870,8 +1064,9 @@ show_menu() {
         14) update_shell ;;
         15) generate_config_file ;;
         16) open_ports ;;
-        17) exit ;;
-        *) echo -e "${red}请输入正确的数字 [0-16]${plain}" ;;
+        17) setup_caddy_reverse_proxy ;;
+        18) exit ;;
+        *) echo -e "${red}请输入正确的数字 [0-18]${plain}" ;;
     esac
 }
 
@@ -892,6 +1087,8 @@ if [[ $# > 0 ]]; then
         "uninstall") check_install 0 && uninstall 0 ;;
         "x25519") check_install 0 && generate_x25519_key 0 ;;
         "version") check_install 0 && show_FNode_version 0 ;;
+        "caddy") setup_caddy_reverse_proxy 0 ;;
+        "install_caddy") install_caddy 0 ;;
         "update_shell") update_shell ;;
         *) show_usage
     esac

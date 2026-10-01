@@ -1,0 +1,1 @@
+{"nodes": [{"id": "$graphify-root$_supportproject_sing_box_constant_cgo_disabled_go", "label": "cgo_disabled.go", "file_type": "code", "source_file": "SupportProject/sing-box/constant/cgo_disabled.go", "source_location": "L1"}], "edges": [], "raw_calls": [], "go_imports": {}}

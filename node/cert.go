@@ -9,13 +9,47 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"path"
 	"time"
 
 	"github.com/tavut846/FNode/common/file"
 	log "github.com/sirupsen/logrus"
 )
 
+func findCaddyCertificate(domain string) (string, string) {
+	if domain == "" {
+		return "", ""
+	}
+	candidates := []string{
+		fmt.Sprintf("/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/%s", domain),
+		fmt.Sprintf("/root/.local/share/caddy/certificates/acme.zerossl.com-v2-dv90/%s", domain),
+	}
+	if home, err := os.UserHomeDir(); err == nil && home != "" && home != "/root" {
+		candidates = append(candidates,
+			fmt.Sprintf("%s/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/%s", home, domain),
+			fmt.Sprintf("%s/.local/share/caddy/certificates/acme.zerossl.com-v2-dv90/%s", home, domain),
+		)
+	}
+	candidates = append(candidates,
+		fmt.Sprintf("/var/lib/caddy/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/%s", domain),
+		fmt.Sprintf("/var/lib/caddy/.local/share/caddy/certificates/acme.zerossl.com-v2-dv90/%s", domain),
+	)
+
+	for _, dir := range candidates {
+		crt := path.Join(dir, domain+".crt")
+		key := path.Join(dir, domain+".key")
+		if file.IsExist(crt) && file.IsExist(key) {
+			return crt, key
+		}
+	}
+	return "", ""
+}
+
 func (c *Controller) renewCertTask() error {
+	switch c.CertConfig.CertMode {
+	case "none", "", "file", "self":
+		return nil
+	}
 	l, err := NewLego(c.CertConfig)
 	if err != nil {
 		log.WithField("tag", c.tag).Info("new lego error: ", err)
@@ -33,8 +67,23 @@ func (c *Controller) requestCert() error {
 	switch c.CertConfig.CertMode {
 	case "none", "":
 	case "file":
+		// If cert or key file is not explicitly set, or not found, try auto-detecting from Caddy
+		if (c.CertConfig.CertFile == "" || c.CertConfig.KeyFile == "" || !file.IsExist(c.CertConfig.CertFile) || !file.IsExist(c.CertConfig.KeyFile)) && c.CertConfig.CertDomain != "" {
+			caddyCert, caddyKey := findCaddyCertificate(c.CertConfig.CertDomain)
+			if caddyCert != "" && caddyKey != "" {
+				c.CertConfig.CertFile = caddyCert
+				c.CertConfig.KeyFile = caddyKey
+				log.WithField("tag", c.tag).Infof("auto-detected Caddy certificates for domain %s: cert=%s, key=%s", c.CertConfig.CertDomain, caddyCert, caddyKey)
+			}
+		}
 		if c.CertConfig.CertFile == "" || c.CertConfig.KeyFile == "" {
-			return fmt.Errorf("cert file path or key file path not exist")
+			return fmt.Errorf("cert file path or key file path not specified")
+		}
+		if !file.IsExist(c.CertConfig.CertFile) {
+			return fmt.Errorf("cert file not found: %s", c.CertConfig.CertFile)
+		}
+		if !file.IsExist(c.CertConfig.KeyFile) {
+			return fmt.Errorf("key file not found: %s", c.CertConfig.KeyFile)
 		}
 	case "dns", "http":
 		if c.CertConfig.CertFile == "" || c.CertConfig.KeyFile == "" {

@@ -1,3 +1,9 @@
+## FNode Architecture & Context
+
+- Always read [docs/PROJECT_GUIDE.md](docs/PROJECT_GUIDE.md) to understand the project architecture, Xboard panel API interactions, sing-box core integration, FNode-script management, TLS certificate handling (including Caddy integration), and configuration rules.
+- Maintain sing-box core exclusivity; do not reintroduce legacy Xray or standalone Hysteria dependencies.
+- Ensure all Go code builds and passes tests using `GOEXPERIMENT=jsonv2`.
+
 ## graphify
 
 This project has a graphify knowledge graph at graphify-out/.

@@ -242,8 +242,20 @@ func (c *Client) GetNodeInfo() (node *NodeInfo, err error) {
 		ForceContentType("application/json").
 		Get(path)
 
+	if err != nil {
+		return nil, c.checkResponse(r, path, err)
+	}
+	if r == nil {
+		return nil, fmt.Errorf("received nil response")
+	}
+	if r.RawBody() != nil {
+		defer r.RawBody().Close()
+	}
 	if r.StatusCode() == 304 {
 		return nil, nil
+	}
+	if err = c.checkResponse(r, path, err); err != nil {
+		return nil, err
 	}
 	hash := sha256.Sum256(r.Body())
 	newBodyHash := hex.EncodeToString(hash[:])
@@ -252,19 +264,6 @@ func (c *Client) GetNodeInfo() (node *NodeInfo, err error) {
 	}
 	c.responseBodyHash = newBodyHash
 	c.nodeEtag = r.Header().Get("ETag")
-	if err = c.checkResponse(r, path, err); err != nil {
-		return nil, err
-	}
-
-	if r != nil {
-		defer func() {
-			if r.RawBody() != nil {
-				r.RawBody().Close()
-			}
-		}()
-	} else {
-		return nil, fmt.Errorf("received nil response")
-	}
 	node = &NodeInfo{
 		Id:   c.NodeId,
 		Type: c.NodeType,

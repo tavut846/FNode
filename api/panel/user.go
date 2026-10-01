@@ -38,6 +38,9 @@ func (c *Client) GetUserList() ([]UserInfo, error) {
 		SetHeader("X-Response-Format", "msgpack").
 		SetDoNotParseResponse(true).
 		Get(path)
+	if err != nil {
+		return nil, c.checkResponse(r, path, err)
+	}
 	if r == nil || r.RawResponse == nil {
 		return nil, fmt.Errorf("received nil response or raw response")
 	}
@@ -97,11 +100,11 @@ func (c *Client) GetUserAlive() (map[int]int, error) {
 	r, err := c.client.R().
 		ForceContentType("application/json").
 		Get(path)
-	if err != nil || r.StatusCode() >= 399 {
+	if err != nil || r == nil || r.StatusCode() >= 399 {
 		c.AliveMap.Alive = make(map[int]int)
 		return c.AliveMap.Alive, nil
 	}
-	if r == nil || r.RawResponse == nil {
+	if r.RawResponse == nil {
 		fmt.Printf("received nil response or raw response")
 		c.AliveMap.Alive = make(map[int]int)
 		return c.AliveMap.Alive, nil
@@ -146,9 +149,8 @@ func (c *Client) ReportNodeOnlineUsers(data *map[int][]string) error {
 		ForceContentType("application/json").
 		Post(path)
 	err = c.checkResponse(r, path, err)
-
 	if err != nil {
-		return nil
+		return err
 	}
 
 	return nil

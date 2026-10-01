@@ -33,11 +33,11 @@
       "TCPFastOpen": false,
       "SniffEnabled": true,
       "CertConfig": {
-        "CertMode": "self",
+        "CertMode": "file",
         "RejectUnknownSni": false,
         "CertDomain": "example.com",
-        "CertFile": "/etc/FNode/fullchain.cer",
-        "KeyFile": "/etc/FNode/cert.key",
+        "CertFile": "/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/example.com/example.com.crt",
+        "KeyFile": "/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/example.com/example.com.key",
         "Provider": "cloudflare",
         "DNSEnv": {
           "EnvName": "env1"

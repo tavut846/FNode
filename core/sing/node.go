@@ -93,6 +93,11 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 			tls.Enabled = true
 			tls.CertificatePath = c.CertConfig.CertFile
 			tls.KeyPath = c.CertConfig.KeyFile
+			if info.Common != nil && info.Common.ServerName != "" {
+				tls.ServerName = info.Common.ServerName
+			} else if c.CertConfig.CertDomain != "" {
+				tls.ServerName = c.CertConfig.CertDomain
+			}
 		}
 	case panel.Reality:
 		tls.Enabled = true
