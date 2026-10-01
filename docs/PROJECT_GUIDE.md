@@ -233,6 +233,25 @@ When Caddy runs, its certificates are stored in:
 
 Both `initconfig.sh` and FNode's `node/cert.go` automatically inspect and resolve these paths when `CertMode: "file"` is selected.
 
+### 5.3 REALITY Configuration & Camouflage Handshake (VLESS & Trojan)
+REALITY eliminates traditional server-side TLS certificates by impersonating existing TLS 1.3 servers (e.g. Apple, Microsoft, Cloudflare). FNode implements full native REALITY support for VLESS and Trojan nodes using sing-box:
+
+1. **SNI & ServerName Alignment (`tls.server_name`)**:
+   - In sing-box (`common/tls/reality_server.go`), inbound SNI validation is governed by `tlsConfig.ServerNames = map[string]bool{options.ServerName: true}`.
+   - FNode automatically extracts `server_name` from the panel's `tls_settings` (with fallback to `dest` host or common `server_name`) and binds it to `tls.ServerName`. This ensures incoming TLS ClientHello SNI matches the expected camouflage domain rather than falling through to probe fallbacks.
+
+2. **Handshake Target & Destination Splitting (`dest:port`)**:
+   - Camouflage servers can be supplied via `dest` (e.g. `gateway.icloud.com:443`) or `server_name` with optional `server_port`.
+   - FNode robustly splits `host:port` pairs, preventing invalid `:port:port` concatenation in sing-box dialers.
+   - If destination port is omitted or zero, it automatically defaults to `443`.
+
+3. **Panel JSON Compatibility**:
+   - Xboard sends `tls_settings.server_port` as a numeric integer (e.g. `443`) and `xver` as an integer. FNode's `TlsSettings.UnmarshalJSON` accepts both integer and string variants seamlessly.
+   - `short_id` flexibly accepts single strings, comma-separated strings, or JSON arrays of hexadecimal strings.
+
+4. **Engine Build Requirement**:
+   - REALITY is powered by sing-box's uTLS stack. All compilation and tests must include the `-tags "with_utls"` build tag (`-tags "sing with_quic with_grpc with_utls with_wireguard with_acme with_gvisor"`).
+
 ---
 
 ## 6. Build & Test Instructions

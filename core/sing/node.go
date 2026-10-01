@@ -100,29 +100,65 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 			}
 		}
 	case panel.Reality:
-		tls.Enabled = true
-		v := info.VAllss
-		mtd, _ := time.ParseDuration(v.RealityConfig.MaxTimeDiff)
-		port, _ := strconv.Atoi(v.TlsSettings.ServerPort)
-		if port == 0 {
-			port = 443
+		tlsSettings := info.GetTlsSettings()
+		if tlsSettings == nil {
+			return option.Inbound{}, fmt.Errorf("reality tls settings missing for tag %s", tag)
 		}
-		var dest string
-		if v.TlsSettings.Dest != "" {
-			dest = v.TlsSettings.Dest
-		} else {
-			dest = tls.ServerName
+		if tlsSettings.PrivateKey == "" {
+			return option.Inbound{}, fmt.Errorf("reality tls requires private_key for tag %s", tag)
+		}
+
+		serverName := strings.TrimSpace(tlsSettings.ServerName)
+		if serverName == "" && info.Common != nil && info.Common.ServerName != "" {
+			serverName = strings.TrimSpace(info.Common.ServerName)
+		}
+		if serverName == "" && c.CertConfig != nil && c.CertConfig.CertDomain != "" {
+			serverName = strings.TrimSpace(c.CertConfig.CertDomain)
+		}
+
+		dest := strings.TrimSpace(tlsSettings.Dest)
+		if serverName == "" && dest == "" {
+			return option.Inbound{}, fmt.Errorf("reality tls requires server_name or dest for tag %s", tag)
+		}
+
+		destHost := dest
+		if destHost == "" {
+			destHost = serverName
+		}
+
+		destPort := tlsSettings.ServerPort
+		if parts := strings.SplitN(destHost, ":", 2); len(parts) == 2 {
+			destHost = parts[0]
+			if p, err := strconv.Atoi(parts[1]); err == nil && p > 0 {
+				destPort = p
+			}
+		}
+		if destPort <= 0 {
+			destPort = 443
+		}
+
+		if serverName == "" {
+			serverName = destHost
+		}
+
+		// In sing-box reality inbound, tls.ServerName MUST match the client's SNI:
+		// reality_server.go: tlsConfig.ServerNames = map[string]bool{options.ServerName: true}
+		tls.Enabled = true
+		tls.ServerName = serverName
+
+		var mtd time.Duration
+		if info.VAllss != nil && info.VAllss.RealityConfig.MaxTimeDiff != "" {
+			mtd, _ = time.ParseDuration(info.VAllss.RealityConfig.MaxTimeDiff)
 		}
 
 		tls.Reality = &option.InboundRealityOptions{
 			Enabled:    true,
-			ShortID:    v.TlsSettings.GetShortIds(),
-			PrivateKey: v.TlsSettings.PrivateKey,
-			// Xver:       uint8(v.TlsSettings.Xver), // Xver is not supported in cedar2025 fork
+			ShortID:    tlsSettings.GetShortIds(),
+			PrivateKey: tlsSettings.PrivateKey,
 			Handshake: option.InboundRealityHandshakeOptions{
 				ServerOptions: option.ServerOptions{
-					Server:     dest,
-					ServerPort: uint16(port),
+					Server:     destHost,
+					ServerPort: uint16(destPort),
 				},
 			},
 			MaxTimeDifference: badoption.Duration(mtd),

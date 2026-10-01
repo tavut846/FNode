@@ -7764,15 +7764,15 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1778482944.3894114,
-    "seen": 1790827664.2659752,
-    "ast_hash": "685da306809d71f6c3c861a7c1ba15ed",
+    "mtime": 1790839989.281987,
+    "seen": 1790840235.1927388,
+    "ast_hash": "14bae1f8119297813e0b4eb450cc0d38",
     "semantic_hash": ""
   },
   "GEMINI.md": {
-    "mtime": 1790827355.3942206,
-    "seen": 1790827664.2659857,
-    "ast_hash": "54899b7e81fa70bf1d45664c23ee9cdf",
+    "mtime": 1790839960.7496328,
+    "seen": 1790840235.1927452,
+    "ast_hash": "166c65730327295d8ef630f091dd4be5",
     "semantic_hash": ""
   },
   "README.md": {
@@ -10254,15 +10254,27 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1790833813.6540022,
-    "seen": 1790834210.689824,
-    "ast_hash": "44cdebf924a467eb384f1728888693ce",
+    "mtime": 1790839938.7235096,
+    "seen": 1790840235.1932325,
+    "ast_hash": "b16a95311ee88edc72f226ca26de8696",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
     "mtime": 1790833834.083043,
     "seen": 1790834210.6898277,
     "ast_hash": "afb3ede2fcc03b6e5bf43d7f5afa0914",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1790840001.1837976,
+    "seen": 1790840235.192736,
+    "ast_hash": "e0ac70c7f8e5a4ed65e3d76041631a77",
+    "semantic_hash": ""
+  },
+  "docs/COMMUNICATION_FLOW_LOGIC.md": {
+    "mtime": 1790839905.2999885,
+    "seen": 1790840235.1932309,
+    "ast_hash": "6da6e1b6d1d5ef87db8482cdd32e4903",
     "semantic_hash": ""
   }
 }

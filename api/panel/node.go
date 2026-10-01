@@ -79,47 +79,83 @@ type VAllssNode struct {
 type TlsSettings struct {
 	ServerName  string   `json:"server_name"`
 	Dest        string   `json:"dest"`
-	ServerPort  string   `json:"server_port"`
+	ServerPort  int      `json:"-"`
 	ShortId     string   `json:"-"`
 	ShortIds    []string `json:"-"`
 	PrivateKey  string   `json:"private_key"`
 	Mldsa65Seed string   `json:"mldsa65Seed"`
-	Xver        uint64   `json:"xver,string"`
+	Xver        uint64   `json:"-"`
 }
 
 func (t *TlsSettings) UnmarshalJSON(data []byte) error {
 	type Alias TlsSettings
 	aux := struct {
 		*Alias
-		RawShortID json.RawMessage `json:"short_id"`
+		RawShortID    json.RawMessage `json:"short_id"`
+		RawServerPort json.RawMessage `json:"server_port"`
+		RawXver       json.RawMessage `json:"xver"`
 	}{
 		Alias: (*Alias)(t),
 	}
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
+
+	// Flexible server_port (integer 443, string "443", or omitted)
+	if len(aux.RawServerPort) > 0 {
+		var portInt int
+		if err := json.Unmarshal(aux.RawServerPort, &portInt); err == nil {
+			t.ServerPort = portInt
+		} else {
+			var portStr string
+			if err := json.Unmarshal(aux.RawServerPort, &portStr); err == nil {
+				t.ServerPort, _ = strconv.Atoi(strings.TrimSpace(portStr))
+			}
+		}
+	}
+
+	// Flexible xver (integer 0, string "0", or omitted)
+	if len(aux.RawXver) > 0 {
+		var xverInt uint64
+		if err := json.Unmarshal(aux.RawXver, &xverInt); err == nil {
+			t.Xver = xverInt
+		} else {
+			var xverStr string
+			if err := json.Unmarshal(aux.RawXver, &xverStr); err == nil {
+				t.Xver, _ = strconv.ParseUint(strings.TrimSpace(xverStr), 10, 64)
+			}
+		}
+	}
+
+	// Flexible short_id (single string, comma-separated, or JSON array)
 	if len(aux.RawShortID) > 0 {
 		var single string
 		if err := json.Unmarshal(aux.RawShortID, &single); err == nil {
-			t.ShortId = single
-			if single != "" {
-				if strings.Contains(single, ",") {
-					for _, s := range strings.Split(single, ",") {
+			trimmed := strings.TrimSpace(single)
+			t.ShortId = trimmed
+			if trimmed != "" {
+				if strings.Contains(trimmed, ",") {
+					for _, s := range strings.Split(trimmed, ",") {
 						s = strings.TrimSpace(s)
 						if s != "" {
 							t.ShortIds = append(t.ShortIds, s)
 						}
 					}
 				} else {
-					t.ShortIds = []string{single}
+					t.ShortIds = []string{trimmed}
 				}
 			}
 		} else {
 			var list []string
 			if err := json.Unmarshal(aux.RawShortID, &list); err == nil {
-				t.ShortIds = list
-				if len(list) > 0 {
-					t.ShortId = list[0]
+				for _, item := range list {
+					item = strings.TrimSpace(item)
+					if item != "" {
+						t.ShortIds = append(t.ShortIds, item)
+					}
+				}
+				if len(t.ShortIds) > 0 {
+					t.ShortId = t.ShortIds[0]
 				}
 			}
 		}
@@ -133,6 +169,16 @@ func (t *TlsSettings) GetShortIds() []string {
 	}
 	if t.ShortId != "" {
 		return []string{t.ShortId}
+	}
+	return nil
+}
+
+func (n *NodeInfo) GetTlsSettings() *TlsSettings {
+	if n.VAllss != nil {
+		return &n.VAllss.TlsSettings
+	}
+	if n.Trojan != nil {
+		return &n.Trojan.TlsSettings
 	}
 	return nil
 }
@@ -159,8 +205,12 @@ type ShadowsocksNode struct {
 
 type TrojanNode struct {
 	CommonNode
-	Network         string          `json:"network"`
-	NetworkSettings json.RawMessage `json:"networkSettings"`
+	Tls                 int             `json:"tls"`
+	TlsSettings         TlsSettings     `json:"tls_settings"`
+	TlsSettingsBack     *TlsSettings    `json:"tlsSettings"`
+	Network             string          `json:"network"`
+	NetworkSettings     json.RawMessage `json:"networkSettings"`
+	NetworkSettingsBack json.RawMessage `json:"network_settings"`
 }
 
 type TuicNode struct {
@@ -307,9 +357,23 @@ func (c *Client) GetNodeInfo() (node *NodeInfo, err error) {
 		if err != nil {
 			return nil, fmt.Errorf("decode trojan params error: %s", err)
 		}
+		if len(rsp.NetworkSettingsBack) > 0 {
+			rsp.NetworkSettings = rsp.NetworkSettingsBack
+			rsp.NetworkSettingsBack = nil
+		}
+		if rsp.TlsSettingsBack != nil {
+			rsp.TlsSettings = *rsp.TlsSettingsBack
+			rsp.TlsSettingsBack = nil
+		}
 		cm = &rsp.CommonNode
 		node.Trojan = rsp
-		node.Security = Tls
+		if rsp.Tls == Reality {
+			node.Security = Reality
+		} else if rsp.Tls == None {
+			node.Security = None
+		} else {
+			node.Security = Tls
+		}
 	case "tuic":
 		rsp := &TuicNode{}
 		err = json.Unmarshal(r.Body(), rsp)
