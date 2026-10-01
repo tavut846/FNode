@@ -9,6 +9,7 @@ It is a fork of [V2bX](https://github.com/wyx2685/V2bX) (kept under `SupportProj
 ## Mandatory Rules for AI Assistants (Gemini / Antigravity / Claude)
 - **Always keep [docs/PROJECT_GUIDE.md](docs/PROJECT_GUIDE.md) and related docs up to date** whenever modifying or adding features, node types, configurations, scripts, or architectural components.
 - Maintain sing-box core exclusivity; do not reintroduce legacy Xray or standalone Hysteria dependencies.
+- **Mandatory Verification**: After making ANY change, write and run a test to verify it actually works before reporting done (`GOEXPERIMENT=jsonv2 go test -v -tags "with_utls" ./...`). Never declare a task complete without executing verification tests.
 - Ensure all Go code builds and passes tests using `GOEXPERIMENT=jsonv2`.
 
 ---

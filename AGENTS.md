@@ -19,14 +19,20 @@ This document specifies mandatory rules for all AI agents (Antigravity, Gemini, 
 
 ---
 
-## 3. Go Build & Test Environment
+## 3. Mandatory Testing Before Reporting Done (Strict)
 
+- **Write & Run Verification Tests**: After making ANY change, AI agents (Antigravity, Gemini, Claude, Cursor, Copilot, etc.) **MUST** write unit/integration tests covering the change and execute them to verify that the change actually works before reporting done.
+- **Never report completion without executing tests**: Verifying compilation and running tests is mandatory; never assume code works without test execution logs.
 - Go version requirement: **1.25+**.
-- Always build and test with the experimental JSON v2 tag:
+- Always build and test with the experimental JSON v2 tag and required build tags:
   ```bash
-  GOEXPERIMENT=jsonv2 go test ./...
+  # PowerShell:
+  $env:GOEXPERIMENT="jsonv2"; go test -v -tags "with_utls" ./...
+
+  # Linux / Bash:
+  GOEXPERIMENT=jsonv2 go test -v -tags "with_utls" ./...
   ```
-- Any code changes must compile without errors under `GOEXPERIMENT=jsonv2`.
+- Any code changes must compile without errors and pass all tests under `GOEXPERIMENT=jsonv2`.
 
 ---
 

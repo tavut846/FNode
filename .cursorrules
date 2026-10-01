@@ -1,0 +1,19 @@
+# Cursor Rules for FNode
+
+Please adhere strictly to the directives specified in [AGENTS.md](AGENTS.md):
+
+1. **Mandatory Testing Before Completion**:
+   After making any change, write and run tests to verify the code actually works before reporting done:
+   ```bash
+   # Windows PowerShell:
+   $env:GOEXPERIMENT="jsonv2"; go test -v -tags "with_utls" ./...
+
+   # Linux/macOS:
+   GOEXPERIMENT=jsonv2 go test -v -tags "with_utls" ./...
+   ```
+2. **Sing-Box Exclusivity**:
+   Never reintroduce Xray or standalone Hysteria binaries or dependencies.
+3. **Documentation**:
+   Always keep `docs/PROJECT_GUIDE.md` and `docs/COMMUNICATION_FLOW_LOGIC.md` updated.
+4. **Graphify**:
+   Run `graphify update .` after code modifications.

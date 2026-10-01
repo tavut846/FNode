@@ -294,3 +294,4 @@ GOEXPERIMENT=jsonv2 go build -v -o build_assets/FNode \
 3. **Be vigilant about network nil guards**: All HTTP responses in `api/panel/` must check `if err != nil` and `if r == nil` before dereferencing `r.StatusCode()` or `r.Body()`.
 4. **Maintain Hot-Reload Integrity**: Config changes are watched by `conf/watch.go`. Test watchers must never block with an unescaped `select {}`.
 5. **Keep tests decoupled from live ACME endpoints**: Never make live ACME challenge calls in unit tests without verifying explicit environment credentials.
+6. **Mandatory Testing Before Reporting Done**: After making ANY code or configuration change, AI assistants (Antigravity, Gemini, Claude, Cursor, Copilot, etc.) must write and run tests verifying that the change actually works before reporting done (`$env:GOEXPERIMENT="jsonv2"; go test -v -tags "with_utls" ./...`).
