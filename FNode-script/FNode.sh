@@ -653,7 +653,7 @@ generate_config_file() {
             \"Timestamp\": true
         },
         \"NTP\": {
-            \"Enable\": false,
+            \"Enable\": true,
             \"Server\": \"time.apple.com\",
             \"ServerPort\": 0
         },

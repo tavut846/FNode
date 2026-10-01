@@ -51,7 +51,7 @@ func NewSingConfig() *SingConfig {
 			Timestamp: true,
 		},
 		NtpConfig: SingNtpConfig{
-			Enable:     false,
+			Enable:     true,
 			Server:     "time.apple.com",
 			ServerPort: 0,
 		},

@@ -240,9 +240,9 @@
     "semantic_hash": ""
   },
   "conf/sing.go": {
-    "mtime": 1788686962.6354883,
-    "seen": 1790827664.2658806,
-    "ast_hash": "e325766dfc72bb30e87f8809dda6ce48",
+    "mtime": 1790836727.5609443,
+    "seen": 1790837100.0291045,
+    "ast_hash": "8f8599307ddce52be8b042a72f094f7a",
     "semantic_hash": ""
   },
   "conf/watch.go": {
@@ -9522,15 +9522,15 @@
     "semantic_hash": ""
   },
   "FNode-script/FNode.sh": {
-    "mtime": 1790833754.2070434,
-    "seen": 1790834210.6842988,
-    "ast_hash": "9718f5f8ad41d3ea9181582120a12af8",
+    "mtime": 1790836749.314241,
+    "seen": 1790837100.0252457,
+    "ast_hash": "11f0fd5463f1a9e4ef4a7f4d71ee38fb",
     "semantic_hash": ""
   },
   "FNode-script/initconfig.sh": {
-    "mtime": 1790830904.5417025,
-    "seen": 1790831336.675211,
-    "ast_hash": "b58266e333b073aea7b855d5684d2471",
+    "mtime": 1790836736.5830436,
+    "seen": 1790837100.0252535,
+    "ast_hash": "82b6f1b81fa095b46363422f1f0f9e7c",
     "semantic_hash": ""
   },
   "FNode-script/install.sh": {
@@ -10092,9 +10092,9 @@
     "semantic_hash": ""
   },
   "example/config.json": {
-    "mtime": 1790827171.6627526,
-    "seen": 1790827664.2659147,
-    "ast_hash": "9e13f30467b9d07def54f9ff16f6263d",
+    "mtime": 1790836717.992424,
+    "seen": 1790837100.02913,
+    "ast_hash": "bb98800ea659ef8bce19e5c9404fb614",
     "semantic_hash": ""
   },
   "example/sing_origin.json": {
