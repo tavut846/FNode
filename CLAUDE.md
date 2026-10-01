@@ -6,6 +6,11 @@ FNode is a **Go-based backend node server** (`github.com/tavut846/FNode`) that s
 
 It is a fork of [V2bX](https://github.com/wyx2685/V2bX) (kept under `SupportProject/V2bX/` as a reference). FNode is **sing-box only** — the xray/hy2 core paths from V2bX are not active.
 
+## Mandatory Rules for AI Assistants (Gemini / Antigravity / Claude)
+- **Always keep [docs/PROJECT_GUIDE.md](docs/PROJECT_GUIDE.md) and related docs up to date** whenever modifying or adding features, node types, configurations, scripts, or architectural components.
+- Maintain sing-box core exclusivity; do not reintroduce legacy Xray or standalone Hysteria dependencies.
+- Ensure all Go code builds and passes tests using `GOEXPERIMENT=jsonv2`.
+
 ---
 
 ## System Architecture

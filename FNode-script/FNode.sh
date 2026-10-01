@@ -56,12 +56,25 @@ elif [[ x"${release}" == x"debian" ]]; then
     fi
 fi
 
-# 检查系统是否有 IPv6 地址
+# 检查系统是否有有效公网 IPv6 地址与路由
 check_ipv6_support() {
-    if ip -6 addr | grep -q "inet6"; then
-        echo "1"  # 支持 IPv6
+    local has_global_ipv6=0
+    local has_ipv6_route=0
+
+    # 检查是否存在全局非保留 IPv6 地址 (排除 ::1 本地回环和 fe80:: 链路本地地址)
+    if ip -6 addr show scope global 2>/dev/null | grep -q "inet6"; then
+        has_global_ipv6=1
+    fi
+
+    # 检查是否存在 IPv6 默认路由网关
+    if ip -6 route show default 2>/dev/null | grep -q "default"; then
+        has_ipv6_route=1
+    fi
+
+    if [[ $has_global_ipv6 -eq 1 && $has_ipv6_route -eq 1 ]]; then
+        echo "1"  # 支持并拥有可用公网 IPv6 (双栈网络)
     else
-        echo "0"  # 不支持 IPv6
+        echo "0"  # 纯 IPv4 (无有效公网 IPv6)
     fi
 }
 
@@ -565,8 +578,10 @@ add_node_config() {
     fi
     ipv6_support=$(check_ipv6_support)
     listen_ip="0.0.0.0"
+    disable_ipv6_node="true"
     if [ "$ipv6_support" -eq 1 ]; then
         listen_ip="::"
+        disable_ipv6_node="false"
     fi
     node_config=""
     node_config=$(cat <<EOF
@@ -579,6 +594,7 @@ add_node_config() {
             "Timeout": 30,
             "ListenIP": "$listen_ip",
             "SendIP": "0.0.0.0",
+            "DisableIPv6": $disable_ipv6_node,
             "DeviceOnlineMinTraffic": 200,
             "MinReportTraffic": 0,
             "TCPFastOpen": $fastopen,
@@ -612,6 +628,19 @@ generate_config_file() {
     read -rp "是否继续？(y/n): " continue_prompt
     if [[ "$continue_prompt" =~ ^[Nn][Oo]? ]]; then
         exit 0
+    fi
+
+    # 检测 VPS 网络环境 (IPv4 与 IPv6)
+    ipv6_support=$(check_ipv6_support)
+    if [ "$ipv6_support" -eq 1 ]; then
+        echo -e "${green}[网络环境检测] 当前 VPS 具备 IPv4 + IPv6 双栈网络，已自动启用 IPv6 支持。${plain}"
+        disable_ipv6_core="false"
+        domain_strategy="prefer_ipv4"
+    else
+        echo -e "${yellow}[网络环境检测] 当前 VPS 仅具备 IPv4 网络 (未检测到有效公网 IPv6)。${plain}"
+        echo -e "${green}已自动配置: DisableIPv6: true，防止客户端本地 IPv6 请求导致连接超时。${plain}"
+        disable_ipv6_core="true"
+        domain_strategy="prefer_ipv4"
     fi
     
     nodes_config=()
@@ -652,6 +681,8 @@ generate_config_file() {
             \"Level\": \"error\",
             \"Timestamp\": true
         },
+        \"DisableIPv6\": ${disable_ipv6_core},
+        \"DomainStrategy\": \"${domain_strategy}\",
         \"NTP\": {
             \"Enable\": true,
             \"Server\": \"time.apple.com\",

@@ -7764,15 +7764,15 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1778482944.3894114,
-    "seen": 1790827664.2659752,
-    "ast_hash": "685da306809d71f6c3c861a7c1ba15ed",
+    "mtime": 1790839989.281987,
+    "seen": 1790840235.1927388,
+    "ast_hash": "14bae1f8119297813e0b4eb450cc0d38",
     "semantic_hash": ""
   },
   "GEMINI.md": {
-    "mtime": 1790827355.3942206,
-    "seen": 1790827664.2659857,
-    "ast_hash": "54899b7e81fa70bf1d45664c23ee9cdf",
+    "mtime": 1790839960.7496328,
+    "seen": 1790840235.1927452,
+    "ast_hash": "166c65730327295d8ef630f091dd4be5",
     "semantic_hash": ""
   },
   "README.md": {
@@ -9522,15 +9522,15 @@
     "semantic_hash": ""
   },
   "FNode-script/FNode.sh": {
-    "mtime": 1790836749.314241,
-    "seen": 1790837100.0252457,
-    "ast_hash": "11f0fd5463f1a9e4ef4a7f4d71ee38fb",
+    "mtime": 1790838865.0337148,
+    "seen": 1790839319.826401,
+    "ast_hash": "6d236f7b021c10443a2f678627733c2f",
     "semantic_hash": ""
   },
   "FNode-script/initconfig.sh": {
-    "mtime": 1790836736.5830436,
-    "seen": 1790837100.0252535,
-    "ast_hash": "82b6f1b81fa095b46363422f1f0f9e7c",
+    "mtime": 1790838910.3857317,
+    "seen": 1790839319.826405,
+    "ast_hash": "3e0f3cfb773f2a156a3456c205ad4a4e",
     "semantic_hash": ""
   },
   "FNode-script/install.sh": {
@@ -10092,9 +10092,9 @@
     "semantic_hash": ""
   },
   "example/config.json": {
-    "mtime": 1790836717.992424,
-    "seen": 1790837100.02913,
-    "ast_hash": "bb98800ea659ef8bce19e5c9404fb614",
+    "mtime": 1790838932.1363466,
+    "seen": 1790839319.8289473,
+    "ast_hash": "5b4dc938ea7222779f15ce77e7b18d41",
     "semantic_hash": ""
   },
   "example/sing_origin.json": {
@@ -10254,15 +10254,27 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1790833813.6540022,
-    "seen": 1790834210.689824,
-    "ast_hash": "44cdebf924a467eb384f1728888693ce",
+    "mtime": 1790839938.7235096,
+    "seen": 1790840235.1932325,
+    "ast_hash": "b16a95311ee88edc72f226ca26de8696",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
     "mtime": 1790833834.083043,
     "seen": 1790834210.6898277,
     "ast_hash": "afb3ede2fcc03b6e5bf43d7f5afa0914",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1790840001.1837976,
+    "seen": 1790840235.192736,
+    "ast_hash": "e0ac70c7f8e5a4ed65e3d76041631a77",
+    "semantic_hash": ""
+  },
+  "docs/COMMUNICATION_FLOW_LOGIC.md": {
+    "mtime": 1790839905.2999885,
+    "seen": 1790840235.1932309,
+    "ast_hash": "6da6e1b6d1d5ef87db8482cdd32e4903",
     "semantic_hash": ""
   }
 }

@@ -10,6 +10,7 @@
         "Level": "info",
         "Timestamp": true
       },
+      "DisableIPv6": true,
       "NTP": {
         "Enable": true,
         "Server": "time.apple.com",

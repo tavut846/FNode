@@ -65,6 +65,15 @@ FNode was derived from [V2bX](https://github.com/wyx2685/V2bX) and [V2bX-script]
 - Stores generated certificates in `/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/<domain>/`.
 - FNode seamlessly ingests Caddy certificates using `CertMode: "file"`.
 
+### 2.5 End-to-End Communication Flow Logic
+For an exhaustive analysis with diagrams, payloads, and sequence charts, see [docs/COMMUNICATION_FLOW_LOGIC.md](docs/COMMUNICATION_FLOW_LOGIC.md). The system operates on 6 primary information flows:
+1. **FNode → Manager Dashboard**: Heartbeats (`touchNode`), user traffic upload/download bytes (`POST /push`), active device IPs (`POST /alive`).
+2. **FNode → Client**: TLS/Reality handshakes, decrypted internet response streaming, token-bucket bandwidth rate limiting, and instant IPv6 blocking (`DisableIPv6`).
+3. **Manager Dashboard → FNode**: Dynamic inbound configuration (`GET /config`), user lists with UUIDs, speed and device limits (`GET /user`), cluster-wide online counts (`GET /alivelist`).
+4. **Manager Dashboard → Client**: Subscription delivery (`/api/v1/client/subscribe`), node connection profiles (Clash/Sing-box/Shadowrocket), account quotas & expiry headers (`Subscription-Userinfo`).
+5. **Client → FNode**: Cryptographic identity handshakes (UUID/password), encapsulated target requests (`host:port`), and upstream client data.
+6. **Client → Manager Dashboard**: Web portal account login, subscription updates, plan purchases, payments, and support ticket submissions.
+
 ---
 
 ## 3. Directory Layout
