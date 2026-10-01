@@ -56,7 +56,7 @@ FNode was derived from [V2bX](https://github.com/wyx2685/V2bX) and [V2bX-script]
 ### 2.3 FNode-script (`FNode-script/`)
 - Contains installation and administration scripts for Linux servers:
   - `install.sh`: Downloads prebuilt binaries, sets up systemd/openrc services, sets file permissions, and initializes `/etc/FNode/`.
-  - `FNode.sh`: Comprehensive management menu (`FNode` CLI command) supporting service control, log inspection, config generation, BBR installation, Caddy installation, and Cloudflare reverse proxy configuration.
+  - `FNode.sh`: Comprehensive management menu (`FNode` CLI command) supporting service control, log inspection, log cleanup, config generation, BBR installation, Caddy installation, and Cloudflare reverse proxy configuration.
   - `initconfig.sh`: Interactive CLI wizard for creating `/etc/FNode/config.json`.
 
 ### 2.4 Caddy Integration & Reverse Proxy
@@ -153,7 +153,7 @@ FNode configuration is JSON5 compatible (permits comments and trailing commas).
       "ApiHost": "https://xboard.example.com",
       "ApiKey": "secret_token_from_xboard",
       "NodeID": 1,
-      "NodeType": "vless", // vmess, vless, trojan, shadowsocks, hysteria, hysteria2, tuic, anytls, hysteria2-fnode
+      "NodeType": "vless", // vmess, vless, trojan, shadowsocks, hysteria, hysteria2, tuic, anytls
       "Timeout": 30,
       "ListenIP": "0.0.0.0",
       "SendIP": "0.0.0.0",

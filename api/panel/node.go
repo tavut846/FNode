@@ -337,7 +337,7 @@ func (c *Client) GetNodeInfo() (node *NodeInfo, err error) {
 		cm = &rsp.CommonNode
 		node.Hysteria = rsp
 		node.Security = Tls
-	case "hysteria2", "hysteria2-fnode":
+	case "hysteria2":
 		rsp := &Hysteria2Node{}
 		err = json.Unmarshal(r.Body(), rsp)
 		if err != nil {

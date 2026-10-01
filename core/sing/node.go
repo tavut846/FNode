@@ -433,7 +433,7 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 				TLS: &tls,
 			},
 		}
-	case "hysteria2", "hysteria2-fnode":
+	case "hysteria2":
 		in.Type = "hysteria2"
 		tls.ALPN = append(tls.ALPN, "h3")
 		var obfs *option.Hysteria2Obfs
@@ -456,9 +456,6 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 		if target == "" && c.Masquerade != "" {
 			target = c.Masquerade
 		}
-		if info.Type == "hysteria2-fnode" && target == "" {
-			target = "https://www.bing.com"
-		}
 		if target != "" {
 			if strings.HasPrefix(target, "file://") {
 				masquerade = &option.Hysteria2Masquerade{
@@ -475,39 +472,8 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 						RewriteHost: true,
 					},
 				}
-			} else if info.Type == "hysteria2-fnode" {
-				urlTarget := target
-				if strings.Contains(urlTarget, ".") || strings.Contains(urlTarget, "localhost") {
-					urlTarget = "http://" + urlTarget
-				} else {
-					urlTarget = "https://www.bing.com"
-				}
-				masquerade = &option.Hysteria2Masquerade{
-					Type: "proxy",
-					ProxyOptions: option.Hysteria2MasqueradeProxy{
-						URL:         urlTarget,
-						RewriteHost: true,
-					},
-				}
 			}
 		}
-		if info.Type == "hysteria2-fnode" {
-			// Securely shuffle curve preferences using crypto/rand to alter TLS ServerHello fingerprint
-			curves := []option.CurvePreference{
-				option.X25519,
-				option.CurveP256,
-				option.CurveP384,
-				option.CurveP521,
-			}
-			b := make([]byte, len(curves))
-			_, _ = rand.Read(b)
-			for i := len(curves) - 1; i > 0; i-- {
-				j := int(b[i]) % (i + 1)
-				curves[i], curves[j] = curves[j], curves[i]
-			}
-			tls.CurvePreferences = curves
-		}
-
 
 		in.Options = &option.Hysteria2InboundOptions{
 			ListenOptions:         listen,

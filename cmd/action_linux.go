@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/tavut846/FNode/common/exec"
@@ -31,6 +32,12 @@ var (
 			exec.RunCommandStd("journalctl", "-u", "FNode.service", "-e", "--no-pager", "-f")
 		},
 	}
+	cleanLogCommand = cobra.Command{
+		Use:     "clearlog",
+		Aliases: []string{"cleanlog", "clean-log"},
+		Short:   "Clean up FNode logs",
+		Run:     cleanLogHandle,
+	}
 )
 
 func init() {
@@ -38,6 +45,7 @@ func init() {
 	command.AddCommand(&stopCommand)
 	command.AddCommand(&restartCommand)
 	command.AddCommand(&logCommand)
+	command.AddCommand(&cleanLogCommand)
 }
 
 func startHandle(_ *cobra.Command, _ []string) {
@@ -108,4 +116,29 @@ func restartHandle(_ *cobra.Command, _ []string) {
 		return
 	}
 	fmt.Println(Ok("FNode重启成功"))
+}
+
+func cleanLogHandle(_ *cobra.Command, _ []string) {
+	fmt.Println("Cleaning up FNode logs...")
+	_, _ = exec.RunCommandByShell("journalctl --rotate && journalctl --vacuum-time=1s --unit=FNode.service")
+	_, _ = exec.RunCommandByShell("journalctl --vacuum-size=20M")
+
+	commonLogs := []string{
+		"/var/log/FNode.log",
+		"/var/log/fnode.log",
+		"/var/log/fnode.error.log",
+		"/usr/local/FNode/box.log",
+		"/usr/local/FNode/fnode.log",
+		"/etc/FNode/box.log",
+		"/etc/FNode/fnode.log",
+	}
+
+	for _, p := range commonLogs {
+		if fi, err := os.Stat(p); err == nil && !fi.IsDir() {
+			if err := os.Truncate(p, 0); err == nil {
+				fmt.Printf("Truncated log file: %s\n", p)
+			}
+		}
+	}
+	fmt.Println(Ok("FNode logs cleaned successfully"))
 }

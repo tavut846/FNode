@@ -288,6 +288,58 @@ show_log() {
     fi
 }
 
+clean_log() {
+    echo -e "${yellow}正在清理 FNode 运行日志...${plain}"
+
+    # 1. 清理 systemd journal 日志 (针对 FNode 与 Caddy)
+    if [[ x"${release}" != x"alpine" ]] && command -v journalctl &>/dev/null; then
+        echo -e "正在清理 systemd 日志 (FNode.service)..."
+        journalctl --rotate &>/dev/null
+        journalctl --vacuum-time=1s --unit=FNode.service &>/dev/null
+        if systemctl list-unit-files 2>/dev/null | grep -q "caddy.service"; then
+            journalctl --vacuum-time=1s --unit=caddy.service &>/dev/null
+        fi
+        journalctl --vacuum-size=20M &>/dev/null
+    fi
+
+    # 2. 清理配置文件中指定的日志文件 (Log.Output 及 Cores[].Log.Output)
+    config_file="/etc/FNode/config.json"
+    if [[ -f "${config_file}" ]]; then
+        log_paths=$(grep -E '"Output":\s*"[^"]+"' "${config_file}" 2>/dev/null | sed -E 's/.*"Output":\s*"([^"]+)".*/\1/' | grep -v '^$')
+        for lp in ${log_paths}; do
+            if [[ -f "${lp}" ]]; then
+                echo -e "正在截断日志文件: ${lp}"
+                truncate -s 0 "${lp}" 2>/dev/null || : > "${lp}"
+            fi
+        done
+    fi
+
+    # 3. 清理常见的独立日志文件
+    common_logs=(
+        "/var/log/FNode.log"
+        "/var/log/fnode.log"
+        "/var/log/fnode.error.log"
+        "/usr/local/FNode/box.log"
+        "/usr/local/FNode/fnode.log"
+        "/etc/FNode/box.log"
+        "/etc/FNode/fnode.log"
+        "/var/log/caddy/caddy.log"
+        "/var/log/caddy/access.log"
+    )
+
+    for log_file in "${common_logs[@]}"; do
+        if [[ -f "${log_file}" ]]; then
+            echo -e "正在截断日志文件: ${log_file}"
+            truncate -s 0 "${log_file}" 2>/dev/null || : > "${log_file}"
+        fi
+    done
+
+    echo -e "${green}FNode 日志清理完成！${plain}"
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+
 install_bbr() {
     bash <(curl -L -s https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcpx.sh)
 }
@@ -439,7 +491,6 @@ add_node_config() {
     echo -e "${green}6. Trojan${plain}"  
     echo -e "${green}7. Tuic${plain}"
     echo -e "${green}8. AnyTLS${plain}"
-    echo -e "${green}9. Hysteria2FNode${plain}"
     read -rp "请输入：" NodeType
     case "$NodeType" in
         1 ) NodeType="shadowsocks" ;;
@@ -450,23 +501,14 @@ add_node_config() {
         6 ) NodeType="trojan" ;;
         7 ) NodeType="tuic" ;;
         8 ) NodeType="anytls" ;;
-        9 ) NodeType="hysteria2-fnode" ;;
         * ) NodeType="shadowsocks" ;;
     esac
     fastopen=true
     if [ "$NodeType" == "vless" ]; then
         read -rp "请选择是否为reality节点？(y/n)" isreality
-    elif [ "$NodeType" == "hysteria" ] || [ "$NodeType" == "hysteria2" ] || [ "$NodeType" == "hysteria2-fnode" ] || [ "$NodeType" == "tuic" ] || [ "$NodeType" == "anytls" ]; then
+    elif [ "$NodeType" == "hysteria" ] || [ "$NodeType" == "hysteria2" ] || [ "$NodeType" == "tuic" ] || [ "$NodeType" == "anytls" ]; then
         fastopen=false
         istls="y"
-    fi
-
-    masquerade_target=""
-    if [ "$NodeType" == "hysteria2-fnode" ]; then
-        read -rp "请输入 Hysteria2-FNode 伪装网页地址 (默认: https://www.bing.com): " masquerade_target
-        if [ -z "$masquerade_target" ]; then
-            masquerade_target="https://www.bing.com"
-        fi
     fi
 
     if [[ "$isreality" != "y" && "$isreality" != "Y" &&  "$istls" != "y" ]]; then
@@ -999,6 +1041,7 @@ show_usage() {
     echo "FNode enable       - 设置 FNode 开机自启"
     echo "FNode disable      - 取消 FNode 开机自启"
     echo "FNode log          - 查看 FNode 日志"
+    echo "FNode clearlog     - 清理 FNode 日志"
     echo "FNode x25519       - 生成 x25519 密钥"
     echo "FNode generate     - 生成 FNode 配置文件"
     echo "FNode update       - 更新 FNode"
@@ -1029,22 +1072,23 @@ show_menu() {
   ${green}6.${plain} 重启 FNode
   ${green}7.${plain} 查看 FNode 状态
   ${green}8.${plain} 查看 FNode 日志
+  ${green}9.${plain} 清理 FNode 日志
 ————————————————
-  ${green}9.${plain} 设置 FNode 开机自启
-  ${green}10.${plain} 取消 FNode 开机自启
+  ${green}10.${plain} 设置 FNode 开机自启
+  ${green}11.${plain} 取消 FNode 开机自启
 ————————————————
-  ${green}11.${plain} 一键安装 bbr (最新内核)
-  ${green}12.${plain} 查看 FNode 版本
-  ${green}13.${plain} 生成 X25519 密钥
-  ${green}14.${plain} 升级 FNode 维护脚本
-  ${green}15.${plain} 生成 FNode 配置文件
-  ${green}16.${plain} 放行 VPS 的所有网络端口
-  ${green}17.${plain} 安装/配置 Caddy 反代与证书
-  ${green}18.${plain} 退出脚本
+  ${green}12.${plain} 一键安装 bbr (最新内核)
+  ${green}13.${plain} 查看 FNode 版本
+  ${green}14.${plain} 生成 X25519 密钥
+  ${green}15.${plain} 升级 FNode 维护脚本
+  ${green}16.${plain} 生成 FNode 配置文件
+  ${green}17.${plain} 放行 VPS 的所有网络端口
+  ${green}18.${plain} 安装/配置 Caddy 反代与证书
+  ${green}19.${plain} 退出脚本
  "
  #后续更新可加入上方字符串中
     show_status
-    echo && read -rp "请输入选择 [0-18]: " num
+    echo && read -rp "请输入选择 [0-19]: " num
 
     case "${num}" in
         0) config ;;
@@ -1056,17 +1100,18 @@ show_menu() {
         6) check_install && restart ;;
         7) check_install && status ;;
         8) check_install && show_log ;;
-        9) check_install && enable ;;
-        10) check_install && disable ;;
-        11) install_bbr ;;
-        12) check_install && show_FNode_version ;;
-        13) check_install && generate_x25519_key ;;
-        14) update_shell ;;
-        15) generate_config_file ;;
-        16) open_ports ;;
-        17) setup_caddy_reverse_proxy ;;
-        18) exit ;;
-        *) echo -e "${red}请输入正确的数字 [0-18]${plain}" ;;
+        9) check_install && clean_log ;;
+        10) check_install && enable ;;
+        11) check_install && disable ;;
+        12) install_bbr ;;
+        13) check_install && show_FNode_version ;;
+        14) check_install && generate_x25519_key ;;
+        15) update_shell ;;
+        16) generate_config_file ;;
+        17) open_ports ;;
+        18) setup_caddy_reverse_proxy ;;
+        19) exit ;;
+        *) echo -e "${red}请输入正确的数字 [0-19]${plain}" ;;
     esac
 }
 
@@ -1080,6 +1125,7 @@ if [[ $# > 0 ]]; then
         "enable") check_install 0 && enable 0 ;;
         "disable") check_install 0 && disable 0 ;;
         "log") check_install 0 && show_log 0 ;;
+        "clearlog"|"cleanlog"|"clean_log") check_install 0 && clean_log 0 ;;
         "update") check_install 0 && update 0 $2 ;;
         "config") config $* ;;
         "generate") generate_config_file ;;
