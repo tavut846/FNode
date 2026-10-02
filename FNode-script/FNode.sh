@@ -581,7 +581,6 @@ add_node_config() {
     disable_ipv6_node="true"
     if [ "$ipv6_support" -eq 1 ]; then
         listen_ip="::"
-        disable_ipv6_node="false"
     fi
     node_config=""
     node_config=$(cat <<EOF
@@ -633,8 +632,9 @@ generate_config_file() {
     # 检测 VPS 网络环境 (IPv4 与 IPv6)
     ipv6_support=$(check_ipv6_support)
     if [ "$ipv6_support" -eq 1 ]; then
-        echo -e "${green}[网络环境检测] 当前 VPS 具备 IPv4 + IPv6 双栈网络，已自动启用 IPv6 支持。${plain}"
-        disable_ipv6_core="false"
+        echo -e "${green}[网络环境检测] 当前 VPS 具备 IPv4 + IPv6 双栈网络，入站已绑定 [::] 双栈。${plain}"
+        echo -e "${green}默认启用 DisableIPv6: true（出站优先/独占 IPv4，彻底杜绝 IPv6 路由绕路与 AAAA DNS 超时）。${plain}"
+        disable_ipv6_core="true"
         domain_strategy="prefer_ipv4"
     else
         echo -e "${yellow}[网络环境检测] 当前 VPS 仅具备 IPv4 网络 (未检测到有效公网 IPv6)。${plain}"

@@ -55,9 +55,9 @@ FNode was derived from [V2bX](https://github.com/wyx2685/V2bX) and [V2bX-script]
 
 ### 2.3 FNode-script (`FNode-script/`)
 - Contains installation and administration scripts for Linux servers:
-  - `install.sh`: Downloads prebuilt binaries, sets up systemd/openrc services, sets file permissions, and initializes `/etc/FNode/`.
+  - `install.sh`: Downloads prebuilt binaries, sets up systemd/openrc services, sets file permissions, and initializes `/etc/FNode/`. The systemd service is explicitly configured with `LimitNOFILE=1048576` and `LimitNPROC=512000` to prevent socket descriptor and process exhaustion during high-concurrency proxy traffic.
   - `FNode.sh`: Comprehensive management menu (`FNode` CLI command) supporting service control, log inspection, log cleanup, config generation, BBR installation, Caddy installation, and Cloudflare reverse proxy configuration.
-  - `initconfig.sh`: Interactive CLI wizard for creating `/etc/FNode/config.json`.
+  - `initconfig.sh`: Interactive CLI wizard for creating `/etc/FNode/config.json`. Defaults `DisableIPv6: true` across core and node configurations to eliminate outbound AAAA DNS lookup delays, routing stalls, and transient socket reset errors, while automatically binding inbounds to `[::]` on dual-stack hosts.
 
 ### 2.4 Caddy Integration & Reverse Proxy
 - Caddy serves as a front-facing reverse proxy and automated SSL certificate manager.
@@ -148,6 +148,9 @@ FNode configuration is JSON5 compatible (permits comments and trailing commas).
         "Level": "info",
         "Timestamp": true
       },
+      "DisableIPv6": true, // Defaults to true: rejects outbound IPv6 immediately to prevent hangs and AAAA lookup delays
+      "DomainStrategy": "prefer_ipv4",
+      "ConnectTimeout": 5, // Outbound dial timeout in seconds
       "NTP": {
         "Enable": false,
         "Server": "time.apple.com",

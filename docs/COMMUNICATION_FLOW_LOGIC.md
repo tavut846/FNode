@@ -52,7 +52,7 @@ FNode handles low-level proxy transport connections directly with the user's cli
 | **Cryptographic Handshake Response** | TLS / Reality / QUIC / Shadowsocks | - **TLS Certificate** (Let's Encrypt / Caddy cert / Self-signed) or Reality Server Hello.<br>- Protocol-specific response (Shadowsocks AEAD sub-session confirmations, VMess header responses, Hysteria 2 / TUIC connection acceptances). |
 | **Proxied Internet Traffic** | Inbound connection stream | Streams back decrypted, unwrapped response payloads from requested internet services (HTML websites, video streams, API responses, game UDP packets). |
 | **Bandwidth Rate Limiting** | TCP Window / Token Bucket | FNode's built-in `limiter` throttles transmission speeds to conform with the user's assigned `speed_limit` (Mbps) or dynamic throttles. |
-| **Instant Rejection / Block Responses** | TCP RST / ICMP / Fin | - Instant connection termination if user is disabled or exceeded device limit.<br>- Immediate reject on IPv6 destinations when `DisableIPv6: true` is configured, preventing client 10-second dial timeouts and triggering instant IPv4 Happy Eyeballs fallback. |
+| **Instant Rejection / Block Responses** | TCP RST / ICMP / Fin | - Instant connection termination if user is disabled or exceeded device limit.<br>- Immediate reject on outbound IPv6 destinations with `DisableIPv6: true` (enabled by default across core and node configurations), preventing client 10-second dial timeouts, eliminating `exchange6` DNS socket errors, and triggering instant IPv4 fallback. |
 
 ---
 

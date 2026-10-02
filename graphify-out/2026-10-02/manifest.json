@@ -138,9 +138,9 @@
     "semantic_hash": ""
   },
   "common/file/file.go": {
-    "mtime": 1774255859.7009113,
-    "seen": 1790827664.2658324,
-    "ast_hash": "4c1e3551059a907ac01523da9d3ba153",
+    "mtime": 1790908223.2437973,
+    "seen": 1790908474.984821,
+    "ast_hash": "c67326ae7fa2b0caa6e9722b8d4cc00c",
     "semantic_hash": ""
   },
   "common/format/user.go": {
@@ -7770,9 +7770,9 @@
     "semantic_hash": ""
   },
   "GEMINI.md": {
-    "mtime": 1790844126.4910269,
-    "seen": 1790844564.004933,
-    "ast_hash": "b9aa2b9b7a2715ae40a2a7e1cde4153a",
+    "mtime": 1790907506.2129874,
+    "seen": 1790908474.98493,
+    "ast_hash": "fc8a5da6f43970205724f5da34b62eeb",
     "semantic_hash": ""
   },
   "README.md": {
@@ -10266,9 +10266,9 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1790844114.7087867,
-    "seen": 1790844564.0049121,
-    "ast_hash": "61ae52e3d5b172c495ae4fa2dbc421df",
+    "mtime": 1790907500.476453,
+    "seen": 1790908474.9849224,
+    "ast_hash": "742e2078a3f03574d80ab16b1c57d293",
     "semantic_hash": ""
   },
   "docs/COMMUNICATION_FLOW_LOGIC.md": {
@@ -10293,6 +10293,12 @@
     "mtime": 1790878237.4765868,
     "seen": 1790907475.9736469,
     "ast_hash": "52e4b9790169a5ad82306f1b97fa684b",
+    "semantic_hash": ""
+  },
+  "common/file/file_test.go": {
+    "mtime": 1790908229.4781752,
+    "seen": 1790908474.9848244,
+    "ast_hash": "c6eed2c4e96de01cc1cb93a3158dd4d7",
     "semantic_hash": ""
   }
 }

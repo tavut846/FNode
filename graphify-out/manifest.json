@@ -240,9 +240,9 @@
     "semantic_hash": ""
   },
   "conf/sing.go": {
-    "mtime": 1790836727.5609443,
-    "seen": 1790837100.0291045,
-    "ast_hash": "8f8599307ddce52be8b042a72f094f7a",
+    "mtime": 1790925798.6029603,
+    "seen": 1790926218.7886584,
+    "ast_hash": "ec3e19b8ee0ebed5238a991c94b0a317",
     "semantic_hash": ""
   },
   "conf/watch.go": {
@@ -9522,21 +9522,21 @@
     "semantic_hash": ""
   },
   "FNode-script/FNode.sh": {
-    "mtime": 1790907077.2972522,
-    "seen": 1790907475.9686272,
-    "ast_hash": "e54546118ce1698175cf1a51471d6081",
+    "mtime": 1790925832.7102778,
+    "seen": 1790926218.7862976,
+    "ast_hash": "19c6232b6b6a8e70588c1fcd67f7a2a9",
     "semantic_hash": ""
   },
   "FNode-script/initconfig.sh": {
-    "mtime": 1790838910.3857317,
-    "seen": 1790839319.826405,
-    "ast_hash": "3e0f3cfb773f2a156a3456c205ad4a4e",
+    "mtime": 1790925817.5995233,
+    "seen": 1790926218.786302,
+    "ast_hash": "d02ba5867f12909aa4bcba7a1bb269d7",
     "semantic_hash": ""
   },
   "FNode-script/install.sh": {
-    "mtime": 1774332067.8606112,
-    "seen": 1790827664.2619233,
-    "ast_hash": "ceaa11d724740084e488080384520c6a",
+    "mtime": 1790925789.8805666,
+    "seen": 1790926218.7863045,
+    "ast_hash": "ec3533bc779476b208c1ff568deeae81",
     "semantic_hash": ""
   },
   "SupportProject/V2bX-script/V2bX.sh": {
@@ -10104,9 +10104,9 @@
     "semantic_hash": ""
   },
   "go.mod": {
-    "mtime": 1790826924.1971786,
-    "seen": 1790827664.265919,
-    "ast_hash": "b39768fa42bda1e1f8fd447edf1613e7",
+    "mtime": 1790923119.7832084,
+    "seen": 1790926218.7886918,
+    "ast_hash": "742e67e15f098b2579aae4e799d60df1",
     "semantic_hash": ""
   },
   "node/cert/user/user-test@test.com.json": {
@@ -10134,9 +10134,9 @@
     "semantic_hash": ""
   },
   ".github/dependabot.yml": {
-    "mtime": 1764710770.0,
-    "seen": 1790827664.265968,
-    "ast_hash": "e4e75a6e74224392f1606bce334386e7",
+    "mtime": 1790924326.7375984,
+    "seen": 1790926218.7887268,
+    "ast_hash": "80580cd54bd6cc33aa7d01b3bdd04442",
     "semantic_hash": ""
   },
   ".github/workflows/release.yml": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1790907096.8850882,
-    "seen": 1790907475.9752848,
-    "ast_hash": "3f725fefecce0238aa17e5d9ca98c40b",
+    "mtime": 1790925888.7507665,
+    "seen": 1790926218.7892652,
+    "ast_hash": "92227324db2d913a13c75ea93c1243b2",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10272,9 +10272,9 @@
     "semantic_hash": ""
   },
   "docs/COMMUNICATION_FLOW_LOGIC.md": {
-    "mtime": 1790842586.048465,
-    "seen": 1790842791.8138306,
-    "ast_hash": "016db2946f3e2f5b752c6a66588ec7d6",
+    "mtime": 1790925905.0201893,
+    "seen": 1790926218.7892637,
+    "ast_hash": "a2d951e67688d6d1248240e7d732895e",
     "semantic_hash": ""
   },
   "core/sing/node_test.go": {
@@ -10299,6 +10299,18 @@
     "mtime": 1790908229.4781752,
     "seen": 1790908474.9848244,
     "ast_hash": "c6eed2c4e96de01cc1cb93a3158dd4d7",
+    "semantic_hash": ""
+  },
+  "conf/sing_test.go": {
+    "mtime": 1790925843.893578,
+    "seen": 1790926218.7886608,
+    "ast_hash": "09c217ea053f2802e4a76eda74adce62",
+    "semantic_hash": ""
+  },
+  ".github/workflows/dependabot.yml": {
+    "mtime": 1790924335.3693836,
+    "seen": 1790926218.788728,
+    "ast_hash": "33e6d7092ac38debaf2a43e610c498af",
     "semantic_hash": ""
   }
 }

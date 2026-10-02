@@ -57,6 +57,7 @@ func NewSingConfig() *SingConfig {
 		},
 		ConnectTimeout: 5,
 		DomainStrategy: "prefer_ipv4",
+		DisableIPv6:    true,
 	}
 }
 
