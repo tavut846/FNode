@@ -323,6 +323,11 @@ FNode uses GitHub Actions (`.github/workflows/release.yml`) for automated multi-
 - **Verification Gate**:
   - Every release workflow automatically runs the complete test suite (`GOEXPERIMENT=jsonv2 go test -v -tags "with_utls" ./...`) before any release artifact is built or published.
 
+### 6.5 Dependabot & Dependency Management
+FNode uses Dependabot (`.github/dependabot.yml`) paired with automated GitHub Actions (`.github/workflows/dependabot.yml`):
+- **Grouped Updates**: Go module updates and GitHub Actions are grouped into weekly bundles (`groups.dependencies` and `groups.actions`) to prevent multiple conflicting PRs and excessive CI runs.
+- **Automated Non-Major Merging**: Safe minor and patch updates can be automatically tested and merged, keeping core libraries secure with minimal manual intervention.
+
 ---
 
 ## 7. Guidelines for AI Assistants & Contributors
