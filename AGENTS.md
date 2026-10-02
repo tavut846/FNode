@@ -44,3 +44,10 @@ This document specifies mandatory rules for all AI agents (Antigravity, Gemini, 
   graphify update .
   ```
   to keep the knowledge graph in sync.
+
+---
+
+## 5. Commit Output on Confirmation (Mandatory)
+
+- Each time you confirm and report completion of changes, you **MUST** write the recommended git commit command and message at the end of your response.
+

@@ -5,6 +5,7 @@
 - **Mandatory Verification**: After making ANY change, write and run a test to verify it actually works before reporting done (`GOEXPERIMENT=jsonv2 go test -v -tags "with_utls" ./...`). Never report completion without executing verification tests.
 - Ensure all Go code builds and passes tests using `GOEXPERIMENT=jsonv2`.
 - Mandatory: Always keep [docs/PROJECT_GUIDE.md](docs/PROJECT_GUIDE.md) and related docs up to date whenever modifying or adding features, node types, configurations, scripts, or architecture.
+- **Commit Output**: Each time you confirm and report changes, always provide the recommended git commit command and message at the end.
 
 ## graphify
 
