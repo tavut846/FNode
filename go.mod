@@ -8,8 +8,8 @@ require (
 	github.com/go-acme/lego/v4 v4.35.2
 	github.com/go-resty/resty/v2 v2.17.2
 	github.com/juju/ratelimit v1.0.2
-	github.com/sagernet/sing v0.9.6
-	github.com/sagernet/sing-box v1.13.0
+	github.com/sagernet/sing v0.8.10
+	github.com/sagernet/sing-box v1.14.2
 	github.com/sirupsen/logrus v1.10.2
 	github.com/spf13/cobra v1.10.2
 	github.com/vmihailenco/msgpack/v5 v5.4.1
