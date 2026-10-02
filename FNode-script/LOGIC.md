@@ -26,8 +26,8 @@ The FNode deployment system consists of three main parts:
 -   **Configuration Generator**: Contains a built-in wizard to generate `config.json` specifically for the **sing-box** core. It prunes non-essential options to ensure a streamlined setup. Supports TLS modes: `http`, `dns`, `self`, and `file`.
 -   **Caddy & Reverse Proxy Integration**:
     -   Option to install Caddy with the Cloudflare DNS module (`caddy-dns/cloudflare`).
-    -   Automated configuration of `/etc/caddy/Caddyfile` with reverse proxy camouflage and Cloudflare DNS-01 ACME certificate issuance.
-    -   Auto-detection of Caddy certificates under `/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/<domain>/` for seamless binding in FNode with `CertMode: "file"`.
+    -   Automated multi-domain configuration of `/etc/caddy/Caddyfile` with reverse proxy camouflage and Cloudflare DNS-01 ACME certificate issuance.
+    -   Auto-detection of individual Caddy certificates under `/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/<domain>/` for seamless binding across multiple nodes in FNode with `CertMode: "file"`.
 -   **Log Management & Cleanup**:
     -   View real-time logs via `journalctl -u FNode.service -e --no-pager -f`.
     -   Log cleanup utility (`FNode clearlog` or menu option 9) to rotate and vacuum systemd journal logs (`--vacuum-time=1s` and `--vacuum-size=20M`) and truncate file logs (`/var/log/FNode.log`, `box.log`, Caddy logs).

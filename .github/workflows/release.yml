@@ -10,25 +10,17 @@ on:
   push:
     branches:
       - master
+      - stable
       - dev
       - dev_new
     tags:
       - "*"
-    paths:
-      - "**/*.go"
-      - "go.mod"
-      - "go.sum"
-      - ".github/workflows/release.yml"
   pull_request:
     branches:
       - master
+      - stable
       - dev
       - dev_new
-    paths:
-      - "**/*.go"
-      - "go.mod"
-      - "go.sum"
-      - ".github/workflows/release.yml"
   release:
     types: [published]
 
@@ -67,19 +59,28 @@ jobs:
 
           echo "Event: $EVENT_NAME, Ref: $REF, Ref Name: $REF_NAME"
 
-          # 1. Locate latest stable tag (e.g., 0.0.12)
-          LATEST_STABLE_TAG=$(git tag -l | grep -E '^[vV]?[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)
+          # 1. Guarantee all remote tags are retrieved
+          git fetch --tags --force 2>/dev/null || true
+
+          # 2. Locate latest stable tag (e.g., 0.0.13)
+          LATEST_STABLE_TAG=$(git tag -l --sort=v:refname | grep -E '^[vV]?[0-9]+\.[0-9]+\.[0-9]+$' | tail -n 1 || true)
           if [ -z "$LATEST_STABLE_TAG" ]; then
             LATEST_STABLE_TAG="0.0.1"
           fi
           CLEAN_STABLE="${LATEST_STABLE_TAG#v}"
 
-          # 2. Compute next upgraded patch version (e.g., 0.0.1 -> 0.0.2, 0.0.12 -> 0.0.13)
+          # 3. Compute next upgraded patch version (e.g. 0.0.13 -> 0.0.14)
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CLEAN_STABLE"
           NEXT_PATCH=$((PATCH + 1))
           UPGRADED_VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}"
 
-          # 3. Compute commit number since last stable tag
+          # Ensure the upgraded version tag does not collide with any existing tag to prevent replacing existing release files
+          while git rev-parse -q --verify "refs/tags/${UPGRADED_VERSION}" >/dev/null || git rev-parse -q --verify "refs/tags/v${UPGRADED_VERSION}" >/dev/null; do
+            NEXT_PATCH=$((NEXT_PATCH + 1))
+            UPGRADED_VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}"
+          done
+
+          # 4. Compute commit number since last stable tag
           COMMITS_SINCE=$(git rev-list --count "${LATEST_STABLE_TAG}..HEAD" 2>/dev/null || echo 1)
           if [ -z "$COMMITS_SINCE" ] || [ "$COMMITS_SINCE" -le 0 ]; then
             COMMITS_SINCE=1
@@ -109,20 +110,15 @@ jobs:
               IS_LATEST="true"
               RELEASE_TITLE="FNode $TAG_NAME"
             fi
-          elif [[ "$REF_NAME" == "master" || "$REF_NAME" == "main" ]]; then
-            # Master update latest version
-            TAG_ON_COMMIT=$(git tag --points-at HEAD | grep -E '^[vV]?[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)
-            if [ -n "$TAG_ON_COMMIT" ]; then
-              VERSION="${TAG_ON_COMMIT#v}"
-            else
-              VERSION="$UPGRADED_VERSION"
-            fi
+          elif [[ "$REF_NAME" == "master" || "$REF_NAME" == "main" || "$REF_NAME" == "stable" ]]; then
+            # Every new build of a commit increments the version (+1 to patch) and creates a new Latest Release
+            VERSION="$UPGRADED_VERSION"
             TAG_NAME="$VERSION"
             IS_PRERELEASE="false"
             IS_LATEST="true"
             RELEASE_TITLE="FNode $TAG_NAME"
           elif [[ "$REF_NAME" == "dev" || "$REF_NAME" == "dev_new" || "$REF_NAME" == dev/* ]]; then
-            # Dev update through pre-release: <upgraded_version>-pre-<commit_number>
+            # Dev branch pre-release
             TAG_NAME="${UPGRADED_VERSION}-pre-${COMMITS_SINCE}"
             VERSION="$TAG_NAME"
             IS_PRERELEASE="true"

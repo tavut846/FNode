@@ -981,7 +981,7 @@ EOF
     echo -e "${green}Caddy 安装并配置服务完成！${plain}"
 }
 
-# 配置 Caddy 反向代理与证书申请
+# 配置 Caddy 反向代理与证书申请 (支持多域名)
 setup_caddy_reverse_proxy() {
     if ! command -v caddy &>/dev/null; then
         echo -e "${yellow}未检测到 Caddy，正在为您自动安装 Caddy...${plain}"
@@ -989,14 +989,53 @@ setup_caddy_reverse_proxy() {
     fi
 
     echo -e "${yellow}===== Caddy 反向代理与 Cloudflare DNS 证书配置向导 =====${plain}"
-    read -rp "请输入需要配置的域名 (例如: domain.com): " caddy_domain
-    if [ -z "$caddy_domain" ]; then
+
+    # 自动探测 /etc/FNode/config.json 中已配置的 CertDomain
+    detected_domains=""
+    if [[ -f "/etc/FNode/config.json" ]]; then
+        detected_domains=$(grep -E '"CertDomain":\s*"[^"]+"' /etc/FNode/config.json 2>/dev/null | sed -E 's/.*"CertDomain":\s*"([^"]+)".*/\1/' | tr '\n' ' ' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+    fi
+    if [[ -n "$detected_domains" ]]; then
+        echo -e "${green}检测到 FNode 配置文件 (config.json) 中的域名: ${detected_domains}${plain}"
+    fi
+
+    echo -e "请输入需要配置的域名 (支持多个域名，用逗号或空格分隔，例如: domain1.com, domain2.com)"
+    read -rp "域名 [默认: ${detected_domains:-domain.com}]: " input_domains
+    caddy_domain_input="${input_domains:-$detected_domains}"
+    if [ -z "$caddy_domain_input" ]; then
         echo -e "${red}域名不能为空！${plain}"
         if [[ $# == 0 ]]; then before_show_menu; fi
         return 1
     fi
 
-    read -rp "请输入 Cloudflare API Token (用于 DNS-01 验证申请证书): " cf_token
+    # 解析多个域名 (兼容逗号、分号、空格分隔)
+    IFS=',; ' read -r -a domain_list <<< "$caddy_domain_input"
+    valid_domains=()
+    for d in "${domain_list[@]}"; do
+        clean_d=$(echo "$d" | tr -d '"' | tr -d "'" | xargs)
+        if [[ -n "$clean_d" ]]; then
+            valid_domains+=("$clean_d")
+        fi
+    done
+
+    if [[ ${#valid_domains[@]} -eq 0 ]]; then
+        echo -e "${red}未能识别有效的域名输入！${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    existing_token=""
+    if [[ -f "/etc/caddy/caddy.env" ]]; then
+        existing_token=$(grep -E '^CLOUDFLARE_API_TOKEN=' /etc/caddy/caddy.env 2>/dev/null | cut -d '=' -f2-)
+    fi
+
+    if [[ -n "$existing_token" ]]; then
+        read -rp "请输入 Cloudflare API Token [直接回车使用已保存的 Token]: " cf_token
+        cf_token="${cf_token:-$existing_token}"
+    else
+        read -rp "请输入 Cloudflare API Token (用于 DNS-01 验证申请证书): " cf_token
+    fi
+
     if [ -z "$cf_token" ]; then
         echo -e "${red}Cloudflare API Token 不能为空！${plain}"
         if [[ $# == 0 ]]; then before_show_menu; fi
@@ -1015,8 +1054,9 @@ setup_caddy_reverse_proxy() {
     echo "CLOUDFLARE_API_TOKEN=${cf_token}" > /etc/caddy/caddy.env
     chmod 600 /etc/caddy/caddy.env
 
-    cat <<EOF > /etc/caddy/Caddyfile
-${caddy_domain} {
+    caddyfile_content=""
+    for dom in "${valid_domains[@]}"; do
+        caddyfile_content+="${dom} {
     encode gzip
 
     tls {
@@ -1028,16 +1068,32 @@ ${caddy_domain} {
         header_up Host ${target_host}
         header_up X-Real-IP {http.request.remote}
         header_up X-Forwarded-Proto https
-        header_up Cache-Control "no-cache, no-store, must-revalidate"
-        header_up Pragma "no-cache"
-        header_up Expires "0"
+        header_up Cache-Control \"no-cache, no-store, must-revalidate\"
+        header_up Pragma \"no-cache\"
+        header_up Expires \"0\"
 
-        header_down Cache-Control "no-cache, no-store, must-revalidate"
-        header_down Pragma "no-cache"
-        header_down Expires "0"
+        header_down Cache-Control \"no-cache, no-store, must-revalidate\"
+        header_down Pragma \"no-cache\"
+        header_down Expires \"0\"
     }
 }
-EOF
+
+"
+    done
+
+    if [[ -f "/etc/caddy/Caddyfile" ]]; then
+        echo -e "${yellow}检测到已存在 /etc/caddy/Caddyfile 配置文件：${plain}"
+        echo -e "1. 覆盖旧配置 (推荐)"
+        echo -e "2. 追加新域名到现有配置后"
+        read -rp "请选择 [默认: 1]: " caddy_write_mode
+        if [[ "$caddy_write_mode" == "2" ]]; then
+            echo -e "\n${caddyfile_content}" >> /etc/caddy/Caddyfile
+        else
+            echo "${caddyfile_content}" > /etc/caddy/Caddyfile
+        fi
+    else
+        echo "${caddyfile_content}" > /etc/caddy/Caddyfile
+    fi
 
     echo -e "${green}正在启动 Caddy 服务并申请证书...${plain}"
     if [[ x"${release}" == x"alpine" ]]; then
@@ -1049,12 +1105,15 @@ EOF
     fi
 
     echo -e "${green}========================================${plain}"
-    echo -e "${green}Caddy 反向代理已成功配置！${plain}"
-    echo -e "域名: ${caddy_domain}"
+    echo -e "${green}Caddy 多域名反向代理已成功配置！${plain}"
+    echo -e "已配置域名列表:"
+    for dom in "${valid_domains[@]}"; do
+        echo -e "  - 域名: ${dom}"
+        echo -e "    证书路径: /root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${dom}/${dom}.crt"
+        echo -e "    私钥路径: /root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${dom}/${dom}.key"
+    done
     echo -e "伪装反代目标: ${proxy_dest}"
-    echo -e "证书存储目录预期为:"
-    echo -e "/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${caddy_domain}/"
-    echo -e "${green}现在你可以运行 FNode 生成配置，并选择 'file' 模式自动对接该证书！${plain}"
+    echo -e "${green}现在你可以运行 FNode 生成配置，并在各节点中选择 'file' 模式自动对接对应域名的证书！${plain}"
     echo -e "${green}========================================${plain}"
     if [[ $# == 0 ]]; then
         before_show_menu

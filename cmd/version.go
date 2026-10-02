@@ -61,6 +61,20 @@ func NextPatchVersion(latestTag string) string {
 	return fmt.Sprintf("%s.%s.%d", parts[0], parts[1], patch+1)
 }
 
+// NextUnusedPatchVersion calculates the next incremental patch version that does not conflict with any existing tags.
+func NextUnusedPatchVersion(latestTag string, existingTags []string) string {
+	next := NextPatchVersion(latestTag)
+	existing := make(map[string]bool)
+	for _, t := range existingTags {
+		clean := strings.TrimPrefix(strings.TrimSpace(t), "v")
+		existing[clean] = true
+	}
+	for existing[next] {
+		next = NextPatchVersion(next)
+	}
+	return next
+}
+
 // FormatDevTag formats a pre-release version tag in the form <targetVersion>-pre-<commitNum>.
 func FormatDevTag(targetVersion string, commitNum int) string {
 	if commitNum <= 0 {
@@ -71,12 +85,13 @@ func FormatDevTag(targetVersion string, commitNum int) string {
 }
 
 // ResolveReleaseMetadata determines the release tag, pre-release state, and latest state based on the ref and git context.
+// Every new commit on master/main/stable always gets an upgraded patch version to prevent replacing existing release files.
 func ResolveReleaseMetadata(refName string, latestStableTag string, commitsSince int) (tagName string, isPreRelease bool, isLatest bool) {
 	ref := strings.TrimSpace(refName)
 	cleanRef := strings.TrimPrefix(ref, "refs/heads/")
 	cleanRef = strings.TrimPrefix(cleanRef, "refs/tags/")
 
-	if cleanRef == "master" || cleanRef == "main" {
+	if cleanRef == "master" || cleanRef == "main" || cleanRef == "stable" {
 		tagName = NextPatchVersion(latestStableTag)
 		return tagName, false, true
 	}

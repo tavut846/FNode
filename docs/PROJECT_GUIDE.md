@@ -200,11 +200,33 @@ FNode configuration is JSON5 compatible (permits comments and trailing commas).
 | `self` | Generates a local self-signed RSA-2048 certificate. | Valid for 30 years |
 | `none` | Disables TLS configuration (e.g. for plain Shadowsocks or VLESS-Reality). | N/A |
 
-### 5.2 Caddy Reverse Proxy Setup
-Caddy can be configured using `FNode caddy` or option `17` in `FNode.sh`. The resulting `/etc/caddy/Caddyfile` directs incoming requests through a camouflage reverse proxy target while obtaining SSL certificates using Cloudflare DNS-01 validation:
+### 5.2 Caddy Reverse Proxy & Multi-Domain Setup
+Caddy can be configured using `FNode caddy` or option `18` in `FNode.sh`. The wizard supports configuring multiple domains (comma- or space-separated, e.g. `domain1.com, domain2.com`) and generates independent site blocks directing incoming traffic through a camouflage reverse proxy target while obtaining SSL certificates using Cloudflare DNS-01 validation:
 
 ```caddy
-domain.com {
+domain1.com {
+    encode gzip
+
+    tls {
+        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+        protocols tls1.2 tls1.3
+    }
+
+    reverse_proxy https://simulate-news.316293.xyz {
+        header_up Host simulate-news.316293.xyz
+        header_up X-Real-IP {http.request.remote}
+        header_up X-Forwarded-Proto https
+        header_up Cache-Control "no-cache, no-store, must-revalidate"
+        header_up Pragma "no-cache"
+        header_up Expires "0"
+
+        header_down Cache-Control "no-cache, no-store, must-revalidate"
+        header_down Pragma "no-cache"
+        header_down Expires "0"
+    }
+}
+
+domain2.com {
     encode gzip
 
     tls {
@@ -227,11 +249,13 @@ domain.com {
 }
 ```
 
-When Caddy runs, its certificates are stored in:
-`/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/<domain>/<domain>.crt`
-`/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/<domain>/<domain>.key`
+When Caddy runs, individual certificates for each domain are stored in:
+- `/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/<domain1>/<domain1>.crt`
+- `/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/<domain1>/<domain1>.key`
+- `/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/<domain2>/<domain2>.crt`
+- `/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/<domain2>/<domain2>.key`
 
-Both `initconfig.sh` and FNode's `node/cert.go` automatically inspect and resolve these paths when `CertMode: "file"` is selected.
+Both `initconfig.sh` and FNode's `node/cert.go` (`findCaddyCertificate`) automatically inspect and resolve these paths when `CertMode: "file"` is selected for any configured node.
 
 ### 5.3 REALITY Configuration & Camouflage Handshake (VLESS & Trojan)
 REALITY eliminates traditional server-side TLS certificates by impersonating existing TLS 1.3 servers (e.g. Apple, Microsoft, Cloudflare). FNode implements full native REALITY support for VLESS and Trojan nodes using sing-box:
@@ -288,11 +312,13 @@ GOEXPERIMENT=jsonv2 go build -v -o build_assets/FNode \
 ### 6.4 Automated CI/CD & Version Tagging Strategy
 
 FNode uses GitHub Actions (`.github/workflows/release.yml`) for automated multi-platform builds and releases:
-- **`master` / `main` Branch**:
-  - Automatically determines the next incremental stable patch version from the highest semantic tag (e.g. `0.0.1` -> `0.0.2`, `0.0.12` -> `0.0.13`).
-  - Creates the upgraded version tag and publishes a full GitHub Release marked as **Latest** (`make_latest: true`).
+- **Continuous Commit Releases**:
+  - Each new commit build automatically fetches all existing tags (`git fetch --tags --force`) and increments the patch version (+1, e.g. `0.0.13` -> `0.0.14` -> `0.0.15`).
+  - Automatically checks and verifies against existing git tags to prevent tag collisions, ensuring each commit creates a brand new GitHub Release instead of overwriting/replacing existing release assets.
+- **`master` / `main` / `stable` Branches**:
+  - Increments the stable patch version and publishes a full GitHub Release marked as **Latest** (`make_latest: true`, `prerelease: false`).
 - **`dev` / `dev_new` Branches**:
-  - Automatically formats the tag in pre-release form: `<upgraded_version>-pre-<commit_number>` (e.g. `0.0.2-pre-1`, `0.0.13-pre-9`), where `<commit_number>` tracks commits since the last stable release.
+  - Automatically formats the tag in pre-release form: `<upgraded_version>-pre-<commit_number>` (e.g. `0.0.14-pre-1`, `0.0.14-pre-2`).
   - Publishes a GitHub Release marked as **Pre-release** (`prerelease: true`, `make_latest: false`).
 - **Verification Gate**:
   - Every release workflow automatically runs the complete test suite (`GOEXPERIMENT=jsonv2 go test -v -tags "with_utls" ./...`) before any release artifact is built or published.

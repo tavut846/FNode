@@ -26,6 +26,42 @@ func TestNextPatchVersion(t *testing.T) {
 	}
 }
 
+func TestNextUnusedPatchVersion(t *testing.T) {
+	tests := []struct {
+		latest       string
+		existingTags []string
+		expected     string
+	}{
+		{
+			latest:       "0.0.12",
+			existingTags: []string{"0.0.13", "0.0.14"},
+			expected:     "0.0.15",
+		},
+		{
+			latest:       "0.0.13",
+			existingTags: []string{"0.0.1", "0.0.12", "0.0.13"},
+			expected:     "0.0.14",
+		},
+		{
+			latest:       "0.0.1",
+			existingTags: []string{"v0.0.2", "0.0.3"},
+			expected:     "0.0.4",
+		},
+		{
+			latest:       "0.0.9",
+			existingTags: []string{"0.0.10"},
+			expected:     "0.0.11",
+		},
+	}
+
+	for _, tt := range tests {
+		result := NextUnusedPatchVersion(tt.latest, tt.existingTags)
+		if result != tt.expected {
+			t.Errorf("NextUnusedPatchVersion(%q, %v) = %q, expected %q", tt.latest, tt.existingTags, result, tt.expected)
+		}
+	}
+}
+
 func TestFormatDevTag(t *testing.T) {
 	tests := []struct {
 		version   string
@@ -63,6 +99,15 @@ func TestResolveReleaseMetadata(t *testing.T) {
 			latestStableTag: "0.0.1",
 			commitsSince:    1,
 			expectedTag:     "0.0.2",
+			expectedPre:     false,
+			expectedLatest:  true,
+		},
+		{
+			name:            "Stable branch upgrade from 0.0.13",
+			refName:         "refs/heads/stable",
+			latestStableTag: "0.0.13",
+			commitsSince:    1,
+			expectedTag:     "0.0.14",
 			expectedPre:     false,
 			expectedLatest:  true,
 		},

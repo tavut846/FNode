@@ -44,6 +44,31 @@
           "EnvName": "env1"
         }
       }
+    },
+    {
+      "Core": "sing",
+      "ApiHost": "http://127.0.0.1",
+      "ApiKey": "test",
+      "NodeID": 34,
+      "NodeType": "vless",
+      "Timeout": 30,
+      "ListenIP": "0.0.0.0",
+      "SendIP": "0.0.0.0",
+      "DeviceOnlineMinTraffic": 200,
+      "MinReportTraffic": 0,
+      "TCPFastOpen": false,
+      "SniffEnabled": true,
+      "CertConfig": {
+        "CertMode": "file",
+        "RejectUnknownSni": false,
+        "CertDomain": "node2.example.com",
+        "CertFile": "/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/node2.example.com/node2.example.com.crt",
+        "KeyFile": "/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/node2.example.com/node2.example.com.key",
+        "Provider": "cloudflare",
+        "DNSEnv": {
+          "EnvName": "env1"
+        }
+      }
     }
   ]
 }

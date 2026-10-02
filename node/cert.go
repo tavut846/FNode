@@ -10,6 +10,7 @@ import (
 	"math/big"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/tavut846/FNode/common/file"
@@ -20,26 +21,33 @@ func findCaddyCertificate(domain string) (string, string) {
 	if domain == "" {
 		return "", ""
 	}
-	candidates := []string{
-		fmt.Sprintf("/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/%s", domain),
-		fmt.Sprintf("/root/.local/share/caddy/certificates/acme.zerossl.com-v2-dv90/%s", domain),
-	}
-	if home, err := os.UserHomeDir(); err == nil && home != "" && home != "/root" {
+	domains := strings.Split(domain, ",")
+	for _, rawD := range domains {
+		d := strings.TrimSpace(rawD)
+		if d == "" {
+			continue
+		}
+		candidates := []string{
+			fmt.Sprintf("/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/%s", d),
+			fmt.Sprintf("/root/.local/share/caddy/certificates/acme.zerossl.com-v2-dv90/%s", d),
+		}
+		if home, err := os.UserHomeDir(); err == nil && home != "" && home != "/root" {
+			candidates = append(candidates,
+				fmt.Sprintf("%s/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/%s", home, d),
+				fmt.Sprintf("%s/.local/share/caddy/certificates/acme.zerossl.com-v2-dv90/%s", home, d),
+			)
+		}
 		candidates = append(candidates,
-			fmt.Sprintf("%s/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/%s", home, domain),
-			fmt.Sprintf("%s/.local/share/caddy/certificates/acme.zerossl.com-v2-dv90/%s", home, domain),
+			fmt.Sprintf("/var/lib/caddy/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/%s", d),
+			fmt.Sprintf("/var/lib/caddy/.local/share/caddy/certificates/acme.zerossl.com-v2-dv90/%s", d),
 		)
-	}
-	candidates = append(candidates,
-		fmt.Sprintf("/var/lib/caddy/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/%s", domain),
-		fmt.Sprintf("/var/lib/caddy/.local/share/caddy/certificates/acme.zerossl.com-v2-dv90/%s", domain),
-	)
 
-	for _, dir := range candidates {
-		crt := path.Join(dir, domain+".crt")
-		key := path.Join(dir, domain+".key")
-		if file.IsExist(crt) && file.IsExist(key) {
-			return crt, key
+		for _, dir := range candidates {
+			crt := path.Join(dir, d+".crt")
+			key := path.Join(dir, d+".key")
+			if file.IsExist(crt) && file.IsExist(key) {
+				return crt, key
+			}
 		}
 	}
 	return "", ""
