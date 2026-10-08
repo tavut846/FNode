@@ -29,6 +29,30 @@ FNode synchronizes configuration and users from the panel for the following node
 | `"hysteria"` | Hysteria 1 | QUIC / UDP-based protocol, bandwidth rate control (`UpMbps`, `DownMbps`), port hopping, obfuscation (`Obfs`). |
 | `"hysteria2"` | Hysteria 2 | QUIC / HTTP/3 transport, Salamander obfuscation (`salamander`), masquerade (HTTP/HTTPS reverse proxy or static file directory), client bandwidth overrides. |
 
+### 2.1 Supported Custom Outbound Protocols (`custom_outbound.json` / `sing_origin.json`)
+
+In addition to panel-managed inbounds, FNode supports custom upstream and relay outbounds (complete templates provided in `example/custom_outbound.json`):
+
+| Outbound Type | Description & Transport Options |
+| :--- | :--- |
+| `"direct"` | Standard direct internet dialer (supports `domain_strategy`: `prefer_ipv4`, `ipv6_only`, `prefer_ipv6`, interface binding). |
+| `"block"` | Drop / blackhole outbound for security blocking and anti-SSRF enforcement. |
+| `"shadowsocks"` | Shadowsocks AEAD (`aes-256-gcm`, `chacha20-ietf-poly1305`) and Shadowsocks 2022 (`2022-blake3-aes-128-gcm`, `2022-blake3-aes-256-gcm`). |
+| `"vless"` | VLESS outbound with standard TLS or **Reality** (camouflaged SNI, short IDs, public keys, uTLS fingerprints). |
+| `"vmess"` | VMess outbound with TCP, WebSocket, gRPC, HTTPUpgrade, TLS. |
+| `"trojan"` | Trojan outbound over TLS with optional WebSocket or gRPC transport. |
+| `"hysteria2"` | Hysteria 2 outbound over UDP/QUIC with optional Salamander obfuscation (build tag `with_quic`). |
+| `"hysteria"` | Hysteria 1 outbound over UDP/QUIC with rate limits and port hopping (build tag `with_quic`). |
+| `"tuic"` | TUIC v5 outbound over UDP/QUIC with BBR / Cubic congestion control (build tag `with_quic`). |
+| `"anytls"` | AnyTLS direct TLS tunnel with custom padding schemes. |
+| `"ssh"` | Native SSH client outbound forwarding traffic through a remote SSH server. |
+| `"socks"` | SOCKS5 / SOCKS4 / SOCKS4a upstream proxy outbound. |
+| `"http"` | HTTP / HTTPS upstream CONNECT proxy outbound. |
+| `"shadowtls"` | ShadowTLS v1/v2/v3 outbound with TLS SNI camouflage proxying. |
+| `"selector"` | Outbound group allowing manual switching among multiple child outbounds. |
+| `"urltest"` | Outbound group performing automated health checks and lowest-latency failover routing. |
+| `"wireguard"` | WireGuard endpoint with Cloudflare WARP support (endpoints block with build tag `with_wireguard`). |
+
 ---
 
 ## 3. Panel Protocols & APIs

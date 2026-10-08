@@ -1,0 +1,401 @@
+{
+  "log": {
+    "disabled": false,
+    "level": "info",
+    "timestamp": true
+  },
+  "dns": {
+    "servers": [
+      {
+        "tag": "dns-remote",
+        "address": "https://1.1.1.1/dns-query",
+        "address_resolver": "dns-local",
+        "strategy": "ipv4_only",
+        "detour": "direct"
+      },
+      {
+        "tag": "dns-local",
+        "address": "local",
+        "detour": "direct"
+      }
+    ],
+    "rules": [
+      {
+        "outbound": "any",
+        "server": "dns-local",
+        "disable_cache": true
+      }
+    ],
+    "final": "dns-remote"
+  },
+  "inbounds": [],
+  "outbounds": [
+    // -------------------------------------------------------------
+    // Core Built-in Outbounds
+    // -------------------------------------------------------------
+    {
+      "type": "direct",
+      "tag": "direct",
+      "domain_strategy": "prefer_ipv4"
+    },
+    {
+      "type": "direct",
+      "tag": "directv6",
+      "domain_strategy": "ipv6_only"
+    },
+    {
+      "type": "block",
+      "tag": "block"
+    },
+
+    // -------------------------------------------------------------
+    // 1. Shadowsocks (AEAD / Shadowsocks 2022)
+    // -------------------------------------------------------------
+    {
+      "type": "shadowsocks",
+      "tag": "ss-out",
+      "server": "1.2.3.4",
+      "server_port": 10001,
+      "method": "aes-256-gcm", // "aes-256-gcm", "chacha20-ietf-poly1305", "2022-blake3-aes-128-gcm", "2022-blake3-aes-256-gcm"
+      "password": "your_shadowsocks_password",
+      "tcp_fast_open": false
+    },
+
+    // -------------------------------------------------------------
+    // 2. VLESS (with TLS or Reality)
+    // -------------------------------------------------------------
+    {
+      "type": "vless",
+      "tag": "vless-reality-out",
+      "server": "1.2.3.4",
+      "server_port": 443,
+      "uuid": "b86a47dc-d3b0-41df-bbc4-c9f4da6360b4",
+      "flow": "xtls-rprx-vision",
+      "tls": {
+        "enabled": true,
+        "server_name": "gateway.icloud.com",
+        "utls": {
+          "enabled": true,
+          "fingerprint": "chrome"
+        },
+        "reality": {
+          "enabled": true,
+          "public_key": "VLcOaRCcu55RTVtR7GO6nYOM4UVrz06avajveaKonkM",
+          "short_id": "0123456789abcdef"
+        }
+      }
+    },
+
+    // -------------------------------------------------------------
+    // 3. VMess (TCP / WebSocket / gRPC / HTTPUpgrade)
+    // -------------------------------------------------------------
+    {
+      "type": "vmess",
+      "tag": "vmess-ws-out",
+      "server": "1.2.3.4",
+      "server_port": 443,
+      "uuid": "b86a47dc-d3b0-41df-bbc4-c9f4da6360b4",
+      "security": "auto",
+      "alter_id": 0,
+      "tls": {
+        "enabled": true,
+        "server_name": "example.com",
+        "insecure": false
+      },
+      "transport": {
+        "type": "ws",
+        "path": "/ray",
+        "headers": {
+          "Host": "example.com"
+        }
+      }
+    },
+
+    // -------------------------------------------------------------
+    // 4. Trojan (TLS / WebSocket / gRPC)
+    // -------------------------------------------------------------
+    {
+      "type": "trojan",
+      "tag": "trojan-out",
+      "server": "1.2.3.4",
+      "server_port": 443,
+      "password": "your_trojan_password",
+      "tls": {
+        "enabled": true,
+        "server_name": "example.com"
+      }
+    },
+
+    // -------------------------------------------------------------
+    // 5. Hysteria 2 (QUIC / UDP) - Requires build tag: with_quic
+    // (Uncomment when running build with with_quic tag)
+    // -------------------------------------------------------------
+    /*
+    {
+      "type": "hysteria2",
+      "tag": "hysteria2-out",
+      "server": "1.2.3.4",
+      "server_port": 443,
+      "password": "your_hysteria2_password",
+      "obfs": {
+        "type": "salamander",
+        "password": "your_obfs_password"
+      },
+      "tls": {
+        "enabled": true,
+        "server_name": "example.com"
+      }
+    },
+    */
+
+    // -------------------------------------------------------------
+    // 6. Hysteria 1 (QUIC / UDP) - Requires build tag: with_quic
+    // (Uncomment when running build with with_quic tag)
+    // -------------------------------------------------------------
+    /*
+    {
+      "type": "hysteria",
+      "tag": "hysteria1-out",
+      "server": "1.2.3.4",
+      "server_port": 443,
+      "auth_str": "your_auth_string",
+      "up_mbps": 100,
+      "down_mbps": 100,
+      "obfs": "your_obfs_password",
+      "tls": {
+        "enabled": true,
+        "server_name": "example.com"
+      }
+    },
+    */
+
+    // -------------------------------------------------------------
+    // 7. TUIC v5 (QUIC / HTTP/3) - Requires build tag: with_quic
+    // (Uncomment when running build with with_quic tag)
+    // -------------------------------------------------------------
+    /*
+    {
+      "type": "tuic",
+      "tag": "tuic-out",
+      "server": "1.2.3.4",
+      "server_port": 443,
+      "uuid": "b86a47dc-d3b0-41df-bbc4-c9f4da6360b4",
+      "password": "your_tuic_password",
+      "congestion_control": "bbr",
+      "tls": {
+        "enabled": true,
+        "server_name": "example.com"
+      }
+    },
+    */
+
+    // -------------------------------------------------------------
+    // 8. AnyTLS (Direct TLS Tunneling)
+    // -------------------------------------------------------------
+    {
+      "type": "anytls",
+      "tag": "anytls-out",
+      "server": "1.2.3.4",
+      "server_port": 443,
+      "password": "your_anytls_password",
+      "tls": {
+        "enabled": true,
+        "server_name": "example.com"
+      }
+    },
+
+    // -------------------------------------------------------------
+    // 9. SSH Outbound Tunnel
+    // -------------------------------------------------------------
+    {
+      "type": "ssh",
+      "tag": "ssh-out",
+      "server": "1.2.3.4",
+      "server_port": 22,
+      "user": "root",
+      "password": "your_ssh_password"
+    },
+
+    // -------------------------------------------------------------
+    // 10. SOCKS5 / SOCKS4 Proxy Outbound
+    // -------------------------------------------------------------
+    {
+      "type": "socks",
+      "tag": "socks-out",
+      "server": "1.2.3.4",
+      "server_port": 1080,
+      "version": "5",
+      "username": "user",
+      "password": "password"
+    },
+
+    // -------------------------------------------------------------
+    // 11. HTTP / HTTPS Upstream Proxy Outbound
+    // -------------------------------------------------------------
+    {
+      "type": "http",
+      "tag": "http-out",
+      "server": "1.2.3.4",
+      "server_port": 8080,
+      "username": "user",
+      "password": "password",
+      "tls": {
+        "enabled": false
+      }
+    },
+
+    // -------------------------------------------------------------
+    // 12. ShadowTLS (v1 / v2 / v3)
+    // -------------------------------------------------------------
+    {
+      "type": "shadowtls",
+      "tag": "shadowtls-out",
+      "server": "1.2.3.4",
+      "server_port": 443,
+      "version": 3,
+      "password": "your_shadowtls_password",
+      "tls": {
+        "enabled": true,
+        "server_name": "gateway.icloud.com"
+      }
+    },
+
+    // -------------------------------------------------------------
+    // 13. Outbound Groups: Selector & URLTest (Auto Failover)
+    // -------------------------------------------------------------
+    {
+      "type": "selector",
+      "tag": "proxy-selector",
+      "outbounds": [
+        "ss-out",
+        "vless-reality-out",
+        "vmess-ws-out",
+        "direct"
+      ],
+      "default": "ss-out"
+    },
+    {
+      "type": "urltest",
+      "tag": "auto-urltest",
+      "outbounds": [
+        "ss-out",
+        "vless-reality-out",
+        "vmess-ws-out"
+      ],
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": "3m",
+      "tolerance": 50
+    }
+  ],
+  "route": {
+    "rules": [
+      {
+        "protocol": "dns",
+        "action": "hijack-dns"
+      },
+      {
+        "ip_is_private": true,
+        "outbound": "direct"
+      },
+      // Example: Route AI services and Reddit through Shadowsocks
+      {
+        "rule_set": [
+          "Reddit",
+          "GeositeAI"
+        ],
+        "outbound": "ss-out"
+      },
+      // Example: Route specific domain suffixes through Custom Outbound
+      {
+        "domain_suffix": [
+          "ip.sb",
+          "openai.com"
+        ],
+        "outbound": "ss-out"
+      },
+      // Example: Route entertainment media to VLESS Reality
+      {
+        "rule_set": [
+          "Netflix",
+          "Instagram",
+          "Tiktok"
+        ],
+        "outbound": "vless-reality-out"
+      }
+    ],
+    "rule_set": [
+      {
+        "type": "remote",
+        "tag": "Tiktok",
+        "format": "binary",
+        "url": "https://github.com/pandaaxi/homiefroxy-singrule/raw/refs/heads/release/singbox_rule_set/geosite-tiktok@!cn.srs",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "Instagram",
+        "format": "binary",
+        "url": "https://github.com/pandaaxi/homiefroxy-singrule/raw/refs/heads/release/singbox_rule_set/geosite-instagram.srs",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "Netflix",
+        "format": "binary",
+        "url": "https://github.com/pandaaxi/homiefroxy-singrule/raw/refs/heads/release/singbox_rule_set/geosite-netflix.srs",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "Reddit",
+        "format": "binary",
+        "url": "https://github.com/pandaaxi/homiefroxy-singrule/raw/refs/heads/release/singbox_rule_set/geosite-reddit.srs",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "GeositeAI",
+        "format": "binary",
+        "url": "https://github.com/pandaaxi/homiefroxy-singrule/raw/refs/heads/release/singbox_rule_set/geosite-category-ai-!cn.srs",
+        "download_detour": "direct"
+      }
+    ],
+    "final": "direct",
+    "auto_detect_interface": true
+  }
+  /*
+  // -------------------------------------------------------------
+  // Endpoints: WireGuard / Cloudflare WARP
+  // Note: Requires build tag: with_wireguard
+  // In modern sing-box (v1.11+), WireGuard is declared under endpoints
+  // and detoured via route rules: { "outbound": "warp-endpoint" }
+  // -------------------------------------------------------------
+  ,
+  "endpoints": [
+    {
+      "type": "wireguard",
+      "tag": "warp-endpoint",
+      "system": false,
+      "name": "wg0",
+      "address": [
+        "172.16.0.2/32",
+        "2606:4700:110:8f81:851e:5f7b:991d:1/128"
+      ],
+      "private_key": "your_wireguard_private_key",
+      "peers": [
+        {
+          "address": "162.159.192.1",
+          "port": 2408,
+          "public_key": "bm90X3JlYWxfcHVibGljX2tleV9leGFtcGxlXzMyYnl0ZXM=",
+          "allowed_ips": [
+            "0.0.0.0/0",
+            "::/0"
+          ],
+          "reserved": [0, 0, 0]
+        }
+      ],
+      "mtu": 1420
+    }
+  ]
+  */
+}

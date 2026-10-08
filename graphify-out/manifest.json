@@ -10086,9 +10086,9 @@
     "semantic_hash": ""
   },
   "core/sing/route_test.go": {
-    "mtime": 1791460149.636417,
-    "seen": 1791461588.431823,
-    "ast_hash": "9051fc4d96c7b60cd6a7d1bfffbc040c",
+    "mtime": 1791478430.8010955,
+    "seen": 1791478832.9017565,
+    "ast_hash": "53a881085d61537fc491a918bef9897d",
     "semantic_hash": ""
   },
   "example/config.json": {
@@ -10098,9 +10098,9 @@
     "semantic_hash": ""
   },
   "example/sing_origin.json": {
-    "mtime": 1780064002.6292205,
-    "seen": 1790827664.2659168,
-    "ast_hash": "84f7a6305c210934a132f92c405ed58b",
+    "mtime": 1791478409.3870199,
+    "seen": 1791478832.9017773,
+    "ast_hash": "034d6107f528cf442a0c76b3be856f2c",
     "semantic_hash": ""
   },
   "go.mod": {
@@ -10254,15 +10254,15 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1791461278.8179872,
-    "seen": 1791461588.4324038,
-    "ast_hash": "fbd6bddbf3f46a25c42b16ea608a2d3e",
+    "mtime": 1791478456.7186446,
+    "seen": 1791478832.9026275,
+    "ast_hash": "493b73e411c520382474d2c706d175dc",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
-    "mtime": 1790833834.083043,
-    "seen": 1790834210.6898277,
-    "ast_hash": "afb3ede2fcc03b6e5bf43d7f5afa0914",
+    "mtime": 1791478444.478352,
+    "seen": 1791478832.9026303,
+    "ast_hash": "1c221da0df016dff94d735dfac3c0572",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -10311,6 +10311,12 @@
     "mtime": 1790924335.3693836,
     "seen": 1790926218.788728,
     "ast_hash": "33e6d7092ac38debaf2a43e610c498af",
+    "semantic_hash": ""
+  },
+  "example/custom_outbound.json": {
+    "mtime": 1791478389.3547652,
+    "seen": 1791478832.901774,
+    "ast_hash": "09a5bcaf732516edf77692beb558849d",
     "semantic_hash": ""
   }
 }
