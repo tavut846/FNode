@@ -190,6 +190,20 @@ FNode configuration is JSON5 compatible (permits comments and trailing commas).
 }
 ```
 
+### 4.2 Base Configuration (`sing_origin.json`) & Route Rules Persistence
+
+When `OriginalPath` points to a base sing-box config (e.g. `/etc/FNode/sing_origin.json`), FNode seamlessly combines panel-managed controls with native sing-box capabilities:
+- **Custom Outbounds**: Custom protocol outbounds (Shadowsocks, WireGuard, directv6, etc.) declared in `sing_origin.json` or `CustomOutbounds` are loaded into the core.
+- **Persistent Routing & Rule Sets**: FNode preserves all base `route.rules` and `route.rule_set` (including remote binary `.srs` rule sets) across dynamic node sync events (`AddNode`/`DelNode`).
+- **Rule Precedence Chain**:
+  1. Anti-SSRF Protection (private IPv4 & IPv6 CIDRs blocked)
+  2. IPv6 Blocking (when `DisableIPv6: true`)
+  3. Panel-defined route rules (audits, blocked protocols/domains from Xboard)
+  4. Base `sing_origin.json` route rules (custom outbound detours, domain suffixes, rule-sets, regex)
+  5. Fallback final outbound (`direct`)
+
+This eliminates the need to bloat `config.json` with duplicated rules, allowing complex routing and remote rule sets to be maintained cleanly in `sing_origin.json`.
+
 ---
 
 ## 5. Certificate Management & Caddy Integration

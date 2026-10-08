@@ -1,6 +1,7 @@
 package sing
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -93,3 +94,85 @@ func TestCompileRouteRules_PanelAndCustomRules(t *testing.T) {
 		t.Errorf("expected custom rule first, got %v", rules[0])
 	}
 }
+
+func TestSing_PreserveOriginRulesAndRuleSets(t *testing.T) {
+	originContent := `{
+  "outbounds": [
+    {
+      "type": "direct",
+      "tag": "direct"
+    },
+    {
+      "type": "block",
+      "tag": "block"
+    },
+    {
+      "type": "shadowsocks",
+      "tag": "USLaxSS",
+      "server": "1.2.3.4",
+      "server_port": 10001,
+      "method": "aes-256-gcm",
+      "password": "password"
+    }
+  ],
+  "route": {
+    "rules": [
+      {
+        "domain_suffix": ["ip.sb"],
+        "outbound": "USLaxSS"
+      }
+    ],
+    "rule_set": [
+      {
+        "type": "inline",
+        "tag": "test-ruleset",
+        "rules": [
+          {
+            "domain_suffix": ["reddit.com"]
+          }
+        ]
+      }
+    ]
+  }
+}`
+	tmpFile, err := os.CreateTemp("", "sing_origin_test_*.json")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.WriteString(originContent); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+	tmpFile.Close()
+
+	coreCfg := &conf.CoreConfig{
+		SingConfig: &conf.SingConfig{
+			OriginalPath: tmpFile.Name(),
+			DisableIPv6:  true,
+		},
+	}
+
+	coreInst, err := New(coreCfg)
+	if err != nil {
+		t.Fatalf("failed to create sing core: %v", err)
+	}
+	singInst, ok := coreInst.(*Sing)
+	if !ok {
+		t.Fatalf("expected *Sing, got %T", coreInst)
+	}
+
+	if len(singInst.originRules) != 1 {
+		t.Fatalf("expected 1 origin rule, got %d", len(singInst.originRules))
+	}
+	if len(singInst.originRuleSets) != 1 {
+		t.Fatalf("expected 1 origin rule set, got %d", len(singInst.originRuleSets))
+	}
+
+	// Simulate dynamic router rule update (as triggered by AddNode/DelNode)
+	err = singInst.UpdateRouterRules()
+	if err != nil {
+		t.Fatalf("UpdateRouterRules failed: %v", err)
+	}
+}
+

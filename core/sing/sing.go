@@ -38,6 +38,8 @@ type Sing struct {
 	inboundConfig             map[string]*conf.Options
 	nodeReportMinTrafficBytes map[string]int64
 	coreConfig                *conf.CoreConfig
+	originRules               []option.Rule
+	originRuleSets            []option.RuleSet
 	mu                        sync.RWMutex
 }
 
@@ -54,6 +56,8 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 	ctx := context.Background()
 	ctx = box.Context(ctx, include.InboundRegistry(), include.OutboundRegistry(), include.EndpointRegistry(), include.DNSTransportRegistry(), include.ServiceRegistry())
 	options := option.Options{}
+	var originRules []option.Rule
+	var originRuleSets []option.RuleSet
 	if len(c.SingConfig.OriginalPath) != 0 {
 		data, err := os.ReadFile(c.SingConfig.OriginalPath)
 		if err != nil {
@@ -62,6 +66,10 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 		options, err = json.UnmarshalExtendedContext[option.Options](ctx, data)
 		if err != nil {
 			return nil, fmt.Errorf("unmarshal original config error: %s", err)
+		}
+		if options.Route != nil {
+			originRules = options.Route.Rules
+			originRuleSets = options.Route.RuleSet
 		}
 	}
 	options.Log = &option.LogOptions{
@@ -96,6 +104,13 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unmarshal default outbounds error: %s", err)
 		}
+	} else if len(c.SingConfig.CustomOutbounds) > 0 {
+		customOutboundsData, err := json.Marshal(c.SingConfig.CustomOutbounds)
+		if err == nil {
+			if customOutbounds, err := json.UnmarshalExtendedContext[[]option.Outbound](ctx, customOutboundsData); err == nil {
+				options.Outbounds = append(options.Outbounds, customOutbounds...)
+			}
+		}
 	}
 
 	// 2. Build default routing rules (anti-SSRF and IPv6 disable if configured)
@@ -114,6 +129,18 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unmarshal default rules error: %s", err)
 		}
+	} else {
+		// Ensure Anti-SSRF, IPv6 blocking and custom config rules precede origin rules at startup
+		rawRules := CompileRouteRules(c.SingConfig.DisableIPv6, nil, c.SingConfig.CustomRouteRules)
+		rulesData, err := json.Marshal(rawRules)
+		if err != nil {
+			return nil, fmt.Errorf("marshal default rules error: %s", err)
+		}
+		compiledRules, err := json.UnmarshalExtendedContext[[]option.Rule](ctx, rulesData)
+		if err != nil {
+			return nil, fmt.Errorf("unmarshal default rules error: %s", err)
+		}
+		options.Route.Rules = append(compiledRules, originRules...)
 	}
 
 	os.Setenv("SING_DNS_PATH", "")
@@ -142,6 +169,8 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 		inboundConfig:             make(map[string]*conf.Options),
 		nodeReportMinTrafficBytes: make(map[string]int64),
 		coreConfig:                c,
+		originRules:               originRules,
+		originRuleSets:            originRuleSets,
 	}, nil
 }
 
@@ -185,11 +214,15 @@ func (b *Sing) UpdateRouterRules() error {
 		return fmt.Errorf("unmarshal route rules error: %w", err)
 	}
 
+	allRules := make([]option.Rule, 0, len(rules)+len(b.originRules))
+	allRules = append(allRules, rules...)
+	allRules = append(allRules, b.originRules...)
+
 	type updatableRouter interface {
 		UpdateRules(rules []option.Rule, ruleSets []option.RuleSet) error
 	}
 	if ur, ok := b.router.(updatableRouter); ok {
-		return ur.UpdateRules(rules, nil)
+		return ur.UpdateRules(allRules, b.originRuleSets)
 	}
 	return nil
 }

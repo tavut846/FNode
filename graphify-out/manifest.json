@@ -288,9 +288,9 @@
     "semantic_hash": ""
   },
   "core/sing/sing.go": {
-    "mtime": 1788687290.6875246,
-    "seen": 1790827664.2659066,
-    "ast_hash": "e35cb5b900de6f803cc47fbfe67fb59e",
+    "mtime": 1791460018.5858111,
+    "seen": 1791461588.4318259,
+    "ast_hash": "ca2563ddbcac1a1840ccab804020d5a0",
     "semantic_hash": ""
   },
   "core/sing/user.go": {
@@ -10086,9 +10086,9 @@
     "semantic_hash": ""
   },
   "core/sing/route_test.go": {
-    "mtime": 1788687150.114503,
-    "seen": 1790827664.2659035,
-    "ast_hash": "49c76ed74414c22fcae52258321cdcd9",
+    "mtime": 1791460149.636417,
+    "seen": 1791461588.431823,
+    "ast_hash": "9051fc4d96c7b60cd6a7d1bfffbc040c",
     "semantic_hash": ""
   },
   "example/config.json": {
@@ -10104,9 +10104,9 @@
     "semantic_hash": ""
   },
   "go.mod": {
-    "mtime": 1790955706.7112396,
-    "seen": 1790956047.5181212,
-    "ast_hash": "84fd16c577c42b18c782f1477caa3aed",
+    "mtime": 1790959137.3894844,
+    "seen": 1791461588.4318357,
+    "ast_hash": "886e4605aacb0cc55e352b7dea1b3e42",
     "semantic_hash": ""
   },
   "node/cert/user/user-test@test.com.json": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1790925888.7507665,
-    "seen": 1790926218.7892652,
-    "ast_hash": "92227324db2d913a13c75ea93c1243b2",
+    "mtime": 1791461278.8179872,
+    "seen": 1791461588.4324038,
+    "ast_hash": "fbd6bddbf3f46a25c42b16ea608a2d3e",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10272,9 +10272,9 @@
     "semantic_hash": ""
   },
   "docs/COMMUNICATION_FLOW_LOGIC.md": {
-    "mtime": 1790925905.0201893,
-    "seen": 1790926218.7892637,
-    "ast_hash": "a2d951e67688d6d1248240e7d732895e",
+    "mtime": 1791461294.1005566,
+    "seen": 1791461588.4324021,
+    "ast_hash": "5746f7237716f924135515705dfce74e",
     "semantic_hash": ""
   },
   "core/sing/node_test.go": {
