@@ -1,7 +1,9 @@
 package sing
 
 import (
+	"encoding/json"
 	"os"
+	"regexp"
 	"testing"
 	"time"
 
@@ -232,5 +234,117 @@ func TestSing_ExampleCustomOutboundJsonLoads(t *testing.T) {
 		t.Fatalf("UpdateRouterRules failed on example/custom_outbound.json: %v", err)
 	}
 }
+
+func TestSing_ProtectionRulesAndDomainRegex(t *testing.T) {
+	content, err := os.ReadFile("../../example/sing_origin.json")
+	if err != nil {
+		t.Fatalf("failed to read example/sing_origin.json: %v", err)
+	}
+
+	var parsed struct {
+		Route struct {
+			Rules []struct {
+				Protocol    []string `json:"protocol"`
+				Port        []uint16 `json:"port"`
+				DomainRegex []string `json:"domain_regex"`
+				Outbound    string   `json:"outbound"`
+			} `json:"rules"`
+		} `json:"route"`
+	}
+
+	if err := json.Unmarshal(content, &parsed); err != nil {
+		t.Fatalf("failed to parse example/sing_origin.json: %v", err)
+	}
+
+	var regexList []string
+	hasBittorrentBlock := false
+	hasSMTPPortBlock := false
+
+	for _, rule := range parsed.Route.Rules {
+		if rule.Outbound == "block" {
+			for _, proto := range rule.Protocol {
+				if proto == "bittorrent" {
+					hasBittorrentBlock = true
+				}
+			}
+			for _, port := range rule.Port {
+				if port == 25 {
+					hasSMTPPortBlock = true
+				}
+			}
+			if len(rule.DomainRegex) > 0 {
+				regexList = append(regexList, rule.DomainRegex...)
+			}
+		}
+	}
+
+	if !hasBittorrentBlock {
+		t.Errorf("expected bittorrent protocol block rule in sing_origin.json")
+	}
+	if !hasSMTPPortBlock {
+		t.Errorf("expected port 25 SMTP block rule in sing_origin.json")
+	}
+
+	// Verify all regex compile
+	compiled := make([]*regexp.Regexp, 0, len(regexList))
+	for _, pattern := range regexList {
+		re, err := regexp.Compile(pattern)
+		if err != nil {
+			t.Fatalf("failed to compile domain regex %q: %v", pattern, err)
+		}
+		compiled = append(compiled, re)
+	}
+
+	isBlocked := func(domain string) bool {
+		for _, re := range compiled {
+			if re.MatchString(domain) {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Must block abusive / DMCA / malicious domains
+	blockedSamples := []string{
+		"thepiratebay.org",
+		"nyaa.si",
+		"tracker.opentrackr.org",
+		"supportxmr.com",
+		"ethermine.org",
+		"guerrillamail.com",
+		"10minutemail.com",
+		"bincheck.io",
+		"ipstresser.com",
+		"360.cn",
+		"guanjia.qq.com",
+		"12377.cn",
+		"pincong.rocks",
+		"miaoko.pages.dev",
+	}
+	for _, domain := range blockedSamples {
+		if !isBlocked(domain) {
+			t.Errorf("expected %s to be blocked by domain regex, but was not", domain)
+		}
+	}
+
+	// Must NOT block normal legitimate internet domains
+	allowedSamples := []string{
+		"google.com",
+		"youtube.com",
+		"github.com",
+		"microsoft.com",
+		"apple.com",
+		"wikipedia.org",
+		"cloudflare.com",
+		"netflix.com",
+		"amazon.com",
+	}
+	for _, domain := range allowedSamples {
+		if isBlocked(domain) {
+			t.Errorf("expected %s to be allowed, but was blocked by domain regex", domain)
+		}
+	}
+}
+
 
 

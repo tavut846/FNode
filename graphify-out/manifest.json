@@ -9522,15 +9522,15 @@
     "semantic_hash": ""
   },
   "FNode-script/FNode.sh": {
-    "mtime": 1790925832.7102778,
-    "seen": 1790926218.7862976,
-    "ast_hash": "19c6232b6b6a8e70588c1fcd67f7a2a9",
+    "mtime": 1791480012.4623518,
+    "seen": 1791480428.2876644,
+    "ast_hash": "ed983c37527cf25eea47b8815db43fc6",
     "semantic_hash": ""
   },
   "FNode-script/initconfig.sh": {
-    "mtime": 1790925817.5995233,
-    "seen": 1790926218.786302,
-    "ast_hash": "d02ba5867f12909aa4bcba7a1bb269d7",
+    "mtime": 1791479990.8535788,
+    "seen": 1791480428.2876685,
+    "ast_hash": "4d85af23aee19aff6df38a77a5972eff",
     "semantic_hash": ""
   },
   "FNode-script/install.sh": {
@@ -10086,9 +10086,9 @@
     "semantic_hash": ""
   },
   "core/sing/route_test.go": {
-    "mtime": 1791478430.8010955,
-    "seen": 1791478832.9017565,
-    "ast_hash": "53a881085d61537fc491a918bef9897d",
+    "mtime": 1791480047.9774466,
+    "seen": 1791480428.2910242,
+    "ast_hash": "7fb904102c606dea3157a4343eb0e50f",
     "semantic_hash": ""
   },
   "example/config.json": {
@@ -10098,9 +10098,9 @@
     "semantic_hash": ""
   },
   "example/sing_origin.json": {
-    "mtime": 1791478409.3870199,
-    "seen": 1791478832.9017773,
-    "ast_hash": "034d6107f528cf442a0c76b3be856f2c",
+    "mtime": 1791479953.4040413,
+    "seen": 1791480428.2910419,
+    "ast_hash": "aeb2314ef26403d66fd3e8e5144b0120",
     "semantic_hash": ""
   },
   "go.mod": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1791478456.7186446,
-    "seen": 1791478832.9026275,
-    "ast_hash": "493b73e411c520382474d2c706d175dc",
+    "mtime": 1791480114.2859957,
+    "seen": 1791480428.2918808,
+    "ast_hash": "30c93999d8e3c91d56b2cd492ba94131",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
