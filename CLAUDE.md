@@ -11,6 +11,7 @@ It is a fork of [V2bX](https://github.com/wyx2685/V2bX) (kept under `SupportProj
 - Maintain sing-box core exclusivity; do not reintroduce legacy Xray or standalone Hysteria dependencies.
 - **Mandatory Verification**: After making ANY change, write and run a test to verify it actually works before reporting done (`GOEXPERIMENT=jsonv2 go test -v -tags "with_utls" ./...`). Never declare a task complete without executing verification tests.
 - Ensure all Go code builds and passes tests using `GOEXPERIMENT=jsonv2`.
+- **Commit Message Output**: Each time you confirm and report changes, always provide the commit message directly at the end (following Conventional Commits format) under `### Commit Message` instead of git shell commands or "Recommended Git Commit" command blocks.
 
 ---
 

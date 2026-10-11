@@ -17,3 +17,5 @@ Please adhere strictly to the directives specified in [AGENTS.md](AGENTS.md):
    Always keep `docs/PROJECT_GUIDE.md` and `docs/COMMUNICATION_FLOW_LOGIC.md` updated.
 4. **Graphify**:
    Run `graphify update .` after code modifications.
+5. **Commit Message Output**:
+   Always provide the commit message directly at the end (following Conventional Commits format) under `### Commit Message` instead of git shell commands or "Recommended Git Commit" command blocks.

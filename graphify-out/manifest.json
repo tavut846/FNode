@@ -7764,15 +7764,15 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1790844132.6269202,
-    "seen": 1790844564.0049179,
-    "ast_hash": "c5b77c97db9363b6a925334d584acf3d",
+    "mtime": 1791689248.8071196,
+    "seen": 1791689578.9877172,
+    "ast_hash": "1a41ea4f57af70e1d616a1ffc777c2ee",
     "semantic_hash": ""
   },
   "GEMINI.md": {
-    "mtime": 1790907506.2129874,
-    "seen": 1790908474.98493,
-    "ast_hash": "fc8a5da6f43970205724f5da34b62eeb",
+    "mtime": 1791689237.090459,
+    "seen": 1791689578.9877272,
+    "ast_hash": "1038b73abb5f33ff77d3633749d88ed7",
     "semantic_hash": ""
   },
   "README.md": {
@@ -10266,9 +10266,9 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1790907500.476453,
-    "seen": 1790908474.9849224,
-    "ast_hash": "742e2078a3f03574d80ab16b1c57d293",
+    "mtime": 1791689224.8616643,
+    "seen": 1791689578.987712,
+    "ast_hash": "ec93b9a8ebb9e87c9e2de35abd361840",
     "semantic_hash": ""
   },
   "docs/COMMUNICATION_FLOW_LOGIC.md": {
