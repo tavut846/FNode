@@ -10,9 +10,10 @@ type SingConfig struct {
 	OriginalPath     string            `json:"OriginalPath"`
 	ConnectTimeout   int               `json:"ConnectTimeout"` // dial timeout in seconds, default 5s
 	DomainStrategy   string            `json:"DomainStrategy"` // "prefer_ipv4", "ipv4_only", "prefer_ipv6", "ipv6_only"
-	DisableIPv6      bool              `json:"DisableIPv6"`    // block ipv6 traffic immediately to avoid timeouts on IPv4-only hosts
-	CustomOutbounds  []map[string]any  `json:"CustomOutbounds"`
-	CustomRouteRules []CustomRouteRule `json:"CustomRouteRules"`
+	DisableIPv6         bool              `json:"DisableIPv6"`         // block ipv6 traffic immediately to avoid timeouts on IPv4-only hosts
+	AutoDetectInterface *bool             `json:"AutoDetectInterface"` // automatically track default network interface and gateway changes (defaults to true)
+	CustomOutbounds     []map[string]any  `json:"CustomOutbounds"`
+	CustomRouteRules    []CustomRouteRule `json:"CustomRouteRules"`
 }
 
 type CustomRouteRule struct {
@@ -45,6 +46,7 @@ type SingLogConfig struct {
 }
 
 func NewSingConfig() *SingConfig {
+	autoDetect := true
 	return &SingConfig{
 		LogConfig: SingLogConfig{
 			Level:     "error",
@@ -55,9 +57,10 @@ func NewSingConfig() *SingConfig {
 			Server:     "time.apple.com",
 			ServerPort: 0,
 		},
-		ConnectTimeout: 5,
-		DomainStrategy: "prefer_ipv4",
-		DisableIPv6:    true,
+		ConnectTimeout:      5,
+		DomainStrategy:      "prefer_ipv4",
+		DisableIPv6:         true,
+		AutoDetectInterface: &autoDetect,
 	}
 }
 

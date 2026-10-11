@@ -114,10 +114,19 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 	}
 
 	// 2. Build default routing rules (anti-SSRF and IPv6 disable if configured)
+	autoDetect := true
+	if c.SingConfig != nil && c.SingConfig.AutoDetectInterface != nil {
+		autoDetect = *c.SingConfig.AutoDetectInterface
+	}
 	if options.Route == nil {
 		options.Route = &option.RouteOptions{
-			Final: "direct",
+			Final:               "direct",
+			AutoDetectInterface: autoDetect,
 		}
+	} else if c.SingConfig != nil && c.SingConfig.AutoDetectInterface != nil {
+		options.Route.AutoDetectInterface = *c.SingConfig.AutoDetectInterface
+	} else if !options.Route.AutoDetectInterface {
+		options.Route.AutoDetectInterface = autoDetect
 	}
 	if len(options.Route.Rules) == 0 {
 		rawRules := CompileRouteRules(c.SingConfig.DisableIPv6, nil, c.SingConfig.CustomRouteRules)

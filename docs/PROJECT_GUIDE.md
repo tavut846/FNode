@@ -216,6 +216,18 @@ When `OriginalPath` points to a base sing-box config (e.g. `/etc/FNode/sing_orig
 
 This eliminates the need to bloat `config.json` with duplicated rules, allowing complex routing and remote rule sets to be maintained cleanly in `sing_origin.json`.
 
+### 4.3 Automatic Hot-Reload & Related Files Monitoring
+FNode includes an intelligent filesystem watcher ([`conf/watch.go`](file:///c:/Users/Keanghour/Documents/GitHub/FNode/FNode/conf/watch.go)) active by default (`-w` flag on `FNode server`):
+- **Atomic Save Resilience**: Watches parent directories (`filepath.Dir(absPath)`) so inotify watches survive inode replacements caused by `vim`, `nano`, `sed -i`, and file move operations.
+- **Related Assets Tracking**: In addition to `/etc/FNode/config.json`, the watcher automatically discovers and monitors `OriginalPath` (`/etc/FNode/sing_origin.json`), `CertFile`, and `KeyFile`. Any modification triggers an automated reload.
+- **Safe Validation**: Validates the syntax of the new configuration and existence of declared files before applying; invalid JSON syntax logs an error and safely preserves the currently running configuration without crashing or interrupting active proxies.
+- **Timer Debounce**: A 1-second debounce consolidates burst filesystem notifications into a single seamless reload cycle.
+
+### 4.4 Dynamic VPS IP & Network Interface Auto-Detection
+To ensure high availability on cloud VPS providers with dynamic or reassigned IP addresses (e.g., Lightsail, AWS, GCP, DHCP lease renewals):
+- **Interface & Gateway Monitoring**: `AutoDetectInterface` defaults to `true` across `SingConfig` and sing-box route options. sing-box actively tracks kernel link and default gateway transitions via `InterfaceMonitor` (rtnetlink on Linux), ensuring outbound `direct` dials and DNS resolvers adapt immediately without entering connection timeout loops.
+- **Wildcard Socket Binding**: Nodes bind inbounds to `0.0.0.0` (or `::` on dual-stack) and outbounds use `SendIP: "0.0.0.0"`, avoiding hardcoded IP addresses.
+
 ---
 
 ## 5. Certificate Management & Caddy Integration

@@ -84,10 +84,8 @@ func serverHandle(_ *cobra.Command, _ []string) {
 		return
 	}
 	log.Info("Nodes started")
-	xdns := os.Getenv("XRAY_DNS_PATH")
-	sdns := os.Getenv("SING_DNS_PATH")
 	if watch {
-		err = c.Watch(config, xdns, sdns, func() {
+		err = c.Watch(config, func() {
 			nodes.Close()
 			err = vc.Close()
 			if err != nil {

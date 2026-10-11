@@ -47,7 +47,7 @@ This document specifies mandatory rules for all AI agents (Antigravity, Gemini, 
 
 ---
 
-## 5. Commit Output on Confirmation (Mandatory)
+## 5. Commit Message Output on Confirmation (Mandatory)
 
-- Each time you confirm and report completion of changes, you **MUST** write the recommended git commit command and message at the end of your response.
+- Each time you confirm and report completion of changes, you **MUST** write the commit message directly (following Conventional Commits format, e.g. `feat: ...`, `fix: ...`, with a concise summary line and descriptive bullet points) under a `### Commit Message` section at the end of your response, instead of writing git shell commands or "Recommended Git Commit" command blocks.
 

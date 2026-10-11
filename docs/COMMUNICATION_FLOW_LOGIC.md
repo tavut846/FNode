@@ -139,3 +139,47 @@ sequenceDiagram
     F->>X: POST /api/v1/server/UniProxy/alive: { "101": ["114.24.50.12"] }
     X-->>F: 200 OK (Cluster Active IP Records Updated)
 ```
+
+---
+
+## 7. Dynamic Environment & Configuration Lifecycle Flows
+
+### 7.1 VPS IP & Default Gateway Transition Flow
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Kernel as Linux Kernel (rtnetlink)
+    participant Sing as sing-box InterfaceMonitor
+    participant Outbound as Outbound Direct Dialer
+    participant Client as Client Connection
+
+    Note over Kernel: VPS Public IP / Gateway Reassigned by Provider
+    Kernel-->>Sing: RTM_NEWADDR / RTM_NEWROUTE link update event
+    Sing->>Sing: Update defaultInterface & network environment
+    Sing->>Outbound: notifyInterfaceUpdate()
+    Outbound->>Outbound: Refresh source IP & flush stale gateway routes
+    Client->>Outbound: New outbound target request
+    Outbound->>Kernel: Dials via updated interface & gateway without timeout
+```
+
+### 7.2 Configuration & Related Asset Hot-Reload Flow
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Sysadmin / Script
+    participant FS as Host Filesystem
+    participant Watcher as FNode Config Watcher
+    participant Core as sing-box Proxy Core
+
+    Admin->>FS: Edit config.json or sing_origin.json (vim/nano/atomic replace)
+    FS-->>Watcher: Inotify event detected on parent directory
+    Watcher->>Watcher: Reset 1s debounce timer
+    Note over Watcher: Debounce timer expires
+    Watcher->>Watcher: Parse and validate new config & declared paths
+    alt Parse Succeeded
+        Watcher->>Core: Reload proxy core & sync active nodes
+        Note over Core: Core restarted seamlessly with new settings
+    else Parse Failed (Syntax Error)
+        Watcher->>Watcher: Log error; preserve running core uninterrupted
+    end
+```

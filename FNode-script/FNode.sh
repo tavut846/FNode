@@ -829,6 +829,7 @@ EOF
     }
   ],
   "route": {
+    "auto_detect_interface": true,
     "rules": [
       {
         "ip_is_private": true,
