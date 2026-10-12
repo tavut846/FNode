@@ -10254,15 +10254,15 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1791654272.7602563,
-    "seen": 1791654587.9416018,
-    "ast_hash": "ae093902d9acf8df71af40f983d5d931",
+    "mtime": 1791768811.0478315,
+    "seen": 1791769027.782809,
+    "ast_hash": "c2be9691bd67c39653ebae846c951097",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
-    "mtime": 1791478444.478352,
-    "seen": 1791478832.9026303,
-    "ast_hash": "1c221da0df016dff94d735dfac3c0572",
+    "mtime": 1791768794.088031,
+    "seen": 1791769027.7828124,
+    "ast_hash": "c1bda739c5d174590dd0a096715e9243",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -10317,6 +10317,12 @@
     "mtime": 1791478389.3547652,
     "seen": 1791478832.901774,
     "ast_hash": "09a5bcaf732516edf77692beb558849d",
+    "semantic_hash": ""
+  },
+  "example/anytls_padding_generator.py": {
+    "mtime": 1791768429.9766853,
+    "seen": 1791768771.5225992,
+    "ast_hash": "607d9f233099957adfd50b318fd4dcbb",
     "semantic_hash": ""
   }
 }

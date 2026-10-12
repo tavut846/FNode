@@ -141,3 +141,14 @@ FNode includes built-in rate-limiting and concurrent device enforcement:
 Located in the [`example/`](./) directory or installed under `/etc/FNode/`:
 - **GeoIP Databases**: `geoip.dat`, `geoip.db`
 - **GeoSite Rule Lists**: `geosite.dat`, `geosite.db`
+
+---
+
+## 9. AnyTLS Traffic Shaping Utilities
+
+- **Generator Script**: [`example/anytls_padding_generator.py`](./anytls_padding_generator.py)
+  - Standalone CLI generator that produces cryptographically random, realistic AnyTLS padding schemes for sing-box and FNode.
+  - Generates full padding DSL schemas adhering to `github.com/anytls/sing-anytls/padding` specifications (`stop=N`, auth padding, session handshake, multi-segment TLS ClientHello with `c` CheckMark termination, and congestion window MTU escalation).
+  - Supports `--preset universal` (default, balanced), `--preset low-latency` (gaming/VoIP, `stop=7`), and `--preset stealth` (censorship-resistant, `stop=11`).
+  - Supports output as sing-box inbound JSON (`--format json`), raw lines (`--format raw`), and self-validation (`--test`).
+
