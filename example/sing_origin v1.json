@@ -11,7 +11,8 @@
       "server": "",
       "server_port": 10001,
       "method": "aes-256-gcm",
-      "password": ""
+      "password": "",
+      "domain_strategy": "prefer_ipv4"
     },
     {
       "type": "block",

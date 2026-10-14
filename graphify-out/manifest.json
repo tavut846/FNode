@@ -10326,9 +10326,9 @@
     "semantic_hash": ""
   },
   "example/sing_origin v1.json": {
-    "mtime": 1791956806.3051465,
-    "seen": 1791957092.0113752,
-    "ast_hash": "8c8e0a6971a8977b95edb96ad1e4a9d0",
+    "mtime": 1791957681.5285084,
+    "seen": 1791957892.7130141,
+    "ast_hash": "fe0010872f20237fd573cc7dc7ed4ebc",
     "semantic_hash": ""
   }
 }
