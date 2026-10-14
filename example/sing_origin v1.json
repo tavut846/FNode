@@ -84,7 +84,13 @@
       },
       {
         "domain_suffix": [
+          "googlevideo.com",
+          "ytimg.com",
+          "ggpht.com",
+          "gvt1.com",
+          "gvt2.com",
           "gstatic.com",
+          "googleusercontent.com",
           "google.com",
           "bing.com"
         ],
