@@ -86,7 +86,7 @@ The client device initiates proxy connections through FNode:
 
 | Stage | Data Transmitted to FNode |
 | :--- | :--- |
-| **1. Protocol Handshake** | Client connects to FNode listening port and sends cryptographic handshake proving identity:<br>- **Shadowsocks**: Key-derived AEAD sub-keys.<br>- **VMess / VLESS**: User UUID and authentication hash.<br>- **Trojan**: SHA-224 password hash.<br>- **Hysteria 2 / TUIC**: User UUID/password with optional Salamander obfuscation. |
+| **1. Protocol Handshake** | Client connects to FNode listening port and sends cryptographic handshake proving identity:<br>- **Shadowsocks**: Key-derived AEAD sub-keys.<br>- **VMess / VLESS**: User UUID and authentication hash.<br>- **Trojan**: SHA-224 password hash.<br>- **Hysteria 2 / TUIC**: User UUID/password with optional Salamander obfuscation.<br>*Note: FNode assigns user identity as `email: [inbound_tag]|uuid` (matching V2bX format) in sing-box, ensuring every inbound connection and error is traceable by searching for the client's token.* |
 | **2. Target Destination Request** | Encapsulated destination address (Domain name or IPv4/IPv6 IP + target port, e.g. `google.com:443`). |
 | **3. Upstream Data Stream** | Raw application data sent by user applications (HTTP requests, TLS Client Hello, DNS queries, uploaded files). |
 

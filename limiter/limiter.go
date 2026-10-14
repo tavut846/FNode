@@ -14,9 +14,11 @@ import (
 )
 
 var limitLock sync.RWMutex
-var limiter map[string]*Limiter
+var limiter = map[string]*Limiter{}
 
 func Init() {
+	limitLock.Lock()
+	defer limitLock.Unlock()
 	limiter = map[string]*Limiter{}
 }
 

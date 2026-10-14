@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "common/format/user.go": {
-    "mtime": 1774255859.704394,
-    "seen": 1790827664.2658353,
-    "ast_hash": "46e13610b2d86a3acd6313b9af4ea0a6",
+    "mtime": 1791958570.406337,
+    "seen": 1791959234.4582093,
+    "ast_hash": "8681d513ee8d4a8ddcf5100f1793ca1a",
     "semantic_hash": ""
   },
   "common/json5/json5.go": {
@@ -276,15 +276,15 @@
     "semantic_hash": ""
   },
   "core/sing/hook.go": {
-    "mtime": 1780107014.7268305,
-    "seen": 1790827664.265896,
-    "ast_hash": "a944aedd3d04915112944ec7c55460a7",
+    "mtime": 1791958631.414589,
+    "seen": 1791959234.4582496,
+    "ast_hash": "84c1c357106a973f7776090be1548820",
     "semantic_hash": ""
   },
   "core/sing/node.go": {
-    "mtime": 1790842424.418003,
-    "seen": 1790842791.8132808,
-    "ast_hash": "dbb911e8d258ca57a793a8ea8a29a83d",
+    "mtime": 1791958709.2968771,
+    "seen": 1791959234.458251,
+    "ast_hash": "05864bdc199ccc74f9586ad67309a34b",
     "semantic_hash": ""
   },
   "core/sing/sing.go": {
@@ -294,9 +294,9 @@
     "semantic_hash": ""
   },
   "core/sing/user.go": {
-    "mtime": 1790830848.4495232,
-    "seen": 1790831336.677582,
-    "ast_hash": "8245e361e6ba8620d2ca95d40fda7655",
+    "mtime": 1791958673.1081326,
+    "seen": 1791959234.4582586,
+    "ast_hash": "023f124578706c23189ad2b465017950",
     "semantic_hash": ""
   },
   "core/sing/utils.go": {
@@ -312,9 +312,9 @@
     "semantic_hash": ""
   },
   "limiter/limiter.go": {
-    "mtime": 1780107014.7302186,
-    "seen": 1790827664.2659254,
-    "ast_hash": "591aa422cb33328a27107f860ebce721",
+    "mtime": 1791958873.1944172,
+    "seen": 1791959234.4582756,
+    "ast_hash": "dfd8abade6ddf461fe50a72d18d2bd21",
     "semantic_hash": ""
   },
   "limiter/rule.go": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1791768811.0478315,
-    "seen": 1791769027.782809,
-    "ast_hash": "c2be9691bd67c39653ebae846c951097",
+    "mtime": 1791958996.0585938,
+    "seen": 1791959234.4588196,
+    "ast_hash": "791a9615c744ba0ee629b6694338de6a",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10272,9 +10272,9 @@
     "semantic_hash": ""
   },
   "docs/COMMUNICATION_FLOW_LOGIC.md": {
-    "mtime": 1791654288.0125315,
-    "seen": 1791654587.9415987,
-    "ast_hash": "4e8f1b94c8bbac4318516b50fa563a7f",
+    "mtime": 1791959019.0328183,
+    "seen": 1791959234.4588177,
+    "ast_hash": "231248c47d68e35e2067055d822b257d",
     "semantic_hash": ""
   },
   "core/sing/node_test.go": {
@@ -10326,9 +10326,21 @@
     "semantic_hash": ""
   },
   "example/sing_origin v1.json": {
-    "mtime": 1791957681.5285084,
-    "seen": 1791957892.7130141,
-    "ast_hash": "fe0010872f20237fd573cc7dc7ed4ebc",
+    "mtime": 1791957904.5892375,
+    "seen": 1791958139.0196218,
+    "ast_hash": "7c74d144fe7f52b553bb13044e286530",
+    "semantic_hash": ""
+  },
+  "common/format/user_test.go": {
+    "mtime": 1791958583.1522746,
+    "seen": 1791959234.4582124,
+    "ast_hash": "4b27b726e5728909933a8914a8a0a3bd",
+    "semantic_hash": ""
+  },
+  "core/sing/user_test.go": {
+    "mtime": 1791958912.032966,
+    "seen": 1791959234.4582603,
+    "ast_hash": "ee3e56691c1d36160190168c6b51e35d",
     "semantic_hash": ""
   }
 }

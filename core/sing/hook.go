@@ -33,7 +33,8 @@ func (h *HookServer) RoutedConnection(_ context.Context, conn net.Conn, m adapte
 		log.Warn("get limiter for ", m.Inbound, " error: ", err)
 		return conn
 	}
-	taguuid := format.UserTag(m.Inbound, m.User)
+	taguuid := format.ExtractTagUUID(m.Inbound, m.User)
+	userUUID := format.ExtractUUID(m.User)
 	ip := m.Source.Addr.String()
 	if b, r := l.CheckLimit(taguuid, ip, true, true); r {
 		conn.Close()
@@ -71,7 +72,7 @@ func (h *HookServer) RoutedConnection(_ context.Context, conn net.Conn, m adapte
 	} else {
 		t = c.(*counter.TrafficCounter)
 	}
-	conn = counter.NewConnCounter(conn, t.GetCounter(m.User))
+	conn = counter.NewConnCounter(conn, t.GetCounter(userUUID))
 	return conn
 }
 
@@ -82,7 +83,8 @@ func (h *HookServer) RoutedPacketConnection(_ context.Context, conn N.PacketConn
 		return conn
 	}
 	ip := m.Source.Addr.String()
-	taguuid := format.UserTag(m.Inbound, m.User)
+	taguuid := format.ExtractTagUUID(m.Inbound, m.User)
+	userUUID := format.ExtractUUID(m.User)
 	if b, r := l.CheckLimit(taguuid, ip, false, false); r {
 		conn.Close()
 		log.Error("[", m.Inbound, "] ", "Limited ", m.User, " by ip or conn")
@@ -119,6 +121,6 @@ func (h *HookServer) RoutedPacketConnection(_ context.Context, conn N.PacketConn
 	} else {
 		t = c.(*counter.TrafficCounter)
 	}
-	conn = counter.NewPacketConnCounter(conn, t.GetCounter(m.User))
+	conn = counter.NewPacketConnCounter(conn, t.GetCounter(userUUID))
 	return conn
 }

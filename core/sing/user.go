@@ -6,6 +6,7 @@ import (
 
 	"github.com/tavut846/FNode/api/panel"
 	"github.com/tavut846/FNode/common/counter"
+	"github.com/tavut846/FNode/common/format"
 	"github.com/tavut846/FNode/core"
 	"github.com/sagernet/sing-box/adapter"
 	"github.com/sagernet/sing-box/option"
@@ -17,7 +18,11 @@ func (b *Sing) AddUsers(p *core.AddUsersParams) (added int, err error) {
 	defer b.users.mapLock.Unlock()
 
 	for i := range p.Users {
-		b.users.uidMap[p.Users[i].Uuid] = p.Users[i].Id
+		uuid := p.Users[i].Uuid
+		id := p.Users[i].Id
+		b.users.uidMap[uuid] = id
+		b.users.uidMap[format.UserTag(p.Tag, uuid)] = id
+		b.users.uidMap[format.UserEmail(p.Tag, uuid)] = id
 	}
 
 	if _, ok := b.inboundUsers[p.Tag]; !ok {
@@ -38,13 +43,18 @@ func (b *Sing) DelUsers(users []panel.UserInfo, tag string, _ *panel.NodeInfo) e
 
 	removeSet := make(map[string]struct{}, len(users))
 	for i := range users {
-		removeSet[users[i].Uuid] = struct{}{}
+		uuid := users[i].Uuid
+		removeSet[uuid] = struct{}{}
 
 		if v, ok := b.hookServer.counter.Load(tag); ok {
 			c := v.(*counter.TrafficCounter)
-			c.Delete(users[i].Uuid)
+			c.Delete(uuid)
+			c.Delete(format.UserTag(tag, uuid))
+			c.Delete(format.UserEmail(tag, uuid))
 		}
-		delete(b.users.uidMap, users[i].Uuid)
+		delete(b.users.uidMap, uuid)
+		delete(b.users.uidMap, format.UserTag(tag, uuid))
+		delete(b.users.uidMap, format.UserEmail(tag, uuid))
 	}
 
 	if currentUsers, ok := b.inboundUsers[tag]; ok {
@@ -76,7 +86,7 @@ func (b *Sing) updateInboundUsers(tag string) error {
 		us := make([]option.VLESSUser, len(users))
 		for i := range users {
 			us[i] = option.VLESSUser{
-				Name: users[i].Uuid,
+				Name: format.UserEmail(tag, users[i].Uuid),
 				Flow: info.VAllss.Flow,
 				UUID: users[i].Uuid,
 			}
@@ -88,7 +98,7 @@ func (b *Sing) updateInboundUsers(tag string) error {
 		us := make([]option.VMessUser, len(users))
 		for i := range users {
 			us[i] = option.VMessUser{
-				Name: users[i].Uuid,
+				Name: format.UserEmail(tag, users[i].Uuid),
 				UUID: users[i].Uuid,
 			}
 		}
@@ -106,7 +116,7 @@ func (b *Sing) updateInboundUsers(tag string) error {
 				password = base64.StdEncoding.EncodeToString([]byte(password[:32]))
 			}
 			us[i] = option.ShadowsocksUser{
-				Name:     users[i].Uuid,
+				Name:     format.UserEmail(tag, users[i].Uuid),
 				Password: password,
 			}
 		}
@@ -117,7 +127,7 @@ func (b *Sing) updateInboundUsers(tag string) error {
 		us := make([]option.TrojanUser, len(users))
 		for i := range users {
 			us[i] = option.TrojanUser{
-				Name:     users[i].Uuid,
+				Name:     format.UserEmail(tag, users[i].Uuid),
 				Password: users[i].Uuid,
 			}
 		}
@@ -128,7 +138,7 @@ func (b *Sing) updateInboundUsers(tag string) error {
 		us := make([]option.TUICUser, len(users))
 		for i := range users {
 			us[i] = option.TUICUser{
-				Name:     users[i].Uuid,
+				Name:     format.UserEmail(tag, users[i].Uuid),
 				UUID:     users[i].Uuid,
 				Password: users[i].Uuid,
 			}
@@ -140,7 +150,7 @@ func (b *Sing) updateInboundUsers(tag string) error {
 		us := make([]option.HysteriaUser, len(users))
 		for i := range users {
 			us[i] = option.HysteriaUser{
-				Name:       users[i].Uuid,
+				Name:       format.UserEmail(tag, users[i].Uuid),
 				AuthString: users[i].Uuid,
 			}
 		}
@@ -151,7 +161,7 @@ func (b *Sing) updateInboundUsers(tag string) error {
 		us := make([]option.Hysteria2User, len(users))
 		for i := range users {
 			us[i] = option.Hysteria2User{
-				Name:     users[i].Uuid,
+				Name:     format.UserEmail(tag, users[i].Uuid),
 				Password: users[i].Uuid,
 			}
 		}
@@ -162,7 +172,7 @@ func (b *Sing) updateInboundUsers(tag string) error {
 		us := make([]option.AnyTLSUser, len(users))
 		for i := range users {
 			us[i] = option.AnyTLSUser{
-				Name:     users[i].Uuid,
+				Name:     format.UserEmail(tag, users[i].Uuid),
 				Password: users[i].Uuid,
 			}
 		}
@@ -197,10 +207,18 @@ func (b *Sing) recreateInbound(tag string, info *panel.NodeInfo) error {
 func (b *Sing) GetUserTraffic(tag, uuid string, reset bool) (up int64, down int64) {
 	if v, ok := b.hookServer.counter.Load(tag); ok {
 		c := v.(*counter.TrafficCounter)
-		up = c.GetUpCount(uuid)
-		down = c.GetDownCount(uuid)
+		cleanUUID := format.ExtractUUID(uuid)
+		up = c.GetUpCount(cleanUUID)
+		down = c.GetDownCount(cleanUUID)
+		if up == 0 && down == 0 && cleanUUID != uuid {
+			up = c.GetUpCount(uuid)
+			down = c.GetDownCount(uuid)
+		}
 		if reset {
-			c.Reset(uuid)
+			c.Reset(cleanUUID)
+			if cleanUUID != uuid {
+				c.Reset(uuid)
+			}
 		}
 		return
 	}
@@ -215,7 +233,8 @@ func (b *Sing) GetUserTrafficSlice(tag string, reset bool) ([]panel.UserTraffic,
 	if v, ok := hook.counter.Load(tag); ok {
 		c := v.(*counter.TrafficCounter)
 		c.Counters.Range(func(key, value interface{}) bool {
-			uuid := key.(string)
+			rawKey := key.(string)
+			cleanUUID := format.ExtractUUID(rawKey)
 			traffic := value.(*counter.TrafficStorage)
 			up := traffic.UpCounter.Load()
 			down := traffic.DownCounter.Load()
@@ -224,12 +243,16 @@ func (b *Sing) GetUserTrafficSlice(tag string, reset bool) ([]panel.UserTraffic,
 					traffic.UpCounter.Store(0)
 					traffic.DownCounter.Store(0)
 				}
-				if b.users.uidMap[uuid] == 0 {
-					c.Delete(uuid)
+				uid := b.users.uidMap[cleanUUID]
+				if uid == 0 {
+					uid = b.users.uidMap[rawKey]
+				}
+				if uid == 0 {
+					c.Delete(rawKey)
 					return true
 				}
 				trafficSlice = append(trafficSlice, panel.UserTraffic{
-					UID:      b.users.uidMap[uuid],
+					UID:      uid,
 					Upload:   up,
 					Download: down,
 				})

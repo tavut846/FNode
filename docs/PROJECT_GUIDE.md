@@ -51,7 +51,8 @@ FNode was derived from [V2bX](https://github.com/wyx2685/V2bX) and [V2bX-script]
   - Inbounds are added dynamically using `box.Router().AddInbound(...)`.
   - Inbounds are deleted via `box.Router().DeleteInbound(tag)`.
   - Users are added/removed on the fly using `core.AddUsers(...)` / `core.DelUsers(...)`.
-  - Connection interception and byte counting are achieved via `HookServer` (`adapter.ConnectionTracker`).
+  - **User Debugging & Tag Formatting**: When users are registered in sing-box inbound options (VLESS, VMess, Shadowsocks, Trojan, TUIC, Hysteria, Hysteria2, AnyTLS), their `Name` field is formatted as `email: [inbound_tag]|uuid` (e.g., `email: [https://domain.com]-shadowsocks:296|11c9573c-abcd-...`), matching the familiar V2bX debugging format. Sing-box logs every inbound connection and packet with this tag, allowing administrators to grep their own token/UUID directly (`grep <token> /var/log/...`) to trace connection events, rate limiting, and rule rejections.
+  - Connection interception and byte counting are achieved via `HookServer` (`adapter.ConnectionTracker`), which extracts clean UUIDs (`format.ExtractUUID`) for accurate traffic tracking and tagUUIDs (`format.ExtractTagUUID`) for speed/device rate limit lookups.
 
 ### 2.3 FNode-script (`FNode-script/`)
 - Contains installation and administration scripts for Linux servers:

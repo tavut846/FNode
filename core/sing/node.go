@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 
 	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/common/format"
 	"github.com/tavut846/FNode/conf"
 	"github.com/sagernet/sing-box/option"
 	F "github.com/sagernet/sing/common/format"
@@ -449,7 +450,7 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 				anytlsOpt.Users = make([]option.AnyTLSUser, len(uList))
 				for i, u := range uList {
 					anytlsOpt.Users[i] = option.AnyTLSUser{
-						Name:     u.Uuid,
+						Name:     format.UserEmail(tag, u.Uuid),
 						Password: u.Uuid,
 					}
 				}
