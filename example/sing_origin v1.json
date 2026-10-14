@@ -63,6 +63,10 @@
       },
       {
         "domain_suffix": [
+          "goog",
+          "googleapis.com",
+          "clients6.google.com",
+          "accounts.google.com",
           "gemini.google.com",
           "bard.google.com",
           "generativelanguage.googleapis.com",
