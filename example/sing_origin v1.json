@@ -13,10 +13,10 @@
     {
       "tag": "USLaxSS",
       "type": "shadowsocks",
-      "server": "",
+      "server": "1.2.3.4",
       "server_port": 10001,
       "method": "aes-256-gcm",
-      "password": "",
+      "password": "password",
       "domain_strategy": "prefer_ipv4"
     },
     {
