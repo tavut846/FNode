@@ -6,6 +6,11 @@
       "domain_strategy": "prefer_ipv4"
     },
     {
+      "tag": "direct6",
+      "type": "direct",
+      "domain_strategy": "prefer_ipv6"
+    },
+    {
       "tag": "USLaxSS",
       "type": "shadowsocks",
       "server": "",
@@ -58,8 +63,7 @@
       {
         "rule_set": [
           "GeositeAI",
-          "Reddit",
-          "Youtube"
+          "Reddit"
         ],
         "outbound": "USLaxSS"
       },
@@ -78,6 +82,7 @@
           "makersuite.google.com",
           "deepmind.google",
           "deepmind.com",
+          "www.youtube.com",
           "myboard.316293.xyz",
           "ip.sb"
         ],
