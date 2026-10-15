@@ -15,7 +15,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	github.com/xtls/xray-core v1.260327.0
 	golang.org/x/crypto v0.57.0
-	golang.org/x/sys v0.48.0
+	golang.org/x/sys v0.49.0
 )
 
 require (
