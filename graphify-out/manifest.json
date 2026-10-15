@@ -10086,9 +10086,9 @@
     "semantic_hash": ""
   },
   "core/sing/route_test.go": {
-    "mtime": 1791480047.9774466,
-    "seen": 1791480428.2910242,
-    "ast_hash": "7fb904102c606dea3157a4343eb0e50f",
+    "mtime": 1792023534.1768978,
+    "seen": 1792023990.5760353,
+    "ast_hash": "76c4903ea1606e0cab398eaa748353b2",
     "semantic_hash": ""
   },
   "example/config.json": {
@@ -10326,9 +10326,9 @@
     "semantic_hash": ""
   },
   "example/sing_origin v1.json": {
-    "mtime": 1791957904.5892375,
-    "seen": 1791958139.0196218,
-    "ast_hash": "7c74d144fe7f52b553bb13044e286530",
+    "mtime": 1792024424.8557532,
+    "seen": 1792024441.423882,
+    "ast_hash": "1e70fb5707e5f4d12ae4c000b768e67b",
     "semantic_hash": ""
   },
   "common/format/user_test.go": {

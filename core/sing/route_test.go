@@ -205,6 +205,33 @@ func TestSing_ExampleSingOriginJsonLoads(t *testing.T) {
 	}
 }
 
+func TestSing_ExampleSingOriginV1JsonLoads(t *testing.T) {
+	coreCfg := &conf.CoreConfig{
+		SingConfig: &conf.SingConfig{
+			OriginalPath: "../../example/sing_origin v1.json",
+			DisableIPv6:  true,
+		},
+	}
+
+	coreInst, err := New(coreCfg)
+	if err != nil {
+		t.Fatalf("failed to create sing core from example/sing_origin v1.json: %v", err)
+	}
+	singInst, ok := coreInst.(*Sing)
+	if !ok {
+		t.Fatalf("expected *Sing, got %T", coreInst)
+	}
+
+	if len(singInst.originRules) == 0 {
+		t.Errorf("expected origin rules to be loaded from example/sing_origin v1.json")
+	}
+
+	err = singInst.UpdateRouterRules()
+	if err != nil {
+		t.Fatalf("UpdateRouterRules failed on example/sing_origin v1.json: %v", err)
+	}
+}
+
 func TestSing_ExampleCustomOutboundJsonLoads(t *testing.T) {
 	coreCfg := &conf.CoreConfig{
 		SingConfig: &conf.SingConfig{

@@ -58,7 +58,8 @@
       {
         "rule_set": [
           "GeositeAI",
-          "Reddit"
+          "Reddit",
+          "Youtube"
         ],
         "outbound": "USLaxSS"
       },
@@ -77,9 +78,14 @@
           "makersuite.google.com",
           "deepmind.google",
           "deepmind.com",
-          "youtube.com",
           "myboard.316293.xyz",
           "ip.sb"
+        ],
+        "outbound": "USLaxSS"
+      },
+      {
+        "domain_keyword": [
+          "gemini"
         ],
         "outbound": "USLaxSS"
       },
@@ -118,6 +124,13 @@
         "tag": "GeositeAI",
         "format": "binary",
         "url": "https://github.com/pandaaxi/homiefroxy-singrule/raw/refs/heads/release/singbox_rule_set/geosite-category-ai-!cn.srs",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "Youtube",
+        "format": "binary",
+        "url": "https://github.com/pandaaxi/homiefroxy-singrule/raw/refs/heads/release/singbox_rule_set/geosite-youtube.srs",
         "download_detour": "direct"
       }
     ]
