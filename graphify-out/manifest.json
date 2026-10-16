@@ -36,9 +36,9 @@
     "semantic_hash": ""
   },
   "cmd/action_linux.go": {
-    "mtime": 1792138431.4037945,
-    "seen": 1792139233.3560863,
-    "ast_hash": "c39e30743694c327b463209eddb56e84",
+    "mtime": 1792160409.200085,
+    "seen": 1792161055.0337265,
+    "ast_hash": "e7ce552659845ef842b311e3be3b8cd7",
     "semantic_hash": ""
   },
   "cmd/cmd.go": {
@@ -10326,9 +10326,9 @@
     "semantic_hash": ""
   },
   "example/sing_origin v1.json": {
-    "mtime": 1792031921.4925826,
-    "seen": 1792032277.111328,
-    "ast_hash": "d6e05b7056a92725134f676e73a69bbc",
+    "mtime": 1792154508.6408675,
+    "seen": 1792161055.033895,
+    "ast_hash": "908cbe536c603c51bce9186f4fe89658",
     "semantic_hash": ""
   },
   "common/format/user_test.go": {
