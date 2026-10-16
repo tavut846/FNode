@@ -120,25 +120,9 @@ func restartHandle(_ *cobra.Command, _ []string) {
 
 func cleanLogHandle(_ *cobra.Command, _ []string) {
 	fmt.Println("Cleaning up FNode logs...")
-	_, _ = exec.RunCommandByShell("journalctl --rotate && journalctl --vacuum-time=1s --unit=FNode.service")
-	_, _ = exec.RunCommandByShell("journalctl --vacuum-size=20M")
-
-	commonLogs := []string{
-		"/var/log/FNode.log",
-		"/var/log/fnode.log",
-		"/var/log/fnode.error.log",
-		"/usr/local/FNode/box.log",
-		"/usr/local/FNode/fnode.log",
-		"/etc/FNode/box.log",
-		"/etc/FNode/fnode.log",
-	}
-
-	for _, p := range commonLogs {
-		if fi, err := os.Stat(p); err == nil && !fi.IsDir() {
-			if err := os.Truncate(p, 0); err == nil {
-				fmt.Printf("Truncated log file: %s\n", p)
-			}
-		}
+	cleaned := CleanLogs()
+	for _, p := range cleaned {
+		fmt.Printf("Truncated log file: %s\n", p)
 	}
 	fmt.Println(Ok("FNode logs cleaned successfully"))
 }

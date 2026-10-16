@@ -30,7 +30,8 @@ The FNode deployment system consists of three main parts:
     -   Auto-detection of individual Caddy certificates under `/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/<domain>/` for seamless binding across multiple nodes in FNode with `CertMode: "file"`.
 -   **Log Management & Cleanup**:
     -   View real-time logs via `journalctl -u FNode.service -e --no-pager -f`.
-    -   Log cleanup utility (`FNode clearlog` or menu option 9) to rotate and vacuum systemd journal logs (`--vacuum-time=1s` and `--vacuum-size=20M`) and truncate file logs (`/var/log/FNode.log`, `box.log`, Caddy logs).
+    -   Log cleanup utility (`FNode clearlog` or menu option 9) to rotate and vacuum systemd journal logs (`--vacuum-time=1s` and `--vacuum-size=20M`), truncate file logs (`/var/log/FNode.log`, `box.log`, Caddy logs), and delete archived log files older than 7 days.
+    -   **Automatic 7-day Log Cleanup**: An automated cron job is provisioned (`/etc/cron.d/FNode-cleanlog` or `/etc/periodic/weekly/fnode-cleanlog`) running every 7 days (`0 3 */7 * *`). Additionally, the Go daemon (`cmd/server.go`) runs a background ticker every 7 days to automatically clean and truncate logs.
 -   **Update Mechanism**: Allows one-click updates to the latest backend version without losing configuration.
 
 ## Installation on a VPS

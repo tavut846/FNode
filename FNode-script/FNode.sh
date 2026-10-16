@@ -173,6 +173,8 @@ uninstall() {
     fi
     rm /etc/FNode/ -rf
     rm /usr/local/FNode/ -rf
+    rm -f /etc/cron.d/FNode-cleanlog /etc/periodic/weekly/fnode-cleanlog
+    (crontab -l 2>/dev/null | grep -v "FNode clearlog") | crontab - 2>/dev/null || true
 
     echo ""
     echo -e "卸载成功，如果你想删除此脚本，则退出脚本后运行 ${green}rm /usr/bin/FNode -f${plain} 进行删除"
@@ -301,6 +303,25 @@ show_log() {
     fi
 }
 
+setup_cleanlog_cron() {
+    # 自动配置每 7 天清理日志的计划任务
+    if [[ -d "/etc/cron.d" ]]; then
+        cat << 'EOF' > /etc/cron.d/FNode-cleanlog
+# Auto clean up FNode logs every 7 days at 03:00
+0 3 */7 * * root /usr/bin/FNode clearlog >/dev/null 2>&1
+EOF
+        chmod 644 /etc/cron.d/FNode-cleanlog
+    elif [[ -d "/etc/periodic/weekly" ]]; then
+        cat << 'EOF' > /etc/periodic/weekly/fnode-cleanlog
+#!/bin/sh
+/usr/bin/FNode clearlog >/dev/null 2>&1
+EOF
+        chmod +x /etc/periodic/weekly/fnode-cleanlog
+    else
+        (crontab -l 2>/dev/null | grep -v "FNode clearlog" ; echo "0 3 */7 * * /usr/bin/FNode clearlog >/dev/null 2>&1") | crontab - 2>/dev/null || true
+    fi
+}
+
 clean_log() {
     echo -e "${yellow}正在清理 FNode 运行日志...${plain}"
 
@@ -347,7 +368,13 @@ clean_log() {
         fi
     done
 
-    echo -e "${green}FNode 日志清理完成！${plain}"
+    # 4. 清理超过 7 天的历史归档日志文件 (*.log.1, *.log.gz, 等)
+    find /var/log/ -maxdepth 2 \( -name "fnode*.log*" -o -name "FNode*.log*" \) -mtime +7 -delete 2>/dev/null || true
+
+    # 5. 确保每 7 天自动定时清理任务已启用
+    setup_cleanlog_cron
+
+    echo -e "${green}FNode 日志清理完成 (已配置每 7 天自动定时清理任务)！${plain}"
     if [[ $# == 0 ]]; then
         before_show_menu
     fi
@@ -1163,7 +1190,7 @@ show_menu() {
   ${green}6.${plain} 重启 FNode
   ${green}7.${plain} 查看 FNode 状态
   ${green}8.${plain} 查看 FNode 日志
-  ${green}9.${plain} 清理 FNode 日志
+  ${green}9.${plain} 清理 FNode 日志 (已启用每7天自动清理)
 ————————————————
   ${green}10.${plain} 设置 FNode 开机自启
   ${green}11.${plain} 取消 FNode 开机自启

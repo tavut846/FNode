@@ -120,7 +120,27 @@ check_status() {
     fi
 }
 
+setup_cleanlog_cron() {
+    echo -e "${green}配置 FNode 每 7 天自动清理日志定时任务...${plain}"
+    if [[ -d "/etc/cron.d" ]]; then
+        cat << 'EOF' > /etc/cron.d/FNode-cleanlog
+# Auto clean up FNode logs every 7 days at 03:00
+0 3 */7 * * root /usr/bin/FNode clearlog >/dev/null 2>&1
+EOF
+        chmod 644 /etc/cron.d/FNode-cleanlog
+    elif [[ -d "/etc/periodic/weekly" ]]; then
+        cat << 'EOF' > /etc/periodic/weekly/fnode-cleanlog
+#!/bin/sh
+/usr/bin/FNode clearlog >/dev/null 2>&1
+EOF
+        chmod +x /etc/periodic/weekly/fnode-cleanlog
+    else
+        (crontab -l 2>/dev/null | grep -v "FNode clearlog" ; echo "0 3 */7 * * /usr/bin/FNode clearlog >/dev/null 2>&1") | crontab - 2>/dev/null || true
+    fi
+}
+
 install_FNode() {
+
     if [[ -e /usr/local/FNode/ ]]; then
         rm -rf /usr/local/FNode/
     fi
@@ -249,6 +269,7 @@ EOF
         ln -s /usr/bin/FNode /usr/bin/fnode
         chmod +x /usr/bin/fnode
     fi
+    setup_cleanlog_cron
     cd $cur_dir
     rm -f install.sh
     echo -e ""

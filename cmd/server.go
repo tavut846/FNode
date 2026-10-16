@@ -5,6 +5,7 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
+	"time"
 
 	"github.com/tavut846/FNode/conf"
 	vCore "github.com/tavut846/FNode/core"
@@ -63,6 +64,10 @@ func serverHandle(_ *cobra.Command, _ []string) {
 		}
 		log.SetOutput(f)
 	}
+	// Start automatic log cleaner every 7 days
+	stopCleaner := startAutoLogCleaner(7*24*time.Hour, c.LogConfig.Output)
+	defer stopCleaner()
+
 	limiter.Init()
 	log.Info("Start FNode...")
 	vc, err := vCore.NewCore(c.CoresConfig)

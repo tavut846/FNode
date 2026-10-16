@@ -337,6 +337,24 @@ REALITY eliminates traditional server-side TLS certificates by impersonating exi
    - Limiter configurations are updated seamlessly across reloads regardless of whether custom node `Name` overrides are used.
    - Periodic user traffic and online device reporting strictly adheres to `PushInterval`.
 
+### 5.5 Automated Log Management & 7-Day Cleanup Cycle
+
+To prevent VPS disk saturation on nodes operating continuously over months or years, FNode incorporates automated multi-tiered log rotation and vacuuming every 7 days:
+
+1. **System Cron Task (`/etc/cron.d/FNode-cleanlog`)**:
+   - On installation (`install.sh`), a scheduled cron entry is automatically registered at `/etc/cron.d/FNode-cleanlog` (or `/etc/periodic/weekly/fnode-cleanlog` on Alpine Linux):
+     ```cron
+     0 3 */7 * * root /usr/bin/FNode clearlog >/dev/null 2>&1
+     ```
+   - Automatically cleans systemd journal logs (`journalctl --vacuum-time=1s --unit=FNode.service` and `caddy.service`, size limited to 20MB).
+   - Truncates custom log paths configured in `/etc/FNode/config.json` (`Log.Output`, `Cores[].Log.Output`) as well as standalone logs (`/var/log/FNode.log`, `/usr/local/FNode/box.log`, `/etc/FNode/box.log`, `/var/log/caddy/*.log`).
+   - Prunes archived log rotation files older than 7 days (`find /var/log/ -name "*fnode*.log*" -mtime +7 -delete`).
+   - Cleanly uninstalled when invoking `uninstall()` via `FNode.sh`.
+
+2. **Internal Go Daemon Auto-Cleaner (`cmd/logcleaner.go`)**:
+   - For environments running `FNode server` directly or in containerized systems where cron is inactive, `cmd/server.go` launches a background routine `startAutoLogCleaner(7*24*time.Hour, c.LogConfig.Output)`.
+   - Fires every 7 days (`time.Hour * 24 * 7`) to execute `CleanLogs()`, truncating active file logs and vacuuming system journal logs without interrupting running inbounds or proxy services.
+
 ---
 
 ## 6. Build & Test Instructions
