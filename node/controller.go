@@ -26,15 +26,17 @@ type Controller struct {
 	renewCertPeriodic         *task.Task
 	dynamicSpeedLimitPeriodic *task.Task
 	onlineIpReportPeriodic    *task.Task
+	lastReportedUIDs          map[int]struct{}
 	*conf.Options
 }
 
 // NewController return a Node controller with default parameters.
 func NewController(server vCore.Core, api *panel.Client, config *conf.Options) *Controller {
 	controller := &Controller{
-		server:    server,
-		Options:   config,
-		apiClient: api,
+		server:           server,
+		Options:          config,
+		apiClient:        api,
+		lastReportedUIDs: make(map[int]struct{}),
 	}
 	return controller
 }

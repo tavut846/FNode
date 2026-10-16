@@ -183,3 +183,57 @@ sequenceDiagram
         Watcher->>Watcher: Log error; preserve running core uninterrupted
     end
 ```
+
+### 7.3 Device Limit & Client IP Migration Flow
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Client Device (e.g. Mobile)
+    participant F as FNode Limiter
+    participant X as Xboard Dashboard
+
+    Note over Client: Connected on WiFi (IP_1)
+    Client->>F: TCP/UDP packets from IP_1
+    F->>F: Record IP_1 with lastSeen timestamp (activeCount = 1)
+    F->>X: Periodic report: { "UID_1": ["IP_1"] }
+    X->>X: Redis cache updated with IP_1 (TTL 300s)
+
+    Note over Client: Network Handover (WiFi -> 4G: IP_2)
+    Client->>F: Handshake from IP_2
+    F->>F: Check device limit (deviceLimit = 1)
+    F->>F: otherNodes = max(0, aliveIp - activeCount) = 0
+    Note over F: Local migration detected: prune older IP_1, register IP_2
+    F-->>Client: Connection permitted without drop or restart!
+    Client->>F: Data stream via IP_2
+    F->>X: Periodic report: { "UID_1": ["IP_2"] }
+    X->>X: Clears IP_1 immediately, binds IP_2
+
+    Note over Client: Client Disconnects
+    F->>F: Inactivity timeout (>60s) reached, IP_2 purged
+    F->>X: Periodic report: { "UID_1": [] }
+    X->>X: removeNodeDevices() clears Redis immediately
+```
+
+### 7.4 Dynamic Speed Limit Lifecycle Flow
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Task as FNode SpeedChecker
+    participant Limiter as FNode Limiter
+    participant Hook as HookServer ConnectionTracker
+    actor Client as Client Connection
+
+    Note over Client,Hook: User consumes high bandwidth
+    Task->>Limiter: Traffic threshold exceeded -> UpdateDynamicSpeedLimit()
+    Limiter->>Limiter: Set DynamicSpeedLimit & ExpireTime (e.g. +30m)
+    Client->>Hook: Subsequent packets rate-limited to DynamicSpeedLimit
+
+    Note over Client,Limiter: ExpireTime Elapsed
+    Client->>Hook: New connection after expiry
+    Hook->>Limiter: CheckLimit(taguuid)
+    Limiter->>Limiter: Expired! Reset DynamicSpeedLimit=0, ExpireTime=0
+    Note over Limiter: UserLimitInfo preserved (never deleted)
+    Limiter-->>Hook: Revert rate limiter to normal plan speed (SpeedLimit)
+    Hook-->>Client: Allowed at standard plan speed
+```
+

@@ -318,6 +318,25 @@ REALITY eliminates traditional server-side TLS certificates by impersonating exi
 4. **Engine Build Requirement**:
    - REALITY is powered by sing-box's uTLS stack. All compilation and tests must include the `-tags "with_utls"` build tag (`-tags "sing with_quic with_grpc with_utls with_wireguard with_acme with_gvisor"`).
 
+### 5.4 Device Limiting, Client IP Migration & Speed Limit Lifecycle
+
+1. **Client IP Handover & Network Migration (`WiFi ↔ Cellular`)**:
+   - In standard deployments, mobile clients frequently switch network interfaces (e.g., leaving home WiFi for 4G/5G, or dynamic IP reallocation).
+   - FNode tracks each active IP with an individual `LastSeen` timestamp. When a client changes IP, FNode detects that the new IP originates from the same node and migrates the session by pruning the older inactive IP rather than locking out the client with a false device limit rejection.
+   - Distinct active devices across other cluster nodes are properly evaluated against `deviceLimit` without false positives.
+
+2. **Immediate Offline Device Synchronization**:
+   - When users disconnect or their active IP times out (>60s inactivity), FNode explicitly reports `{ "UID": [] }` to Xboard's `/api/v1/server/UniProxy/alive` endpoint.
+   - This triggers Xboard's `DeviceStateService::removeNodeDevices()` immediately, eliminating 5-minute Redis TTL ghost device deadlocks.
+
+3. **Dynamic Speed Limit Expiration Safety**:
+   - When dynamic speed limits expire, FNode resets `DynamicSpeedLimit = 0` and `ExpireTime = 0`, restoring normal plan speed (`SpeedLimit`) without deleting `UserLimitInfo`. This permanently prevents the "limited by ip or conn until restart" failure mode.
+
+4. **Resilient Node Reloading (`nodeInfoMonitor`)**:
+   - When node configuration changes in Xboard, TLS certificates are verified/renewed *before* deleting the running inbound. If cert validation fails, the active inbound continues proxying traffic safely.
+   - Limiter configurations are updated seamlessly across reloads regardless of whether custom node `Name` overrides are used.
+   - Periodic user traffic and online device reporting strictly adheres to `PushInterval`.
+
 ---
 
 ## 6. Build & Test Instructions

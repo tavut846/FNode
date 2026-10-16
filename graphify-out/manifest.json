@@ -312,9 +312,9 @@
     "semantic_hash": ""
   },
   "limiter/limiter.go": {
-    "mtime": 1791958873.1944172,
-    "seen": 1791959234.4582756,
-    "ast_hash": "dfd8abade6ddf461fe50a72d18d2bd21",
+    "mtime": 1792135542.0911138,
+    "seen": 1792136489.677716,
+    "ast_hash": "331ac4f199b492020c0091226b1dd6f5",
     "semantic_hash": ""
   },
   "limiter/rule.go": {
@@ -336,9 +336,9 @@
     "semantic_hash": ""
   },
   "node/controller.go": {
-    "mtime": 1790830785.45867,
-    "seen": 1790831336.6776035,
-    "ast_hash": "56b787999f6ce84a52e4a69c0b54cbd3",
+    "mtime": 1792135561.761963,
+    "seen": 1792136489.677763,
+    "ast_hash": "627ce9fd53b11d4e7f3a7375684c2fc3",
     "semantic_hash": ""
   },
   "node/lego.go": {
@@ -360,15 +360,15 @@
     "semantic_hash": ""
   },
   "node/task.go": {
-    "mtime": 1774255859.8766425,
-    "seen": 1790827664.2659547,
-    "ast_hash": "a1a54699b83967a54ddbea9f42474eb1",
+    "mtime": 1792135655.4470105,
+    "seen": 1792136489.677784,
+    "ast_hash": "082fc2c12f1fb2072bd9dc65eedda4a4",
     "semantic_hash": ""
   },
   "node/user.go": {
-    "mtime": 1774255859.8810797,
-    "seen": 1790827664.265957,
-    "ast_hash": "57920745685499372c180c49ac07adde",
+    "mtime": 1792135856.1366181,
+    "seen": 1792136489.6777892,
+    "ast_hash": "a2387372ce1efef41b03caa7893ecdac",
     "semantic_hash": ""
   },
   "SupportProject/sing-box/box.go": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1791958996.0585938,
-    "seen": 1791959234.4588196,
-    "ast_hash": "791a9615c744ba0ee629b6694338de6a",
+    "mtime": 1792136056.9109933,
+    "seen": 1792136489.6790802,
+    "ast_hash": "cb527e67367609e467395fb1b3240470",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10272,9 +10272,9 @@
     "semantic_hash": ""
   },
   "docs/COMMUNICATION_FLOW_LOGIC.md": {
-    "mtime": 1791959019.0328183,
-    "seen": 1791959234.4588177,
-    "ast_hash": "231248c47d68e35e2067055d822b257d",
+    "mtime": 1792136026.608632,
+    "seen": 1792136489.6790752,
+    "ast_hash": "ca1a374fc01f7ceff711ab72a62aad15",
     "semantic_hash": ""
   },
   "core/sing/node_test.go": {
@@ -10341,6 +10341,18 @@
     "mtime": 1791958912.032966,
     "seen": 1791959234.4582603,
     "ast_hash": "ee3e56691c1d36160190168c6b51e35d",
+    "semantic_hash": ""
+  },
+  "limiter/limiter_test.go": {
+    "mtime": 1792135765.6384842,
+    "seen": 1792136489.6777258,
+    "ast_hash": "a81f117166f5cc0c0ee29e7914046819",
+    "semantic_hash": ""
+  },
+  "node/user_test.go": {
+    "mtime": 1792135809.0167036,
+    "seen": 1792136489.6777945,
+    "ast_hash": "dcfab822db7d46b04dbd94cfb430a22d",
     "semantic_hash": ""
   }
 }

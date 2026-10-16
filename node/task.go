@@ -84,6 +84,18 @@ func (c *Controller) nodeInfoMonitor() (err error) {
 			c.userList = newU
 		}
 		c.traffic = make(map[string]int64)
+		// Check cert first before deleting the old node so a cert error doesn't kill the running node
+		if newN.Security == panel.Tls {
+			err = c.requestCert()
+			if err != nil {
+				log.WithFields(log.Fields{
+					"tag": c.tag,
+					"err": err,
+				}).Error("Request cert failed, keeping running node")
+				return nil
+			}
+		}
+
 		// Remove old node
 		log.WithField("tag", c.tag).Info("Node changed, reload")
 		err = c.server.DelNode(c.tag)
@@ -95,15 +107,15 @@ func (c *Controller) nodeInfoMonitor() (err error) {
 			return nil
 		}
 
-		// Update limiter
+		oldTag := c.tag
 		if len(c.Options.Name) == 0 {
 			c.tag = c.buildNodeTag(newN)
-			// Remove Old limiter
-			limiter.DeleteLimiter(c.tag)
-			// Add new Limiter
-			l := limiter.AddLimiter(c.tag, &c.LimitConfig, c.userList, newA)
-			c.limiter = l
 		}
+		// Update limiter
+		limiter.DeleteLimiter(oldTag)
+		l := limiter.AddLimiter(c.tag, &c.LimitConfig, c.userList, newA)
+		c.limiter = l
+
 		// update alive list
 		if newA != nil {
 			c.limiter.AliveList = newA
@@ -118,17 +130,6 @@ func (c *Controller) nodeInfoMonitor() (err error) {
 			return nil
 		}
 
-		// check cert
-		if newN.Security == panel.Tls {
-			err = c.requestCert()
-			if err != nil {
-				log.WithFields(log.Fields{
-					"tag": c.tag,
-					"err": err,
-				}).Error("Request cert failed")
-				return nil
-			}
-		}
 		// add new node
 		err = c.server.AddNode(c.tag, newN, c.Options)
 		if err != nil {
@@ -159,7 +160,7 @@ func (c *Controller) nodeInfoMonitor() (err error) {
 		}
 		if c.userReportPeriodic.Interval != newN.PushInterval &&
 			newN.PushInterval != 0 {
-			c.userReportPeriodic.Interval = newN.PullInterval
+			c.userReportPeriodic.Interval = newN.PushInterval
 			c.userReportPeriodic.Close()
 			_ = c.userReportPeriodic.Start(false)
 		}
@@ -233,7 +234,9 @@ func (c *Controller) SpeedChecker() error {
 			err := c.limiter.UpdateDynamicSpeedLimit(c.tag, u,
 				c.LimitConfig.DynamicSpeedLimitConfig.SpeedLimit,
 				time.Now().Add(time.Duration(c.LimitConfig.DynamicSpeedLimitConfig.ExpireTime)*time.Minute))
-			log.WithField("err", err).Error("Update dynamic speed limit failed")
+			if err != nil {
+				log.WithField("err", err).Error("Update dynamic speed limit failed")
+			}
 			delete(c.traffic, u)
 		}
 	}

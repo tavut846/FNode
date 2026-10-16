@@ -125,6 +125,11 @@ func (l *Limiter) UpdateDynamicSpeedLimit(tag, uuid string, limit int, expire ti
 	return nil
 }
 
+type IPRecord struct {
+	UID      int
+	LastSeen int64
+}
+
 func (l *Limiter) CheckLimit(taguuid string, ip string, isTcp bool, noSSUDP bool) (Bucket *ratelimit.Bucket, Reject bool) {
 	// check if ipv4 mapped ipv6
 	ip = strings.TrimPrefix(ip, "::ffff:")
@@ -139,13 +144,9 @@ func (l *Limiter) CheckLimit(taguuid string, ip string, isTcp bool, noSSUDP bool
 		deviceLimit = u.DeviceLimit
 		uid = u.UID
 		if u.ExpireTime < time.Now().Unix() && u.ExpireTime != 0 {
-			if u.SpeedLimit != 0 {
-				userLimit = u.SpeedLimit
-				u.DynamicSpeedLimit = 0
-				u.ExpireTime = 0
-			} else {
-				l.UserLimitInfo.Delete(taguuid)
-			}
+			u.DynamicSpeedLimit = 0
+			u.ExpireTime = 0
+			userLimit = u.SpeedLimit
 		} else {
 			userLimit = determineSpeedLimit(u.SpeedLimit, u.DynamicSpeedLimit)
 		}
@@ -153,37 +154,66 @@ func (l *Limiter) CheckLimit(taguuid string, ip string, isTcp bool, noSSUDP bool
 		return nil, true
 	}
 	if noSSUDP {
-		// Store online user for device limit
-		newipMap := new(sync.Map)
-		newipMap.Store(ip, uid)
-		aliveIp := l.AliveList[uid]
-		// If any device is online
-		if v, loaded := l.UserOnlineIP.LoadOrStore(taguuid, newipMap); loaded {
-			oldipMap := v.(*sync.Map)
-			// If this is a new ip
-			if _, loaded := oldipMap.LoadOrStore(ip, uid); !loaded {
-				if v, loaded := l.OldUserOnline.Load(ip); loaded {
-					if v.(int) == uid {
-						l.OldUserOnline.Delete(ip)
-					}
-				} else if deviceLimit > 0 {
-					if deviceLimit <= aliveIp {
-						oldipMap.Delete(ip)
-						return nil, true
-					}
-				}
-			}
-		} else if v, ok := l.OldUserOnline.Load(ip); ok {
-			if v.(int) == uid {
-				l.OldUserOnline.Delete(ip)
+		now := time.Now().Unix()
+		const ipActiveTimeout = 60
+
+		var ipMap *sync.Map
+		if v, loaded := l.UserOnlineIP.Load(taguuid); loaded {
+			ipMap = v.(*sync.Map)
+		} else {
+			ipMap = new(sync.Map)
+			actual, _ := l.UserOnlineIP.LoadOrStore(taguuid, ipMap)
+			ipMap = actual.(*sync.Map)
+		}
+
+		if v, exists := ipMap.Load(ip); exists {
+			if rec, ok := v.(*IPRecord); ok {
+				rec.LastSeen = now
+			} else {
+				ipMap.Store(ip, &IPRecord{UID: uid, LastSeen: now})
 			}
 		} else {
+			activeCount := 0
+			var oldestIP string
+			var oldestSeen int64 = now + 1
+
+			ipMap.Range(func(k, v interface{}) bool {
+				var recLastSeen int64
+				if rec, ok := v.(*IPRecord); ok {
+					recLastSeen = rec.LastSeen
+				}
+				if recLastSeen > 0 && now-recLastSeen > ipActiveTimeout {
+					ipMap.Delete(k)
+				} else {
+					activeCount++
+					if recLastSeen > 0 && recLastSeen < oldestSeen {
+						oldestSeen = recLastSeen
+						oldestIP = k.(string)
+					}
+				}
+				return true
+			})
+
+			aliveIp := l.AliveList[uid]
 			if deviceLimit > 0 {
-				if deviceLimit <= aliveIp {
-					l.UserOnlineIP.Delete(taguuid)
+				otherNodes := aliveIp - activeCount
+				if otherNodes < 0 {
+					otherNodes = 0
+				}
+				if otherNodes >= deviceLimit {
 					return nil, true
 				}
+				if activeCount >= deviceLimit {
+					if oldestIP != "" {
+						ipMap.Delete(oldestIP)
+					}
+				}
 			}
+
+			ipMap.Store(ip, &IPRecord{
+				UID:      uid,
+				LastSeen: now,
+			})
 		}
 	}
 
@@ -203,18 +233,33 @@ func (l *Limiter) CheckLimit(taguuid string, ip string, isTcp bool, noSSUDP bool
 
 func (l *Limiter) GetOnlineDevice() (*[]panel.OnlineUser, error) {
 	var onlineUser []panel.OnlineUser
-	l.OldUserOnline = new(sync.Map)
+	now := time.Now().Unix()
+	const ipActiveTimeout = 60
+
 	l.UserOnlineIP.Range(func(key, value interface{}) bool {
 		taguuid := key.(string)
 		ipMap := value.(*sync.Map)
-		ipMap.Range(func(key, value interface{}) bool {
-			uid := value.(int)
-			ip := key.(string)
-			l.OldUserOnline.Store(ip, uid)
-			onlineUser = append(onlineUser, panel.OnlineUser{UID: uid, IP: ip})
+		hasActive := false
+
+		ipMap.Range(func(k, v interface{}) bool {
+			ip := k.(string)
+			if rec, ok := v.(*IPRecord); ok {
+				if now-rec.LastSeen <= ipActiveTimeout {
+					onlineUser = append(onlineUser, panel.OnlineUser{UID: rec.UID, IP: ip})
+					hasActive = true
+				} else {
+					ipMap.Delete(k)
+				}
+			} else if uid, ok := v.(int); ok {
+				onlineUser = append(onlineUser, panel.OnlineUser{UID: uid, IP: ip})
+				hasActive = true
+			}
 			return true
 		})
-		l.UserOnlineIP.Delete(taguuid) // Reset online device
+
+		if !hasActive {
+			l.UserOnlineIP.Delete(taguuid)
+		}
 		return true
 	})
 
