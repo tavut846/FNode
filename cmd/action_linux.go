@@ -2,11 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"time"
 
-	"github.com/tavut846/FNode/common/exec"
 	"github.com/spf13/cobra"
+	"github.com/tavut846/FNode/common/exec"
 )
 
 var (
