@@ -191,3 +191,187 @@ func TestGetInboundOptions_Trojan_Reality(t *testing.T) {
 		t.Errorf("expected ServerPort 443, got %d", reality.Handshake.ServerOptions.ServerPort)
 	}
 }
+
+func TestGetInboundOptions_Hysteria2_DefaultPerformance(t *testing.T) {
+	s := &Sing{}
+	opt := &conf.Options{
+		ListenIP:   "0.0.0.0",
+		CertConfig: conf.NewCertConfig(),
+	}
+	node := &panel.NodeInfo{
+		Id:       3,
+		Type:     "hysteria2",
+		Security: panel.Tls,
+		Common: &panel.CommonNode{
+			ServerPort: 443,
+		},
+		Hysteria2: &panel.Hysteria2Node{
+			CommonNode: panel.CommonNode{
+				ServerPort: 443,
+			},
+			UpMbps:                  100,
+			DownMbps:                200,
+			Ignore_Client_Bandwidth: true,
+			ObfsType:                "salamander",
+			ObfsPassword:            "secret123",
+		},
+	}
+
+	in, err := s.getInboundOptions("hy2-default-test", node, opt)
+	if err != nil {
+		t.Fatalf("getInboundOptions error: %s", err)
+	}
+
+	if in.Type != "hysteria2" {
+		t.Fatalf("expected inbound type hysteria2, got %s", in.Type)
+	}
+
+	hy2Opt, ok := in.Options.(*option.Hysteria2InboundOptions)
+	if !ok {
+		t.Fatalf("expected *option.Hysteria2InboundOptions, got %T", in.Options)
+	}
+
+	// Verify socket reuse is active for high-performance UDP listening
+	if !hy2Opt.ListenOptions.ReuseAddr {
+		t.Errorf("expected ReuseAddr to be true, got false")
+	}
+
+	if hy2Opt.BrutalDebug {
+		t.Errorf("expected default BrutalDebug to be false, got true")
+	}
+
+	if hy2Opt.UpMbps != 100 || hy2Opt.DownMbps != 200 {
+		t.Errorf("expected 100/200 mbps, got %d/%d", hy2Opt.UpMbps, hy2Opt.DownMbps)
+	}
+
+	if hy2Opt.Obfs == nil || hy2Opt.Obfs.Password != "secret123" {
+		t.Fatalf("expected obfs password 'secret123'")
+	}
+}
+
+func TestGetInboundOptions_Hysteria2_CustomConfig(t *testing.T) {
+	s := &Sing{}
+	udpFrag := true
+	opt := &conf.Options{
+		ListenIP:   "0.0.0.0",
+		CertConfig: conf.NewCertConfig(),
+		Hysteria2Config: &conf.Hysteria2Config{
+			UDPFragment: &udpFrag,
+			UDPTimeout:  "45s",
+			BrutalDebug: true,
+		},
+	}
+	node := &panel.NodeInfo{
+		Id:       4,
+		Type:     "hysteria2",
+		Security: panel.Tls,
+		Common: &panel.CommonNode{
+			ServerPort: 443,
+		},
+		Hysteria2: &panel.Hysteria2Node{
+			CommonNode: panel.CommonNode{
+				ServerPort: 443,
+			},
+			UpMbps:   50,
+			DownMbps: 100,
+		},
+	}
+
+	in, err := s.getInboundOptions("hy2-custom-test", node, opt)
+	if err != nil {
+		t.Fatalf("getInboundOptions error: %s", err)
+	}
+
+	hy2Opt := in.Options.(*option.Hysteria2InboundOptions)
+
+	if !hy2Opt.ListenOptions.ReuseAddr {
+		t.Errorf("expected ReuseAddr to be true")
+	}
+
+	if !hy2Opt.BrutalDebug {
+		t.Errorf("expected BrutalDebug to be true")
+	}
+
+	if hy2Opt.ListenOptions.UDPFragment == nil || !*hy2Opt.ListenOptions.UDPFragment {
+		t.Errorf("expected UDPFragment to be true")
+	}
+}
+
+func TestGetInboundOptions_Hysteria2_MasqueradeString(t *testing.T) {
+	s := &Sing{}
+	opt := &conf.Options{
+		ListenIP:   "0.0.0.0",
+		CertConfig: conf.NewCertConfig(),
+	}
+	node := &panel.NodeInfo{
+		Id:       5,
+		Type:     "hysteria2",
+		Security: panel.Tls,
+		Common: &panel.CommonNode{
+			ServerPort: 443,
+		},
+		Hysteria2: &panel.Hysteria2Node{
+			CommonNode: panel.CommonNode{
+				ServerPort: 443,
+			},
+			Masquerade: "Hello, World! Camouflage Site",
+		},
+	}
+
+	in, err := s.getInboundOptions("hy2-masq-test", node, opt)
+	if err != nil {
+		t.Fatalf("getInboundOptions error: %s", err)
+	}
+
+	hy2Opt := in.Options.(*option.Hysteria2InboundOptions)
+	if hy2Opt.Masquerade == nil || hy2Opt.Masquerade.Type != "string" {
+		t.Fatalf("expected string masquerade, got %v", hy2Opt.Masquerade)
+	}
+
+	if hy2Opt.Masquerade.StringOptions.Content != "Hello, World! Camouflage Site" {
+		t.Errorf("unexpected string content: %s", hy2Opt.Masquerade.StringOptions.Content)
+	}
+}
+
+func TestGetInboundOptions_Hysteria2_PanelOverride(t *testing.T) {
+	s := &Sing{}
+	udpFrag := false
+	opt := &conf.Options{
+		ListenIP:   "0.0.0.0",
+		CertConfig: conf.NewCertConfig(),
+		Hysteria2Config: &conf.Hysteria2Config{
+			UDPFragment: &udpFrag,
+			BrutalDebug: false,
+		},
+	}
+	node := &panel.NodeInfo{
+		Id:       6,
+		Type:     "hysteria2",
+		Security: panel.Tls,
+		Common: &panel.CommonNode{
+			ServerPort: 443,
+		},
+		Hysteria2: &panel.Hysteria2Node{
+			CommonNode: panel.CommonNode{
+				ServerPort: 443,
+			},
+			UDPFragment: true,
+			BrutalDebug: true,
+		},
+	}
+
+	in, err := s.getInboundOptions("hy2-override-test", node, opt)
+	if err != nil {
+		t.Fatalf("getInboundOptions error: %s", err)
+	}
+
+	hy2Opt := in.Options.(*option.Hysteria2InboundOptions)
+
+	// Panel-level setting must override local config
+	if !hy2Opt.BrutalDebug {
+		t.Errorf("expected BrutalDebug from panel to be true")
+	}
+	if hy2Opt.ListenOptions.UDPFragment == nil || !*hy2Opt.ListenOptions.UDPFragment {
+		t.Errorf("expected UDPFragment from panel to be true")
+	}
+}

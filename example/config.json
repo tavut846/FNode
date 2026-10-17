@@ -69,6 +69,30 @@
           "EnvName": "env1"
         }
       }
+    },
+    {
+      "Core": "sing",
+      "ApiHost": "http://127.0.0.1",
+      "ApiKey": "test",
+      "NodeID": 35,
+      "NodeType": "hysteria2",
+      "Timeout": 30,
+      "ListenIP": "0.0.0.0",
+      "SendIP": "0.0.0.0",
+      "DeviceOnlineMinTraffic": 200,
+      "MinReportTraffic": 0,
+      "Hysteria2Config": {
+        "UDPFragment": true,
+        "UDPTimeout": "60s",
+        "BrutalDebug": false
+      },
+      "CertConfig": {
+        "CertMode": "file",
+        "RejectUnknownSni": false,
+        "CertDomain": "hy2.example.com",
+        "CertFile": "/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/hy2.example.com/hy2.example.com.crt",
+        "KeyFile": "/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/hy2.example.com/hy2.example.com.key"
+      }
     }
   ]
 }

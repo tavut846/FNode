@@ -117,8 +117,9 @@ type Options struct {
 	LimitConfig            LimitConfig     `json:"LimitConfig"`
 	RawOptions             json.RawMessage `json:"RawOptions"`
 	SingOptions            *SingOptions    `json:"SingOptions"`
-	CertConfig             *CertConfig     `json:"CertConfig"`
-	Masquerade             string          `json:"Masquerade"`
+	CertConfig             *CertConfig      `json:"CertConfig"`
+	Masquerade             string           `json:"Masquerade"`
+	Hysteria2Config        *Hysteria2Config `json:"Hysteria2Config,omitempty"`
 }
 
 func (o *Options) UnmarshalJSON(data []byte) error {

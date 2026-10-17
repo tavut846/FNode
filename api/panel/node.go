@@ -272,6 +272,8 @@ type Hysteria2Node struct {
 	ObfsPassword            string `json:"obfs-password"`
 	Masquerade              string `json:"masquerade"`
 	UDPFragment             bool   `json:"udp_fragment"`
+	BBRProfile              string `json:"bbr_profile"`
+	BrutalDebug             bool   `json:"brutal_debug"`
 }
 
 type RawDNS struct {

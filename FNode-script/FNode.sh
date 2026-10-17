@@ -927,6 +927,64 @@ open_ports() {
     echo -e "${green}放开防火墙端口成功！${plain}"
 }
 
+# Hysteria 2 多端口/端口跳跃 (Port Hopping) NAT 转发设置
+setup_hy2_port_hopping() {
+    echo -e "${green}=== Hysteria 2 多端口/跳跃 NAT 转发配置 ===${plain}"
+    echo -e "${yellow}说明: 将客户端跳跃端口范围 (例如: 10000:20000) 自动转发重定向到 FNode 实际监听端口 (例如: 443)${plain}"
+    echo -e " 1. 查看当前 UDP 端口转发规则"
+    echo -e " 2. 添加/更新 UDP 端口跳跃转发规则"
+    echo -e " 3. 清理所有 NAT 端口转发规则"
+    echo -e " 0. 返回主菜单"
+    read -rp "请输入选项 [0-3]: " opt
+    case "$opt" in
+        1)
+            echo -e "${green}=== iptables NAT PREROUTING 规则 ===${plain}"
+            iptables -t nat -L PREROUTING -n -v --line-numbers 2>/dev/null
+            if command -v ip6tables &>/dev/null; then
+                echo -e "${green}=== ip6tables NAT PREROUTING 规则 ===${plain}"
+                ip6tables -t nat -L PREROUTING -n -v --line-numbers 2>/dev/null
+            fi
+            ;;
+        2)
+            read -rp "请输入 FNode 实际监听的 UDP 端口 (默认: 443): " s_port
+            [[ -z "$s_port" ]] && s_port="443"
+            read -rp "请输入客户端跳跃端口范围 (例如: 10000:20000 或 10000-20000): " c_range
+            if [[ -z "$c_range" ]]; then
+                echo -e "${red}端口范围不能为空！${plain}"
+                return
+            fi
+            c_range="${c_range//-/:}"
+
+            iptables -t nat -A PREROUTING -p udp --dport "$c_range" -j REDIRECT --to-ports "$s_port"
+            if command -v ip6tables &>/dev/null; then
+                ip6tables -t nat -A PREROUTING -p udp --dport "$c_range" -j REDIRECT --to-ports "$s_port" 2>/dev/null
+            fi
+
+            if command -v netfilter-persistent &>/dev/null; then
+                netfilter-persistent save 2>/dev/null
+            elif command -v iptables-save &>/dev/null; then
+                mkdir -p /etc/iptables
+                iptables-save > /etc/iptables/rules.v4 2>/dev/null
+            fi
+            echo -e "${green}成功配置 UDP 端口转发: ${c_range} -> ${s_port}${plain}"
+            ;;
+        3)
+            echo -e "${yellow}正在清除 NAT PREROUTING 端口转发规则...${plain}"
+            iptables -t nat -F PREROUTING 2>/dev/null
+            if command -v ip6tables &>/dev/null; then
+                ip6tables -t nat -F PREROUTING 2>/dev/null
+            fi
+            if command -v netfilter-persistent &>/dev/null; then
+                netfilter-persistent save 2>/dev/null
+            fi
+            echo -e "${green}端口转发规则已清理！${plain}"
+            ;;
+        *)
+            return
+            ;;
+    esac
+}
+
 # 安装 Caddy (集成 Cloudflare DNS 模块)
 install_caddy() {
     echo -e "${green}开始安装 Caddy (包含 Cloudflare DNS 模块)...${plain}"
@@ -1202,11 +1260,12 @@ show_menu() {
   ${green}16.${plain} 生成 FNode 配置文件
   ${green}17.${plain} 放行 VPS 的所有网络端口
   ${green}18.${plain} 安装/配置 Caddy 反代与证书
-  ${green}19.${plain} 退出脚本
+  ${green}19.${plain} 配置 Hysteria 2 多端口/跳跃 NAT 转发
+  ${green}20.${plain} 退出脚本
  "
  #后续更新可加入上方字符串中
     show_status
-    echo && read -rp "请输入选择 [0-19]: " num
+    echo && read -rp "请输入选择 [0-20]: " num
 
     case "${num}" in
         0) config ;;
@@ -1228,8 +1287,9 @@ show_menu() {
         16) generate_config_file ;;
         17) open_ports ;;
         18) setup_caddy_reverse_proxy ;;
-        19) exit ;;
-        *) echo -e "${red}请输入正确的数字 [0-19]${plain}" ;;
+        19) setup_hy2_port_hopping ;;
+        20) exit ;;
+        *) echo -e "${red}请输入正确的数字 [0-20]${plain}" ;;
     esac
 }
 
@@ -1253,6 +1313,7 @@ if [[ $# > 0 ]]; then
         "version") check_install 0 && show_FNode_version 0 ;;
         "caddy") setup_caddy_reverse_proxy 0 ;;
         "install_caddy") install_caddy 0 ;;
+        "porthop"|"port_hop"|"mport") setup_hy2_port_hopping ;;
         "update_shell") update_shell ;;
         *) show_usage
     esac

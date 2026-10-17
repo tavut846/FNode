@@ -242,6 +242,19 @@ To ensure high availability on cloud VPS providers with dynamic or reassigned IP
 - **Interface & Gateway Monitoring**: `AutoDetectInterface` defaults to `true` across `SingConfig` and sing-box route options. sing-box actively tracks kernel link and default gateway transitions via `InterfaceMonitor` (rtnetlink on Linux), ensuring outbound `direct` dials and DNS resolvers adapt immediately without entering connection timeout loops.
 - **Wildcard Socket Binding**: Nodes bind inbounds to `0.0.0.0` (or `::` on dual-stack) and outbounds use `SendIP: "0.0.0.0"`, avoiding hardcoded IP addresses.
 
+### 4.5 Hysteria 2 Transport & Multi-Port Architecture
+To maximize throughput and resist ISP UDP QoS throttling without requiring subscription resets or panel variable churn:
+- **Socket Recycling (`ReuseAddr: true`)**: Hysteria 2 inbounds bind UDP listening sockets with `ReuseAddr` enabled by default, ensuring instantaneous node reloads without socket-in-use wait delays.
+- **Flexible Masquerade Fallback**: Supports `file://`, `http://`/`https://` reverse proxies, and string/HTML content fallback.
+- **UDP Fragmentation & Timeouts**: Configurable via node config or local `Hysteria2Config` (`UDPFragment`, `UDPTimeout`, `BrutalDebug`).
+- **Multi-Port Port Hopping**:
+  - **Xboard Separation**: Xboard manages `server_port` (backend daemon port, e.g. `443`) and `port` (client port or hopping range, e.g. `10000-20000`).
+  - **Linux Host Forwarding**: PREROUTING NAT redirection routes the client range to FNode's daemon port:
+    ```bash
+    iptables -t nat -A PREROUTING -p udp --dport 10000:20000 -j REDIRECT --to-ports 443
+    ```
+  - **Automation Script**: Managed via `FNode` maintenance CLI menu option `19` or `FNode porthop` (`FNode-script/FNode.sh`).
+
 ---
 
 ## 5. Certificate Management & Caddy Integration

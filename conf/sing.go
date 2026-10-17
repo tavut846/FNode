@@ -74,6 +74,13 @@ type SingOptions struct {
 	Multiplex                *MultiplexConfig       `json:"MultiplexConfig"`
 	DisableIPv6              bool                   `json:"DisableIPv6"`
 	ConnectTimeout           int                    `json:"ConnectTimeout"`
+	Hysteria2Config          *Hysteria2Config       `json:"Hysteria2Config,omitempty"`
+}
+
+type Hysteria2Config struct {
+	UDPFragment *bool  `json:"UDPFragment,omitempty"` // enable or disable UDP packet fragmentation
+	UDPTimeout  string `json:"UDPTimeout,omitempty"`  // custom UDP session timeout, e.g. "60s"
+	BrutalDebug bool   `json:"BrutalDebug,omitempty"` // enable sing-box Brutal CC internal debug logs
 }
 
 type SingNtpConfig struct {

@@ -64,12 +64,14 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 		return option.Inbound{}, fmt.Errorf("the listen ip not vail")
 	}
 	listen := option.ListenOptions{
-		Listen:      (*badoption.Addr)(&addr),
-		ListenPort:  uint16(info.Common.ServerPort),
-		TCPFastOpen: c.SingOptions.TCPFastOpen,
+		Listen:     (*badoption.Addr)(&addr),
+		ListenPort: uint16(info.Common.ServerPort),
+	}
+	if c.SingOptions != nil {
+		listen.TCPFastOpen = c.SingOptions.TCPFastOpen
 	}
 	var multiplex *option.InboundMultiplexOptions
-	if c.SingOptions.Multiplex != nil {
+	if c.SingOptions != nil && c.SingOptions.Multiplex != nil {
 		multiplexOption := option.InboundMultiplexOptions{
 			Enabled: c.SingOptions.Multiplex.Enabled,
 			Padding: c.SingOptions.Multiplex.Padding,
@@ -509,7 +511,51 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 						RewriteHost: true,
 					},
 				}
+			} else {
+				masquerade = &option.Hysteria2Masquerade{
+					Type: "string",
+					StringOptions: option.Hysteria2MasqueradeString{
+						StatusCode: 200,
+						Content:    target,
+					},
+				}
 			}
+		}
+
+		// Transport & Performance enhancements (Option A):
+		// 1. Enable UDP socket reuse for rapid restart and multi-process socket load distribution
+		listen.ReuseAddr = true
+
+		// 2. Configure UDP packet fragmentation based on local config with panel override
+		var udpFragment *bool
+		var hy2Cfg *conf.Hysteria2Config
+		if c.Hysteria2Config != nil {
+			hy2Cfg = c.Hysteria2Config
+		} else if c.SingOptions != nil && c.SingOptions.Hysteria2Config != nil {
+			hy2Cfg = c.SingOptions.Hysteria2Config
+		}
+
+		if hy2Cfg != nil && hy2Cfg.UDPFragment != nil {
+			udpFragment = hy2Cfg.UDPFragment
+		}
+		if info.Hysteria2.UDPFragment {
+			frag := true
+			udpFragment = &frag
+		}
+
+		brutalDebug := info.Hysteria2.BrutalDebug
+		if hy2Cfg != nil {
+			if !brutalDebug {
+				brutalDebug = hy2Cfg.BrutalDebug
+			}
+			if hy2Cfg.UDPTimeout != "" {
+				if d, err := time.ParseDuration(hy2Cfg.UDPTimeout); err == nil {
+					listen.UDPTimeout = option.UDPTimeoutCompat(badoption.Duration(d))
+				}
+			}
+		}
+		if udpFragment != nil {
+			listen.UDPFragment = udpFragment
 		}
 
 		in.Options = &option.Hysteria2InboundOptions{
@@ -519,6 +565,7 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 			IgnoreClientBandwidth: info.Hysteria2.Ignore_Client_Bandwidth,
 			Obfs:                  obfs,
 			Masquerade:            masquerade,
+			BrutalDebug:           brutalDebug,
 			InboundTLSOptionsContainer: option.InboundTLSOptionsContainer{
 				TLS: &tls,
 			},
