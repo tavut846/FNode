@@ -422,9 +422,10 @@ FNode uses GitHub Actions (`.github/workflows/release.yml`) for automated multi-
   - Automatically checks and verifies against existing git tags to prevent tag collisions, ensuring each commit creates a brand new GitHub Release instead of overwriting/replacing existing release assets.
 - **`master` / `main` / `stable` Branches**:
   - Increments the stable patch version and publishes a full GitHub Release marked as **Latest** (`make_latest: true`, `prerelease: false`).
+  - **Pre-Release Auto-Deletion**: Automatically detects, deletes, and cleans up obsolete pre-releases (e.g. `<version>-pre`) and remote git tags when an official version comes out, ensuring the GitHub releases list remains pristine.
 - **`dev` / `dev_new` Branches**:
-  - Automatically formats the tag in pre-release form: `<upgraded_version>-pre-<commit_number>` (e.g. `0.0.14-pre-1`, `0.0.14-pre-2`).
-  - Publishes a GitHub Release marked as **Pre-release** (`prerelease: true`, `make_latest: false`).
+  - Automatically formats the tag in rolling pre-release form: `<upgraded_version>-pre` (e.g. `0.0.22-pre`).
+  - Publishes and continuously updates the GitHub Release marked as **Pre-release** (`prerelease: true`, `make_latest: false`), updating the git tag and overwriting release binaries on each push to `dev` without cluttering the releases page with multiple versions.
 - **Verification Gate**:
   - Every release workflow automatically runs the complete test suite (`GOEXPERIMENT=jsonv2 go test -v -tags "with_utls" ./...`) before any release artifact is built or published.
 

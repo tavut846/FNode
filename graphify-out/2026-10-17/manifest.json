@@ -84,9 +84,9 @@
     "semantic_hash": ""
   },
   "cmd/version.go": {
-    "mtime": 1792204504.1337712,
-    "seen": 1792206171.9138584,
-    "ast_hash": "f808ec0fe7a27ade63c3388523c5474a",
+    "mtime": 1792211729.5165515,
+    "seen": 1792212269.4909322,
+    "ast_hash": "12f07d9f3708ee879ada4035ed970db4",
     "semantic_hash": ""
   },
   "cmd/x25519.go": {
@@ -10092,9 +10092,9 @@
     "semantic_hash": ""
   },
   "example/config.json": {
-    "mtime": 1792204504.2820094,
-    "seen": 1792206171.9139278,
-    "ast_hash": "577fc5ebdca493c79e034a208152ffaa",
+    "mtime": 1792210903.911156,
+    "seen": 1792211258.8232121,
+    "ast_hash": "ced76e227e9b5196dfed4010c6626364",
     "semantic_hash": ""
   },
   "example/sing_origin.json": {
@@ -10140,9 +10140,9 @@
     "semantic_hash": ""
   },
   ".github/workflows/release.yml": {
-    "mtime": 1792204496.5449948,
-    "seen": 1792206171.9139683,
-    "ast_hash": "42f40faa089f07dc8daecc0e599f8cb6",
+    "mtime": 1792211782.9780848,
+    "seen": 1792212269.4912565,
+    "ast_hash": "91bf5fc64ab613f940d23f18186a4e28",
     "semantic_hash": ""
   },
   "SupportProject/V2bX/.github/ISSUE_TEMPLATE/bug-report.md": {
@@ -10254,15 +10254,15 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1792208414.5471394,
-    "seen": 1792208838.2897875,
-    "ast_hash": "c6f7217bda445da324c82771f6fccd48",
+    "mtime": 1792211794.3653314,
+    "seen": 1792212269.4924586,
+    "ast_hash": "f7cf5f5e1d630e763b32280121070e9a",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
-    "mtime": 1792205727.7094126,
-    "seen": 1792206171.9143922,
-    "ast_hash": "7e885a1b5628fc6ca7273f58fb0fc3b0",
+    "mtime": 1792211002.962211,
+    "seen": 1792211258.8254704,
+    "ast_hash": "43c2a96177e20a9d60bfbf532786aa27",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -10290,9 +10290,9 @@
     "semantic_hash": ""
   },
   "cmd/version_test.go": {
-    "mtime": 1792204504.1387691,
-    "seen": 1792206171.9138603,
-    "ast_hash": "d393e68497db04b2cc6021b3e3cd997b",
+    "mtime": 1792211752.5156362,
+    "seen": 1792212269.4909396,
+    "ast_hash": "ef865a7f3a5fe5f7d5f44c6c15a58ee7",
     "semantic_hash": ""
   },
   "common/file/file_test.go": {

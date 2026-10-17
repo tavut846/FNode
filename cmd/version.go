@@ -75,17 +75,19 @@ func NextUnusedPatchVersion(latestTag string, existingTags []string) string {
 	return next
 }
 
-// FormatDevTag formats a pre-release version tag in the form <targetVersion>-pre-<commitNum>.
-func FormatDevTag(targetVersion string, commitNum int) string {
-	if commitNum <= 0 {
-		commitNum = 1
-	}
+// FormatDevTag formats a pre-release version tag in the form <targetVersion>-pre.
+// If an optional commitNum > 0 is provided, it formats as <targetVersion>-pre-<commitNum>.
+func FormatDevTag(targetVersion string, commitNum ...int) string {
 	targetVersion = strings.TrimPrefix(strings.TrimSpace(targetVersion), "v")
-	return fmt.Sprintf("%s-pre-%d", targetVersion, commitNum)
+	if len(commitNum) > 0 && commitNum[0] > 0 {
+		return fmt.Sprintf("%s-pre-%d", targetVersion, commitNum[0])
+	}
+	return fmt.Sprintf("%s-pre", targetVersion)
 }
 
 // ResolveReleaseMetadata determines the release tag, pre-release state, and latest state based on the ref and git context.
-// Every new commit on master/main/stable always gets an upgraded patch version to prevent replacing existing release files.
+// Master/main/stable builds increment the patch version to create a new Latest Release.
+// Dev/dev_new builds create and update a rolling pre-release tag (<targetVersion>-pre).
 func ResolveReleaseMetadata(refName string, latestStableTag string, commitsSince int) (tagName string, isPreRelease bool, isLatest bool) {
 	ref := strings.TrimSpace(refName)
 	cleanRef := strings.TrimPrefix(ref, "refs/heads/")
@@ -98,15 +100,55 @@ func ResolveReleaseMetadata(refName string, latestStableTag string, commitsSince
 
 	if cleanRef == "dev" || cleanRef == "dev_new" || strings.HasPrefix(cleanRef, "dev/") {
 		target := NextPatchVersion(latestStableTag)
-		tagName = FormatDevTag(target, commitsSince)
+		tagName = FormatDevTag(target)
 		return tagName, true, false
 	}
 
 	// Tag or other ref
 	tagName = strings.TrimPrefix(cleanRef, "v")
-	if strings.Contains(tagName, "-pre-") || strings.Contains(tagName, "-") {
+	if strings.Contains(tagName, "-pre") || strings.Contains(tagName, "-") {
 		return tagName, true, false
 	}
 	return tagName, false, true
+}
+
+// ShouldCleanupPreRelease determines whether a given pre-release tag should be cleaned up
+// when an official version is published. It returns true if preReleaseTag is marked as a
+// pre-release and its base version is less than or equal to the official release version.
+func ShouldCleanupPreRelease(preReleaseTag, officialTag string) bool {
+	preClean := strings.TrimPrefix(strings.TrimSpace(preReleaseTag), "v")
+	offClean := strings.TrimPrefix(strings.TrimSpace(officialTag), "v")
+
+	// Must be a pre-release tag (contains "-")
+	if !strings.Contains(preClean, "-") {
+		return false
+	}
+
+	preBase := strings.Split(preClean, "-")[0]
+	offBase := strings.Split(offClean, "-")[0]
+
+	preParts := strings.Split(preBase, ".")
+	offParts := strings.Split(offBase, ".")
+
+	if len(preParts) != 3 || len(offParts) != 3 {
+		return strings.HasPrefix(preClean, offBase+"-pre")
+	}
+
+	for i := 0; i < 3; i++ {
+		pNum, err1 := strconv.Atoi(preParts[i])
+		oNum, err2 := strconv.Atoi(offParts[i])
+		if err1 != nil || err2 != nil {
+			return strings.HasPrefix(preClean, offBase+"-pre")
+		}
+		if pNum < oNum {
+			return true
+		}
+		if pNum > oNum {
+			return false
+		}
+	}
+
+	// Base versions are equal (e.g. 0.0.22-pre vs 0.0.22) -> cleanup
+	return true
 }
 

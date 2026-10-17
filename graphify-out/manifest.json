@@ -84,9 +84,9 @@
     "semantic_hash": ""
   },
   "cmd/version.go": {
-    "mtime": 1792204504.1337712,
-    "seen": 1792206171.9138584,
-    "ast_hash": "f808ec0fe7a27ade63c3388523c5474a",
+    "mtime": 1792212345.5370355,
+    "seen": 1792212817.4077454,
+    "ast_hash": "f9fd5c23cfe25e18c5dd03d793a91490",
     "semantic_hash": ""
   },
   "cmd/x25519.go": {
@@ -10140,9 +10140,9 @@
     "semantic_hash": ""
   },
   ".github/workflows/release.yml": {
-    "mtime": 1792204496.5449948,
-    "seen": 1792206171.9139683,
-    "ast_hash": "42f40faa089f07dc8daecc0e599f8cb6",
+    "mtime": 1792212399.7833953,
+    "seen": 1792212817.4079301,
+    "ast_hash": "8d34e1ec38c518787d6e07df5f04731d",
     "semantic_hash": ""
   },
   "SupportProject/V2bX/.github/ISSUE_TEMPLATE/bug-report.md": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1792208414.5471394,
-    "seen": 1792208838.2897875,
-    "ast_hash": "c6f7217bda445da324c82771f6fccd48",
+    "mtime": 1792212428.5411634,
+    "seen": 1792212817.4086702,
+    "ast_hash": "8ce3bd8551c469c3199ab13a7535272d",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10290,9 +10290,9 @@
     "semantic_hash": ""
   },
   "cmd/version_test.go": {
-    "mtime": 1792204504.1387691,
-    "seen": 1792206171.9138603,
-    "ast_hash": "d393e68497db04b2cc6021b3e3cd997b",
+    "mtime": 1792212383.0085673,
+    "seen": 1792212817.40775,
+    "ast_hash": "4879a70bfcf494c277fa55fbf5b0b0f0",
     "semantic_hash": ""
   },
   "common/file/file_test.go": {

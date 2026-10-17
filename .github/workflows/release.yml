@@ -118,15 +118,15 @@ jobs:
             IS_LATEST="true"
             RELEASE_TITLE="FNode $TAG_NAME"
           elif [[ "$REF_NAME" == "dev" || "$REF_NAME" == "dev_new" || "$REF_NAME" == dev/* ]]; then
-            # Dev branch pre-release
-            TAG_NAME="${UPGRADED_VERSION}-pre-${COMMITS_SINCE}"
+            # Dev branch rolling pre-release (e.g. 0.0.22-pre)
+            TAG_NAME="${UPGRADED_VERSION}-pre"
             VERSION="$TAG_NAME"
             IS_PRERELEASE="true"
             IS_LATEST="false"
             RELEASE_TITLE="FNode $TAG_NAME (Pre-release)"
           else
             # Default / PR / other branches
-            TAG_NAME="${UPGRADED_VERSION}-pre-${COMMITS_SINCE}"
+            TAG_NAME="${UPGRADED_VERSION}-pre"
             VERSION="$TAG_NAME"
             IS_PRERELEASE="true"
             IS_LATEST="false"
@@ -320,6 +320,17 @@ jobs:
       - name: Display downloaded files
         run: ls -lh ./artifacts
 
+      - name: Update git tag for pre-release
+        if: needs.version.outputs.is_prerelease == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          TAG="${{ needs.version.outputs.tag_name }}"
+          echo "Updating git tag $TAG to commit ${{ github.sha }}"
+          git tag -f "$TAG" "${{ github.sha }}"
+          git push -f origin "$TAG" || true
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -332,3 +343,26 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean up obsolete pre-releases
+        if: needs.version.outputs.is_prerelease == 'false'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_TAG="${{ needs.version.outputs.tag_name }}"
+          CLEAN_VER="${RELEASE_TAG#v}"
+          echo "Official release published: $RELEASE_TAG ($CLEAN_VER). Checking for pre-releases to clean up..."
+
+          ALL_PRERELEASES=$(gh release list --limit 100 --json tagName,isPrerelease --jq '.[] | select(.isPrerelease == true) | .tagName' 2>/dev/null || true)
+          for PRE in $ALL_PRERELEASES; do
+            PRE_CLEAN="${PRE#v}"
+            PRE_BASE="${PRE_CLEAN%%-*}"
+            # Compare versions: delete if pre-release base version <= official version
+            LOWEST=$(printf "%s\n%s\n" "$PRE_BASE" "$CLEAN_VER" | sort -V | head -n 1)
+            if [ "$LOWEST" = "$PRE_BASE" ]; then
+              echo "Deleting obsolete pre-release: $PRE (base $PRE_BASE <= official $CLEAN_VER)..."
+              gh release delete "$PRE" --cleanup-tag --yes || true
+              git push origin :refs/tags/"$PRE" 2>/dev/null || true
+            fi
+          done

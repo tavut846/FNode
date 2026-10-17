@@ -64,22 +64,25 @@ func TestNextUnusedPatchVersion(t *testing.T) {
 
 func TestFormatDevTag(t *testing.T) {
 	tests := []struct {
+		name      string
 		version   string
-		commitNum int
+		commitNum []int
 		expected  string
 	}{
-		{"0.0.2", 1, "0.0.2-pre-1"},
-		{"v0.0.2", 5, "0.0.2-pre-5"},
-		{"0.0.13", 9, "0.0.13-pre-9"},
-		{"0.0.13", 0, "0.0.13-pre-1"},
-		{"0.0.13", -2, "0.0.13-pre-1"},
+		{"Rolling dev tag without commit", "0.0.2", nil, "0.0.2-pre"},
+		{"Rolling dev tag with v prefix", "v0.0.2", nil, "0.0.2-pre"},
+		{"Numbered dev tag with commit", "0.0.13", []int{9}, "0.0.13-pre-9"},
+		{"Zero commit returns rolling dev tag", "0.0.13", []int{0}, "0.0.13-pre"},
+		{"Negative commit returns rolling dev tag", "0.0.13", []int{-2}, "0.0.13-pre"},
 	}
 
 	for _, tt := range tests {
-		result := FormatDevTag(tt.version, tt.commitNum)
-		if result != tt.expected {
-			t.Errorf("FormatDevTag(%q, %d) = %q, expected %q", tt.version, tt.commitNum, result, tt.expected)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			result := FormatDevTag(tt.version, tt.commitNum...)
+			if result != tt.expected {
+				t.Errorf("FormatDevTag(%q, %v) = %q, expected %q", tt.version, tt.commitNum, result, tt.expected)
+			}
+		})
 	}
 }
 
@@ -125,7 +128,7 @@ func TestResolveReleaseMetadata(t *testing.T) {
 			refName:         "dev",
 			latestStableTag: "0.0.1",
 			commitsSince:    1,
-			expectedTag:     "0.0.2-pre-1",
+			expectedTag:     "0.0.2-pre",
 			expectedPre:     true,
 			expectedLatest:  false,
 		},
@@ -134,7 +137,7 @@ func TestResolveReleaseMetadata(t *testing.T) {
 			refName:         "refs/heads/dev_new",
 			latestStableTag: "0.0.12",
 			commitsSince:    9,
-			expectedTag:     "0.0.13-pre-9",
+			expectedTag:     "0.0.13-pre",
 			expectedPre:     true,
 			expectedLatest:  false,
 		},
@@ -148,11 +151,20 @@ func TestResolveReleaseMetadata(t *testing.T) {
 			expectedLatest:  true,
 		},
 		{
-			name:            "Explicit pre-release tag",
+			name:            "Explicit numbered pre-release tag",
 			refName:         "refs/tags/v0.0.15-pre-2",
 			latestStableTag: "0.0.12",
 			commitsSince:    0,
 			expectedTag:     "0.0.15-pre-2",
+			expectedPre:     true,
+			expectedLatest:  false,
+		},
+		{
+			name:            "Explicit rolling pre-release tag",
+			refName:         "refs/tags/v0.0.15-pre",
+			latestStableTag: "0.0.12",
+			commitsSince:    0,
+			expectedTag:     "0.0.15-pre",
 			expectedPre:     true,
 			expectedLatest:  false,
 		},
@@ -164,6 +176,62 @@ func TestResolveReleaseMetadata(t *testing.T) {
 			if tag != tt.expectedTag || isPre != tt.expectedPre || isLatest != tt.expectedLatest {
 				t.Errorf("ResolveReleaseMetadata(%q, %q, %d) = (%q, %v, %v), expected (%q, %v, %v)",
 					tt.refName, tt.latestStableTag, tt.commitsSince, tag, isPre, isLatest, tt.expectedTag, tt.expectedPre, tt.expectedLatest)
+			}
+		})
+	}
+}
+
+func TestShouldCleanupPreRelease(t *testing.T) {
+	tests := []struct {
+		name          string
+		preReleaseTag string
+		officialTag   string
+		expected      bool
+	}{
+		{
+			name:          "Matching rolling pre-release tag",
+			preReleaseTag: "0.0.22-pre",
+			officialTag:   "0.0.22",
+			expected:      true,
+		},
+		{
+			name:          "Matching rolling pre-release with v prefix",
+			preReleaseTag: "v0.0.22-pre",
+			officialTag:   "v0.0.22",
+			expected:      true,
+		},
+		{
+			name:          "Older numbered pre-release tag",
+			preReleaseTag: "0.0.21-pre-1",
+			officialTag:   "0.0.22",
+			expected:      true,
+		},
+		{
+			name:          "Older rolling pre-release tag",
+			preReleaseTag: "0.0.20-pre",
+			officialTag:   "0.0.22",
+			expected:      true,
+		},
+		{
+			name:          "Future pre-release tag should NOT be cleaned up",
+			preReleaseTag: "0.0.23-pre",
+			officialTag:   "0.0.22",
+			expected:      false,
+		},
+		{
+			name:          "Official stable tag is not a pre-release",
+			preReleaseTag: "0.0.22",
+			officialTag:   "0.0.22",
+			expected:      false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ShouldCleanupPreRelease(tt.preReleaseTag, tt.officialTag)
+			if result != tt.expected {
+				t.Errorf("ShouldCleanupPreRelease(%q, %q) = %v, expected %v",
+					tt.preReleaseTag, tt.officialTag, result, tt.expected)
 			}
 		})
 	}
