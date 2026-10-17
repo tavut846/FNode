@@ -4,13 +4,23 @@ This document details all supported components, protocols, features, and configu
 
 ---
 
-## 1. Core Engines (`Cores[].Type`)
+## 1. Core Engines (`Cores[].Type`) & Ecosystem
 
+### 1.1 Server Core Engine
 FNode exclusively integrates and embeds the modern **sing-box** core engine for superior memory efficiency, high throughput, and unified protocol routing.
 
 | Core Identifier | Engine | Notes |
 | :--- | :--- | :--- |
-| `"sing"` | **sing-box** (v1.11+ / v1.14+) | Complete in-memory lifecycle control; supports dynamic inbounds, outbounds, and router rules without process restarts. |
+| `"sing"` | **sing-box** (v1.11+ / v1.14+) | Complete in-memory Go lifecycle control; dynamically injects inbounds, outbounds, rate limiters, and router rules without process restarts. |
+
+### 1.2 Client Core Engines & Client Applications
+In the proxy ecosystem, client applications connect to FNode via two primary underlying client core engines:
+
+| Client Core | Repository / Project | Primary Client Applications | Configuration Format | Supported Features / Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **Mihomo (Clash.Meta)** | [`MetaCubeX/mihomo`](https://github.com/MetaCubeX/mihomo.git)<br>*(Local: `SupportProject/mihomo-Meta`)* | **Clash Verge** / **Clash Verge Rev**, **Clash Mi**, **Clash Nyanpasu**, **Flclash**, **Mihomo Party** | Clash Meta YAML (`proxies: ...`) | Dominant core for Clash-family apps. Each client application wraps Mihomo with self-modified GUI interfaces, rule processors, or embedded scripts. Supports Shadowsocks 2022, VLESS Reality, TUIC v5, and Hysteria 2. |
+| **sing-box** | [`sagernet/sing-box`](https://github.com/sagernet/sing-box)<br>*(Local: `SupportProject/sing-box`)* | **sing-box** (Official iOS/Android/Desktop), **Karing**, **Hiddify**, **NekoBox** | sing-box JSON (`outbounds: ...`) | Besides powering FNode on the server side, sing-box is a universal, first-class client core. Enables modern protocol stacks, rule-sets (`.srs`), Tun mode, and advanced obfuscation natively across platforms. |
+
 
 ---
 

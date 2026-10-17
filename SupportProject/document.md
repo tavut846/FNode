@@ -19,3 +19,15 @@ Xboard is the modern frontend dashboard server for managing nodes and users. Bui
 
 ### [Xboard-Node](./Xboard-Node)
 Xboard-Node is a Go-based backend specifically built by the Xboard team as the native node server. It leverages a specialized sing-box fork (`cedar2025/sing-box`) to provide first-class support for modern protocols like `xhttp` (SplitHTTP) and `naive` transport, as well as real-time synchronization via the V2 handshake API.
+
+### [sing-box](./sing-box)
+sing-box is the universal, high-performance proxy platform. In the FNode ecosystem:
+- **Server-Side Core**: Sing-box is exclusively integrated as FNode's in-memory server engine, managing dynamic inbounds, multiplexing, routing, and traffic accounting.
+- **Client-Side Core**: Beyond being the server core for FNode, sing-box is also an industry-standard client core engine used by prominent client applications such as the official **sing-box** client, **Karing**, **Hiddify**, and **NekoBox**.
+
+### [mihomo-Meta](./mihomo-Meta)
+[Mihomo](https://github.com/MetaCubeX/mihomo.git) (formerly Clash.Meta) is a rule-based proxy kernel based on Clash:
+- **Client Core Engine**: Mihomo is the primary core engine used by client proxy applications across desktop and mobile platforms.
+- **Client App Adoption**: Widely utilized by Clash-family client applications such as **Clash Verge** (and **Clash Verge Rev**), **Clash Mi**, **Clash Nyanpasu**, **Flclash**, and **Mihomo Party**, typically bundled with self-modified GUI wrappers, enhanced script engines, and custom rule providers tailored for each respective client app.
+- **Panel Compatibility**: Xboard provides native subscription templates (`ClashMeta` format) tailored to Mihomo's extended features (such as VLESS Reality, TUIC v5, Hysteria 2, and Shadowsocks 2022).
+

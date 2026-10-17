@@ -47,26 +47,39 @@ FNode was derived from [V2bX](https://github.com/wyx2685/V2bX) and [V2bX-script]
 
 ### 2.2 sing-box (`SupportProject/sing-box`)
 - The modern, universal proxy core engine.
-- FNode does not generate or invoke external sing-box CLI processes or static configuration files. Instead, it drives sing-box **programmatically** via its Go library interface:
+- **Server-Side Core (FNode)**:
+  FNode does not generate or invoke external sing-box CLI processes or static configuration files. Instead, it drives sing-box **programmatically** via its Go library interface:
   - Inbounds are added dynamically using `box.Router().AddInbound(...)`.
   - Inbounds are deleted via `box.Router().DeleteInbound(tag)`.
   - Users are added/removed on the fly using `core.AddUsers(...)` / `core.DelUsers(...)`.
   - **User Debugging & Tag Formatting**: When users are registered in sing-box inbound options (VLESS, VMess, Shadowsocks, Trojan, TUIC, Hysteria, Hysteria2, AnyTLS), their `Name` field is formatted as `email: [inbound_tag]|uuid` (e.g., `email: [https://domain.com]-shadowsocks:296|11c9573c-abcd-...`), matching the familiar V2bX debugging format. Sing-box logs every inbound connection and packet with this tag, allowing administrators to grep their own token/UUID directly (`grep <token> /var/log/...`) to trace connection events, rate limiting, and rule rejections.
   - Connection interception and byte counting are achieved via `HookServer` (`adapter.ConnectionTracker`), which extracts clean UUIDs (`format.ExtractUUID`) for accurate traffic tracking and tagUUIDs (`format.ExtractTagUUID`) for speed/device rate limit lookups.
+- **Client-Side Core (Ecosystem)**:
+  Beside serving as the backbone server core for FNode, sing-box is also a preeminent client core powering next-generation cross-platform proxy clients:
+  - **Official sing-box Client**: Multiplatform GUI/CLI (iOS, Android, macOS, Windows, Linux).
+  - **Karing**: Modern cross-platform proxy utility utilizing sing-box core.
+  - **Hiddify**: Universal multi-platform client built on top of the sing-box core engine.
+  - **NekoBox**: Feature-rich client on Android and desktop leveraging sing-box core.
 
-### 2.3 FNode-script (`FNode-script/`)
+### 2.3 Mihomo (Clash.Meta) Client Core (`SupportProject/mihomo-Meta`)
+- [Mihomo](https://github.com/MetaCubeX/mihomo.git) (formerly Clash.Meta) is an open-source, rule-based proxy kernel written in Go:
+  - **Dominant Client Core**: Mihomo is the primary client core used by the modern Clash ecosystem across Windows, macOS, Linux, and Android.
+  - **Client Applications**: Powers applications such as **Clash Verge** / **Clash Verge Rev**, **Clash Mi**, **Clash Nyanpasu**, **Flclash**, and **Mihomo Party**. Most client applications embed Mihomo with customized GUI wrappers, rule converters, and client-specific UX enhancements.
+  - **Panel & Node Interoperability**: Xboard provides tailored subscription outputs (`ClashMeta` format) that map nodes directly into Mihomo's extended protocol capabilities (VLESS Reality, Shadowsocks 2022, Hysteria 2, TUIC v5), which FNode terminates and proxies on the server side.
+
+### 2.4 FNode-script (`FNode-script/`)
 - Contains installation and administration scripts for Linux servers:
   - `install.sh`: Downloads prebuilt binaries, sets up systemd/openrc services, sets file permissions, and initializes `/etc/FNode/`. The systemd service is explicitly configured with `LimitNOFILE=1048576` and `LimitNPROC=512000` to prevent socket descriptor and process exhaustion during high-concurrency proxy traffic.
   - `FNode.sh`: Comprehensive management menu (`FNode` CLI command) supporting service control, log inspection, log cleanup, config generation, BBR installation, Caddy installation, and Cloudflare reverse proxy configuration.
   - `initconfig.sh`: Interactive CLI wizard for creating `/etc/FNode/config.json`. Defaults `DisableIPv6: true` across core and node configurations to eliminate outbound AAAA DNS lookup delays, routing stalls, and transient socket reset errors, while automatically binding inbounds to `[::]` on dual-stack hosts.
 
-### 2.4 Caddy Integration & Reverse Proxy
+### 2.5 Caddy Integration & Reverse Proxy
 - Caddy serves as a front-facing reverse proxy and automated SSL certificate manager.
 - Supports Cloudflare DNS-01 ACME challenges (`tls { dns cloudflare {env.CLOUDFLARE_API_TOKEN} }`).
 - Stores generated certificates in `/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/<domain>/`.
 - FNode seamlessly ingests Caddy certificates using `CertMode: "file"`.
 
-### 2.5 End-to-End Communication Flow Logic
+### 2.6 End-to-End Communication Flow Logic
 For an exhaustive analysis with diagrams, payloads, and sequence charts, see [docs/COMMUNICATION_FLOW_LOGIC.md](docs/COMMUNICATION_FLOW_LOGIC.md). The system operates on 6 primary information flows:
 1. **FNode → Manager Dashboard**: Heartbeats (`touchNode`), user traffic upload/download bytes (`POST /push`), active device IPs (`POST /alive`).
 2. **FNode → Client**: TLS/Reality handshakes, decrypted internet response streaming, token-bucket bandwidth rate limiting, and instant IPv6 blocking (`DisableIPv6`).

@@ -3,7 +3,10 @@
 This document details the complete end-to-end information flow between the three core entities in the proxy ecosystem:
 1. **FNode** (Backend Proxy Node Server)
 2. **Manager Dashboard** (Xboard Centralized Web Panel & Database)
-3. **Client** (End-User Device & Proxy Application, e.g., Clash, Sing-box, Shadowrocket, v2rayN)
+3. **Client** (End-User Device & Proxy Application powered by modern client cores):
+   - **Mihomo Core Ecosystem** (`MetaCubeX/mihomo`): Powers Clash-family clients such as **Clash Verge / Clash Verge Rev**, **Clash Mi**, **Clash Nyanpasu**, **Flclash**, and **Mihomo Party** using Clash Meta YAML configs.
+   - **sing-box Core Ecosystem** (`sagernet/sing-box`): Powers next-generation cross-platform clients such as the official **sing-box** app, **Karing**, **Hiddify**, and **NekoBox** using sing-box JSON configs.
+
 
 ---
 
