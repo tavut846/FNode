@@ -84,9 +84,9 @@
     "semantic_hash": ""
   },
   "cmd/version.go": {
-    "mtime": 1792211729.5165515,
-    "seen": 1792212269.4909322,
-    "ast_hash": "12f07d9f3708ee879ada4035ed970db4",
+    "mtime": 1792212345.5370355,
+    "seen": 1792212817.4077454,
+    "ast_hash": "f9fd5c23cfe25e18c5dd03d793a91490",
     "semantic_hash": ""
   },
   "cmd/x25519.go": {
@@ -10140,9 +10140,9 @@
     "semantic_hash": ""
   },
   ".github/workflows/release.yml": {
-    "mtime": 1792211782.9780848,
-    "seen": 1792212269.4912565,
-    "ast_hash": "91bf5fc64ab613f940d23f18186a4e28",
+    "mtime": 1792215163.769953,
+    "seen": 1792215597.987194,
+    "ast_hash": "86f3f6a705441f178e1ba4b683021d8f",
     "semantic_hash": ""
   },
   "SupportProject/V2bX/.github/ISSUE_TEMPLATE/bug-report.md": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1792211794.3653314,
-    "seen": 1792212269.4924586,
-    "ast_hash": "f7cf5f5e1d630e763b32280121070e9a",
+    "mtime": 1792215207.0539193,
+    "seen": 1792215597.987869,
+    "ast_hash": "2904607f76cfc45b07b6f059cd5262c2",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10290,9 +10290,9 @@
     "semantic_hash": ""
   },
   "cmd/version_test.go": {
-    "mtime": 1792211752.5156362,
-    "seen": 1792212269.4909396,
-    "ast_hash": "ef865a7f3a5fe5f7d5f44c6c15a58ee7",
+    "mtime": 1792212383.0085673,
+    "seen": 1792212817.40775,
+    "ast_hash": "4879a70bfcf494c277fa55fbf5b0b0f0",
     "semantic_hash": ""
   },
   "common/file/file_test.go": {
@@ -10365,6 +10365,18 @@
     "mtime": 1792204504.1197424,
     "seen": 1792206171.9138525,
     "ast_hash": "e4999fa9bbf11bff592fe76574306ade",
+    "semantic_hash": ""
+  },
+  "FNode-script/delete_drafts.py": {
+    "mtime": 1792215182.2321665,
+    "seen": 1792215597.9837217,
+    "ast_hash": "7be6691650d7276fc033ebc2a547478d",
+    "semantic_hash": ""
+  },
+  ".github/workflows/clean-drafts.yml": {
+    "mtime": 1792215148.206141,
+    "seen": 1792215597.9871879,
+    "ast_hash": "2e8267376d2ac456fbf9a53ad02d5f1c",
     "semantic_hash": ""
   }
 }

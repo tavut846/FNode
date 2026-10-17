@@ -69,8 +69,8 @@ FNode was derived from [V2bX](https://github.com/wyx2685/V2bX) and [V2bX-script]
 
 ### 2.4 FNode-script (`FNode-script/`)
 - Contains installation and administration scripts for Linux servers:
-  - `install.sh`: Downloads prebuilt binaries, sets up systemd/openrc services, sets file permissions, and initializes `/etc/FNode/`. The systemd service is explicitly configured with `LimitNOFILE=1048576` and `LimitNPROC=512000` to prevent socket descriptor and process exhaustion during high-concurrency proxy traffic.
-  - `FNode.sh`: Comprehensive management menu (`FNode` CLI command) supporting service control, log inspection, log cleanup, config generation, BBR installation, Caddy installation, and Cloudflare reverse proxy configuration.
+  - `install.sh`: Downloads prebuilt binaries, sets up systemd/openrc services, sets file permissions, and initializes `/etc/FNode/`. The systemd service is explicitly configured with `LimitNOFILE=1048576` and `LimitNPROC=512000` to prevent socket descriptor and process exhaustion during high-concurrency proxy traffic. Supports interactive version selection (Latest Release, Pre-release, or Specific Version) as well as direct CLI arguments (`bash install.sh latest`, `bash install.sh pre`, or `bash install.sh <version>`).
+  - `FNode.sh`: Comprehensive management menu (`FNode` CLI command) supporting service control, log inspection, log cleanup, config generation, BBR installation, Caddy installation, and Cloudflare reverse proxy configuration. Includes an enhanced update function (Menu option `2` or `FNode update [latest|pre|<version>]`) providing interactive selection between latest stable releases, rolling pre-releases, and custom pinned versions.
   - `initconfig.sh`: Interactive CLI wizard for creating `/etc/FNode/config.json`. Defaults `DisableIPv6: true` across core and node configurations to eliminate outbound AAAA DNS lookup delays, routing stalls, and transient socket reset errors, while automatically binding inbounds to `[::]` on dual-stack hosts.
 
 ### 2.5 Caddy Integration & Reverse Proxy
@@ -426,6 +426,10 @@ FNode uses GitHub Actions (`.github/workflows/release.yml`) for automated multi-
 - **`dev` / `dev_new` Branches**:
   - Automatically formats the tag in rolling pre-release form: `<upgraded_version>-pre` (e.g. `0.0.22-pre`).
   - Publishes and continuously updates the GitHub Release marked as **Pre-release** (`prerelease: true`, `make_latest: false`), updating the git tag and overwriting release binaries on each push to `dev` without cluttering the releases page with multiple versions.
+- **Draft Releases Auto-Cleanup**:
+  - The release workflow automatically sweeps and deletes all orphaned or stale draft releases before publishing new release artifacts.
+  - Dedicated on-demand cleanup workflow [`.github/workflows/clean-drafts.yml`](../.github/workflows/clean-drafts.yml) provides 1-click bulk deletion of all draft releases via GitHub Actions `workflow_dispatch`.
+  - Local CLI tool [`FNode-script/delete_drafts.py`](../FNode-script/delete_drafts.py) allows repository administrators to purge draft releases directly via GitHub REST API.
 - **Verification Gate**:
   - Every release workflow automatically runs the complete test suite (`GOEXPERIMENT=jsonv2 go test -v -tags "with_utls" ./...`) before any release artifact is built or published.
 

@@ -148,27 +148,59 @@ install_FNode() {
     mkdir /usr/local/FNode/ -p
     cd /usr/local/FNode/
 
-    if  [ $# == 0 ] ;then
+    target_type="$1"
+    if [[ -z "$target_type" ]]; then
+        if [ -t 0 ]; then
+            echo -e "请选择要安装的 FNode 版本:"
+            echo -e "  ${green}1.${plain} 最新正式版 (Latest Release, 默认)"
+            echo -e "  ${green}2.${plain} 预发布预览版 (Pre-release)"
+            echo -e "  ${green}3.${plain} 自定义指定版本 (Specific Version)"
+            read -rp "请输入选择 [1-3] (默认 1): " ver_choice
+            case "$ver_choice" in
+                2)
+                    target_type="pre"
+                    ;;
+                3)
+                    read -rp "请输入指定版本号 (例如 0.0.21 或 0.0.22-pre): " custom_ver
+                    target_type="${custom_ver}"
+                    ;;
+                *)
+                    target_type="latest"
+                    ;;
+            esac
+        else
+            target_type="latest"
+        fi
+    fi
+
+    if [[ "$target_type" == "pre" || "$target_type" == "prerelease" || "$target_type" == "pre-release" ]]; then
+        echo -e "正在获取最新预发布版本信息..."
+        last_version=$(curl -Ls "https://api.github.com/repos/tavut846/FNode/releases" | awk -F'"' '/"tag_name":/{t=$4} /"prerelease": *true/{print t; exit}')
+        if [[ ! -n "$last_version" ]]; then
+            echo -e "${red}检测 FNode 预发布版本失败，可能是超出 Github API 限制或暂无预发布版本，请稍后再试或手动指定版本安装${plain}"
+            exit 1
+        fi
+        echo -e "检测到 FNode 最新预发布版本：${green}${last_version}${plain}，开始安装"
+        url="https://github.com/tavut846/FNode/releases/download/${last_version}/FNode-linux-${arch}.zip"
+    elif [[ "$target_type" == "latest" ]]; then
+        echo -e "正在获取最新正式版信息..."
         last_version=$(curl -Ls "https://api.github.com/repos/tavut846/FNode/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
         if [[ ! -n "$last_version" ]]; then
             echo -e "${red}检测 FNode 版本失败，可能是超出 Github API 限制，请稍后再试，或手动指定 FNode 版本安装${plain}"
             exit 1
         fi
-        echo -e "检测到 FNode 最新版本：${last_version}，开始安装"
-        wget --no-check-certificate -N --progress=bar -O /usr/local/FNode/FNode-linux.zip https://github.com/tavut846/FNode/releases/download/${last_version}/FNode-linux-${arch}.zip
-        if [[ $? -ne 0 ]]; then
-            echo -e "${red}下载 FNode 失败，请确保你的服务器能够下载 Github 的文件${plain}"
-            exit 1
-        fi
-    else
-        last_version=$1
+        echo -e "检测到 FNode 最新正式版本：${green}${last_version}${plain}，开始安装"
         url="https://github.com/tavut846/FNode/releases/download/${last_version}/FNode-linux-${arch}.zip"
-        echo -e "开始安装 FNode $1"
-        wget --no-check-certificate -N --progress=bar -O /usr/local/FNode/FNode-linux.zip ${url}
-        if [[ $? -ne 0 ]]; then
-            echo -e "${red}下载 FNode $1 失败，请确保此版本存在${plain}"
-            exit 1
-        fi
+    else
+        last_version="$target_type"
+        url="https://github.com/tavut846/FNode/releases/download/${last_version}/FNode-linux-${arch}.zip"
+        echo -e "开始安装指定版本 FNode: ${green}${last_version}${plain}"
+    fi
+
+    wget --no-check-certificate -N --progress=bar -O /usr/local/FNode/FNode-linux.zip ${url}
+    if [[ $? -ne 0 ]]; then
+        echo -e "${red}下载 FNode ${last_version} 失败，请确保你的服务器能够下载 Github 的文件且此版本存在${plain}"
+        exit 1
     fi
 
     unzip FNode-linux.zip
@@ -285,9 +317,10 @@ EOF
     echo "FNode log          - 查看 FNode 日志"
     echo "FNode x25519       - 生成 x25519 密钥"
     echo "FNode generate     - 生成 FNode 配置文件"
-    echo "FNode update       - 更新 FNode"
+    echo "FNode update       - 更新 FNode (交互式选择: 最新版/预发布版/指定版本)"
+    echo "FNode update pre   - 更新 FNode 至最新预发布预览版"
     echo "FNode update x.x.x - 更新 FNode 指定版本"
-    echo "FNode install      - 安装 FNode"
+    echo "FNode install      - 安装 FNode (可选参数: latest/pre/指定版本)"
     echo "FNode uninstall    - 卸载 FNode"
     echo "FNode version      - 查看 FNode 版本"
     echo "------------------------------------------"

@@ -113,15 +113,72 @@ install() {
 }
 
 update() {
+    local target_ver=""
     if [[ $# == 0 ]]; then
-        echo && echo -n -e "输入指定版本(默认最新版): " && read version
+        echo -e "\n请选择更新版本类型:"
+        echo -e "  ${green}1.${plain} 最新正式版 (Latest Release, 默认)"
+        echo -e "  ${green}2.${plain} 预发布预览版 (Pre-release)"
+        echo -e "  ${green}3.${plain} 自定义指定版本 (Specific Version)"
+        echo -e "  ${green}0.${plain} 返回主菜单"
+        echo && read -rp "请输入选择 [0-3] (默认 1): " update_choice
+        case "${update_choice}" in
+            0)
+                show_menu
+                return
+                ;;
+            2)
+                target_ver="pre"
+                ;;
+            3)
+                read -rp "请输入指定版本号 (例如 0.0.21 或 0.0.22-pre): " custom_ver
+                if [[ -z "${custom_ver}" ]]; then
+                    echo -e "${red}版本号不能为空${plain}"
+                    before_show_menu
+                    return
+                fi
+                target_ver="${custom_ver}"
+                ;;
+            *)
+                target_ver="latest"
+                ;;
+        esac
     else
-        version=$2
+        if [[ -z "$2" ]]; then
+            echo -e "\n请选择更新版本类型:"
+            echo -e "  ${green}1.${plain} 最新正式版 (Latest Release, 默认)"
+            echo -e "  ${green}2.${plain} 预发布预览版 (Pre-release)"
+            echo -e "  ${green}3.${plain} 自定义指定版本 (Specific Version)"
+            echo -e "  ${green}0.${plain} 取消退出"
+            echo && read -rp "请输入选择 [0-3] (默认 1): " update_choice
+            case "${update_choice}" in
+                0)
+                    exit 0
+                    ;;
+                2)
+                    target_ver="pre"
+                    ;;
+                3)
+                    read -rp "请输入指定版本号 (例如 0.0.21 或 0.0.22-pre): " custom_ver
+                    if [[ -z "${custom_ver}" ]]; then
+                        echo -e "${red}版本号不能为空${plain}"
+                        exit 1
+                    fi
+                    target_ver="${custom_ver}"
+                    ;;
+                *)
+                    target_ver="latest"
+                    ;;
+            esac
+        else
+            target_ver="$2"
+        fi
     fi
-    bash <(curl -Ls https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh) $version
+
+    echo -e "准备更新 FNode: ${green}${target_ver}${plain}"
+    bash <(curl -Ls https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh) "${target_ver}"
     if [[ $? == 0 ]]; then
         echo -e "${green}更新完成，已自动重启 FNode，请使用 FNode log 查看运行日志${plain}"
-        exit
+        exit 0
     fi
 
     if [[ $# == 0 ]]; then
@@ -1220,7 +1277,8 @@ show_usage() {
     echo "FNode clearlog     - 清理 FNode 日志"
     echo "FNode x25519       - 生成 x25519 密钥"
     echo "FNode generate     - 生成 FNode 配置文件"
-    echo "FNode update       - 更新 FNode"
+    echo "FNode update       - 更新 FNode (交互式选择: 最新版/预发布版/指定版本)"
+    echo "FNode update pre   - 更新 FNode 至最新预发布预览版"
     echo "FNode update x.x.x - 安装 FNode 指定版本"
     echo "FNode install      - 安装 FNode"
     echo "FNode uninstall    - 卸载 FNode"
@@ -1240,7 +1298,7 @@ show_menu() {
 --- https://github.com/tavut846/FNode ---
   ${green}0.${plain} 修改配置
   ${green}1.${plain} 安装 FNode
-  ${green}2.${plain} 更新 FNode
+  ${green}2.${plain} 更新 FNode (稳定版/预发布版/指定版本)
   ${green}3.${plain} 卸载 FNode
 ————————————————
   ${green}4.${plain} 启动 FNode

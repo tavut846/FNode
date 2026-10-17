@@ -152,3 +152,19 @@ func ShouldCleanupPreRelease(preReleaseTag, officialTag string) bool {
 	return true
 }
 
+// ResolveReleaseTarget resolves the intended release tag based on user selection or argument.
+// If target is "pre", "prerelease", or "pre-release", it returns the latest pre-release tag.
+// If target is "latest" or empty, it returns the latest official release tag.
+// Otherwise, it returns the custom specified version string.
+func ResolveReleaseTarget(target, latestOfficial, latestPreRelease string) string {
+	t := strings.ToLower(strings.TrimSpace(target))
+	switch t {
+	case "pre", "prerelease", "pre-release":
+		return latestPreRelease
+	case "latest", "":
+		return latestOfficial
+	default:
+		return strings.TrimSpace(target)
+	}
+}
+

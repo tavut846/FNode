@@ -265,7 +265,7 @@ jobs:
         run: |
           cd ./build_assets || exit 1
           mv FNode FNode.exe
-      - name: Prepare to release
+      - name: Prepare release assets
         run: |
           cp ${GITHUB_WORKSPACE}/README.md ./build_assets/README.md
           cp ${GITHUB_WORKSPACE}/LICENSE ./build_assets/LICENSE
@@ -302,7 +302,7 @@ jobs:
             ./FNode-${{ steps.get_filename.outputs.ASSET_NAME }}.zip*
 
   publish:
-    name: Publish Release
+    name: ${{ needs.version.outputs.is_prerelease == 'true' && 'Publish Pre-release' || 'Publish Release' }}
     needs: [version, build]
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
@@ -331,14 +331,41 @@ jobs:
           git tag -f "$TAG" "${{ github.sha }}"
           git push -f origin "$TAG" || true
 
-      - name: Publish GitHub Release
+      - name: Clean up stale draft releases
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Scanning and cleaning up stale draft releases..."
+          DRAFT_IDS=$(gh api --paginate "/repos/${{ github.repository }}/releases" --jq '.[] | select(.draft == true) | .id' 2>/dev/null || true)
+          for DRAFT_ID in $DRAFT_IDS; do
+            echo "Deleting stale draft release ID: $DRAFT_ID..."
+            gh api -X DELETE "/repos/${{ github.repository }}/releases/$DRAFT_ID" || true
+          done
+
+      - name: Publish GitHub Pre-release
+        if: needs.version.outputs.is_prerelease == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.version.outputs.tag_name }}
           target_commitish: ${{ github.sha }}
           name: ${{ needs.version.outputs.release_title }}
-          prerelease: ${{ needs.version.outputs.is_prerelease == 'true' }}
-          make_latest: ${{ needs.version.outputs.is_latest == 'true' }}
+          prerelease: true
+          make_latest: false
+          files: ./artifacts/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish GitHub Official Release
+        if: needs.version.outputs.is_prerelease != 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.tag_name }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ needs.version.outputs.release_title }}
+          prerelease: false
+          make_latest: true
           files: ./artifacts/*
           generate_release_notes: true
         env:

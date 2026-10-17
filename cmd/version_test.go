@@ -236,3 +236,34 @@ func TestShouldCleanupPreRelease(t *testing.T) {
 		})
 	}
 }
+
+func TestResolveReleaseTarget(t *testing.T) {
+	official := "0.0.21"
+	prerelease := "0.0.22-pre"
+
+	tests := []struct {
+		target   string
+		expected string
+	}{
+		{"", official},
+		{"latest", official},
+		{"LATEST", official},
+		{"pre", prerelease},
+		{"PRE", prerelease},
+		{"prerelease", prerelease},
+		{"pre-release", prerelease},
+		{"0.0.20", "0.0.20"},
+		{"0.0.22-pre", "0.0.22-pre"},
+		{"v1.0.0", "v1.0.0"},
+	}
+
+	for _, tt := range tests {
+		t.Run("target_"+tt.target, func(t *testing.T) {
+			result := ResolveReleaseTarget(tt.target, official, prerelease)
+			if result != tt.expected {
+				t.Errorf("ResolveReleaseTarget(%q, %q, %q) = %q, expected %q",
+					tt.target, official, prerelease, result, tt.expected)
+			}
+		})
+	}
+}
