@@ -9522,9 +9522,9 @@
     "semantic_hash": ""
   },
   "FNode-script/FNode.sh": {
-    "mtime": 1792215977.7256153,
-    "seen": 1792216541.5829818,
-    "ast_hash": "b20b7d53efc9f83739c340835c9f48ef",
+    "mtime": 1792242537.259747,
+    "seen": 1792242952.5424645,
+    "ast_hash": "d66911eb6ca29771848bbc742ff6ad90",
     "semantic_hash": ""
   },
   "FNode-script/initconfig.sh": {
@@ -9534,9 +9534,9 @@
     "semantic_hash": ""
   },
   "FNode-script/install.sh": {
-    "mtime": 1792215898.7707286,
-    "seen": 1792216541.5829976,
-    "ast_hash": "7178092a9501098dcddfe4ac8486dd1e",
+    "mtime": 1792242579.5081472,
+    "seen": 1792242952.5424762,
+    "ast_hash": "5d34850e26d33825909f15978c7ae536",
     "semantic_hash": ""
   },
   "SupportProject/V2bX-script/V2bX.sh": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1792216015.0705602,
-    "seen": 1792216541.5871954,
-    "ast_hash": "995457fac98a1263f1f310d74bd88646",
+    "mtime": 1792242633.8105443,
+    "seen": 1792242952.5458398,
+    "ast_hash": "b7bf110ae006946a6b0b36ed6a58e1ec",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {

@@ -108,8 +108,10 @@ before_show_menu() {
     show_menu
 }
 
+FNODE_BRANCH="${FNODE_BRANCH:-master}"
+
 install() {
-    bash <(curl -Ls https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh)
+    bash <(curl -Ls "https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}/FNode-script/install.sh")
 }
 
 update() {
@@ -138,7 +140,11 @@ update() {
                 fi
                 target_ver="${custom_ver}"
                 ;;
+            1|"")
+                target_ver="latest"
+                ;;
             *)
+                echo -e "${yellow}输入无效，默认更新至最新正式版${plain}"
                 target_ver="latest"
                 ;;
         esac
@@ -165,7 +171,11 @@ update() {
                     fi
                     target_ver="${custom_ver}"
                     ;;
+                1|"")
+                    target_ver="latest"
+                    ;;
                 *)
+                    echo -e "${yellow}输入无效，默认更新至最新正式版${plain}"
                     target_ver="latest"
                     ;;
             esac
@@ -175,7 +185,7 @@ update() {
     fi
 
     echo -e "准备更新 FNode: ${green}${target_ver}${plain}"
-    bash <(curl -Ls https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh) "${target_ver}"
+    bash <(curl -Ls "https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}/FNode-script/install.sh") "${target_ver}"
     if [[ $? == 0 ]]; then
         echo -e "${green}更新完成，已自动重启 FNode，请使用 FNode log 查看运行日志${plain}"
         exit 0
@@ -442,7 +452,7 @@ install_bbr() {
 }
 
 update_shell() {
-    wget -O /usr/bin/FNode -N --no-check-certificate https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/FNode.sh
+    wget -O /usr/bin/FNode -N --no-check-certificate "https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}/FNode-script/FNode.sh"
     if [[ $? != 0 ]]; then
         echo ""
         echo -e "${red}下载脚本失败，请检查本机能否连接 Github${plain}"

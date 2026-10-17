@@ -6,6 +6,7 @@ yellow='\033[0;33m'
 plain='\033[0m'
 
 cur_dir=$(pwd)
+FNODE_BRANCH="${FNODE_BRANCH:-master}"
 
 # check root
 [[ $EUID -ne 0 ]] && echo -e "${red}错误：${plain} 必须使用root用户运行此脚本！\n" && exit 1
@@ -164,7 +165,11 @@ install_FNode() {
                     read -rp "请输入指定版本号 (例如 0.0.21 或 0.0.22-pre): " custom_ver
                     target_type="${custom_ver}"
                     ;;
+                1|"")
+                    target_type="latest"
+                    ;;
                 *)
+                    echo -e "${yellow}输入无效，默认安装最新正式版${plain}"
                     target_type="latest"
                     ;;
             esac
@@ -295,7 +300,7 @@ EOF
     if [[ ! -f /etc/FNode/custom_inbound.json ]]; then
         cp custom_inbound.json /etc/FNode/
     fi
-    curl -o /usr/bin/FNode -Ls https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/FNode.sh
+    curl -o /usr/bin/FNode -Ls "https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}/FNode-script/FNode.sh"
     chmod +x /usr/bin/FNode
     if [ ! -L /usr/bin/fnode ]; then
         ln -s /usr/bin/FNode /usr/bin/fnode
@@ -328,7 +333,7 @@ EOF
     if [[ $first_install == true ]]; then
         read -rp "检测到你为第一次安装FNode,是否自动直接生成配置文件？(y/n): " if_generate
         if [[ $if_generate == [Yy] ]]; then
-            curl -o ./initconfig.sh -Ls https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/initconfig.sh
+            curl -o ./initconfig.sh -Ls "https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}/FNode-script/initconfig.sh"
             source initconfig.sh
             rm initconfig.sh -f
             generate_config_file
