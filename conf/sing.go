@@ -1,19 +1,54 @@
 package conf
 
 import (
+	"path/filepath"
+
 	"github.com/sagernet/sing-box/option"
 )
 
 type SingConfig struct {
-	LogConfig        SingLogConfig     `json:"Log"`
-	NtpConfig        SingNtpConfig     `json:"NTP"`
-	OriginalPath     string            `json:"OriginalPath"`
-	ConnectTimeout   int               `json:"ConnectTimeout"` // dial timeout in seconds, default 5s
-	DomainStrategy   string            `json:"DomainStrategy"` // "prefer_ipv4", "ipv4_only", "prefer_ipv6", "ipv6_only"
+	LogConfig           SingLogConfig     `json:"Log"`
+	NtpConfig           SingNtpConfig     `json:"NTP"`
+	OriginalPath        string            `json:"OriginalPath"`
+	ConnectTimeout      int               `json:"ConnectTimeout"`      // dial timeout in seconds, default 5s
+	DomainStrategy      string            `json:"DomainStrategy"`      // "prefer_ipv4", "ipv4_only", "prefer_ipv6", "ipv6_only"
 	DisableIPv6         bool              `json:"DisableIPv6"`         // block ipv6 traffic immediately to avoid timeouts on IPv4-only hosts
 	AutoDetectInterface *bool             `json:"AutoDetectInterface"` // automatically track default network interface and gateway changes (defaults to true)
 	CustomOutbounds     []map[string]any  `json:"CustomOutbounds"`
 	CustomRouteRules    []CustomRouteRule `json:"CustomRouteRules"`
+	// GeneratedDir receives the generated <node>.effective.json and
+	// <node>.panel.json debug files. Defaults to "generated" next to the
+	// main config file. It is never watched for reloads.
+	GeneratedDir string `json:"GeneratedDir"`
+}
+
+// DefaultGeneratedDir returns the generated-files directory for a config file.
+func DefaultGeneratedDir(configPath string) string {
+	if abs, err := filepath.Abs(configPath); err == nil {
+		configPath = abs
+	}
+	return filepath.Join(filepath.Dir(configPath), "generated")
+}
+
+// SetGeneratedDirs fills an empty GeneratedDir of every sing core with the
+// default for configPath.
+func (p *Conf) SetGeneratedDirs(configPath string) {
+	for i := range p.CoresConfig {
+		if sc := p.CoresConfig[i].SingConfig; sc != nil && sc.GeneratedDir == "" {
+			sc.GeneratedDir = DefaultGeneratedDir(configPath)
+		}
+	}
+}
+
+// GeneratedDir returns the generated-files directory of the first sing core,
+// or the default for configPath.
+func (p *Conf) GeneratedDir(configPath string) string {
+	for _, c := range p.CoresConfig {
+		if c.SingConfig != nil && c.SingConfig.GeneratedDir != "" {
+			return c.SingConfig.GeneratedDir
+		}
+	}
+	return DefaultGeneratedDir(configPath)
 }
 
 type CustomRouteRule struct {

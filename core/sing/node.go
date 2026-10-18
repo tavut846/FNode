@@ -601,6 +601,9 @@ func (b *Sing) AddNode(tag string, info *panel.NodeInfo, config *conf.Options) e
 	if err != nil {
 		return fmt.Errorf("add inbound error: %s", err)
 	}
+	b.users.mapLock.Lock()
+	b.inboundOptions[tag] = c
+	b.users.mapLock.Unlock()
 	if err := b.applyPanelState(true); err != nil {
 		logrus.WithFields(logrus.Fields{"tag": tag, "err": err}).Error("Apply panel outbounds and routes failed")
 	}
@@ -612,6 +615,7 @@ func (b *Sing) DelNode(tag string) error {
 	delete(b.inboundInfo, tag)
 	delete(b.inboundUsers, tag)
 	delete(b.inboundConfig, tag)
+	delete(b.inboundOptions, tag)
 	b.users.mapLock.Unlock()
 	in := b.box.Inbound()
 	err := in.Remove(tag)

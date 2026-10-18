@@ -200,6 +200,9 @@ Config supports **JSON5** (comments, trailing commas) and `"Include": "path/to/f
 
 - **Single instance, multi-node**: One FNode process connects to multiple Xboard nodes simultaneously.
 - **ETag caching**: Node config and user list only re-parse when the server's ETag changes.
+- **Panel routing**: panel `custom_outbounds`/`custom_routes`/`custom_route_rules`/`routes` are merged in memory after `sing_origin.json` and local `CustomOutbounds` (panel wins on a duplicate tag) and applied through the sing-box `OutboundManager` (`core/sing/apply.go`). Never write `sing_origin.json` or `config.json`: they are watched.
+- **WebSocket push**: `node/ws.go` connects per node after `POST /api/v2/server/handshake`; the HTTP poll is skipped while connected.
+- **Generated files**: after each apply `core/sing/effective.go` writes `<GeneratedDir>/<node>.effective.json` and `<node>.panel.json` (debug only); `FNode config show` prints them.
 - **Hot reload**: `cmd/server.go` uses `conf.Watch()` (fsnotify) — editing the config restarts cores+nodes automatically (`-w` flag, default on).
 - **TLS / ACME**: Managed by `node/cert.go` using the `lego` library. Cert modes: `http`, `dns`, `tls`, `self`, `file`, `none`.
 - **Traffic reporting**: Collected inside sing-box via a `HookServer` (`core/sing/hook.go`) that intercepts connections; aggregated and POSTed to Xboard on the `PushInterval` from node config.

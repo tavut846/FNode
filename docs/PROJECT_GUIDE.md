@@ -221,12 +221,17 @@ When `OriginalPath` points to a base sing-box config (e.g. `/etc/FNode/sing_orig
     - Public speedtest scrapers and probe bots (`miaoko`, `flows.pages.dev`)
     - Antivirus honeypots & telemetry reporting (`360`, `guanjia.qq.com`, `rising`, `kingsoft`, `umeng`)
     - Cyber police & reporting portals (`12377`, `12321`, `12315`, `cyberpolice`, `110.qq`)
-- **Rule Precedence Chain**:
-  1. Anti-SSRF Protection (private IPv4 & IPv6 CIDRs blocked)
-  2. IPv6 Blocking (when `DisableIPv6: true`)
-  3. Panel-defined route rules (audits, blocked protocols/domains from Xboard)
-  4. Base `sing_origin.json` route rules (custom outbound detours, domain suffixes, rule-sets, regex, protocol blocks)
-  5. Fallback final outbound (`direct`)
+- **Rule Precedence Chain** (first match wins; same order as xboard-node):
+  1. Local `CustomRouteRules` from `config.json`
+  2. Panel `custom_route_rules` (structured rules, when the panel sends them)
+  3. Panel `custom_routes` (raw sing-box rules)
+  4. Anti-SSRF Protection (private IPv4 & IPv6 CIDRs blocked)
+  5. IPv6 Blocking (when `DisableIPv6: true`)
+  6. Panel `routes` from the node's route groups (`block`, `direct`, `proxy`/`route` → `action_value` outbound tag; `dns` routes are not router rules)
+  7. Base `sing_origin.json` route rules (custom outbound detours, domain suffixes, rule-sets, regex, protocol blocks)
+  8. Fallback final outbound (`direct`)
+
+  A panel rule that targets an outbound tag that does not exist is dropped with a warning instead of failing at connection time with `router: outbound not found`. Rules to `direct`/`block` are never dropped.
 
 This eliminates the need to bloat `config.json` with duplicated rules, allowing complex routing and remote rule sets to be maintained cleanly in `sing_origin.json`.
 
@@ -254,6 +259,16 @@ To maximize throughput and resist ISP UDP QoS throttling without requiring subsc
     iptables -t nat -A PREROUTING -p udp --dport 10000:20000 -j REDIRECT --to-ports 443
     ```
   - **Automation Script**: Managed via `FNode` maintenance CLI menu option `19` or `FNode porthop` (`FNode-script/FNode.sh`).
+
+### 4.6 Panel Outbounds, Routes & Real-Time WebSocket Sync
+Route changes made in the Xboard dashboard reach every FNode server without per-server edits:
+- **Panel outbounds** (`core/sing/outbound.go`, `core/sing/apply.go`): the UniProxy config's `custom_outbounds` (`{tag, protocol, settings, proxy_tag}`, as written by the CustomNode plugin; a raw sing-box outbound is accepted too) are converted to sing-box outbounds (`{type: protocol, tag, ...settings}`, `proxy_tag` → `detour`). `custom_routes` (raw sing-box rules), `custom_route_rules` and the node's `routes` are kept on `NodeInfo`.
+- **Merge order** (in memory only): `sing_origin.json` outbounds → local `CustomOutbounds` → panel `custom_outbounds` of every node (sorted by node tag). A later source wins on a duplicate tag and a warning is logged. Builtin `direct`/`block` are added only when `sing_origin.json` has no outbounds.
+- **Applying**: every `AddNode` and routing change reconciles the outbound set through sing-box's `OutboundManager` using a per-tag hash: new or changed outbounds are created (dependencies first), outbounds that detour through a changed one are recreated too, and outbounds no longer wanted are removed. The router rules are then replaced. A config change that only touches `routes`/`custom_outbounds`/`custom_routes`/`custom_route_rules` (same inbound hash) is applied in place without recreating the inbound or re-adding users. One line is logged per apply: `applied N outbounds (origin a, local b, panel c, builtin d), M rules`.
+- **Never written**: FNode never writes `sing_origin.json` or `config.json`. Both are watched (§4.3), so writing them would cause a reload loop and mix generated data into hand-written files.
+- **WebSocket push** (`api/panel/ws.go`, `node/ws.go`): on start each node calls `POST /api/v2/server/handshake`. When `websocket.enabled` is true and `ws_url` starts with `ws://`/`wss://`, the node connects to `ws_url?token=…&node_id=…` (one connection per node, state kept per controller), answers `ping` with `pong`, and reconnects with exponential backoff (1s → 60s, with jitter). Events: `sync.config` (same shape as the HTTP config), `sync.users`, `sync.user.delta` (`add`/`remove` by id) and `sync.devices` (uid → IPs, used as the alive list). While the node's WS is connected its HTTP poll is skipped; when it drops, polling resumes. A malformed `ws_url` is logged as an error and the node keeps polling. Traffic and alive reports stay on HTTP.
+- **Generated files** (`core/sing/effective.go`): after every successful apply FNode atomically writes, per node, `<GeneratedDir>/<node>.effective.json` (the merged sing-box config: inbound without users, outbounds, route rules and rule sets, plus an `_fnode` block listing each outbound's source) and `<node>.panel.json` (the raw panel `routes`, `custom_outbounds`, `custom_routes`, `custom_route_rules`). `GeneratedDir` (in the sing core config) defaults to `generated/` next to `config.json` and is not watched. `<node>` is the node tag with unsafe characters replaced by `_`. Files of removed nodes are deleted. The files are mode 0600 and may contain outbound passwords and keys.
+- **CLI**: `FNode config show [-c config.json] [--node <tag|file|part of tag>] [--summary] [--dir <dir>]` prints a per-node summary (outbound tag, type, source, contributing node) followed by the effective JSON.
 
 ---
 

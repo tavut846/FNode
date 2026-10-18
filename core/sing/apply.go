@@ -192,5 +192,6 @@ func (b *Sing) applyPanelState(prune bool) error {
 	log.Infof("applied %d outbounds (origin %d, local %d, panel %d, builtin %d), %d rules",
 		len(effective), counts[SourceOrigin], counts[SourceLocal], counts[SourcePanel], counts[SourceBuiltin],
 		len(allRules))
+	b.writeEffectiveFiles(prune)
 	return nil
 }

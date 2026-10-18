@@ -68,6 +68,9 @@ Xboard responds to FNode's UniProxy polling requests with centralized node param
 | `GET /config` | - **Listen & Port**: `server_port` (backend daemon bind port, e.g. `443`), `listen_ip`.<br>- **Transport Settings**: WebSocket path, gRPC service name, HTTPUpgrade path, HTTP request headers.<br>- **Security Settings**: Standard TLS parameters or Reality configurations (`server_name`, `dest`, `server_port`, `short_id`, `private_key`).<br>- **Bandwidth & Obfs**: `up_mbps`, `down_mbps`, `obfs`, `obfs-password`, `salamander`.<br>- **Hysteria 2 Enhancements**: `udp_fragment`, `brutal_debug`, masquerade fallback target.<br>- **Base Intervals**: `pull_interval` (user poll frequency), `push_interval` (traffic report frequency).<br>- **Auditing & Route Rules**: Blocking rules for BT/torrents, spam, government sites, or anti-SSRF CIDRs. | FNode dynamically invokes `core.AddNode(tag, node, options)` to create or update the sing-box inbound (binding SNI to `tls.server_name` and camouflage destination to `handshake.server`) and updates router rules, seamlessly merging panel rules with base origin rules (`sing_origin.json`) and Anti-SSRF protections in memory without restarting the process. For Hysteria 2, FNode automatically activates `ReuseAddr: true` socket recycling and wires Brutal CC debug/UDP fragment controls. |
 | `GET /user` | - Array of active users:<br>`[{ "id": 101, "uuid": "...", "speed_limit": 100, "device_limit": 3 }]`<br>- Encoded via MsgPack (fast binary) or JSON streaming. | FNode parses the list, dynamically updates active users via `core.AddUsers()` / `core.DelUsers()`, and configures the local speed and device limiters. |
 | `GET /alivelist` | Map of active IP counts per user across all servers in the cluster:<br>`{ "alive": { "101": 2, "102": 1 } }` | FNode checks if a user has already hit their global `device_limit` on other nodes before allowing a new IP to establish a connection. |
+| `GET /config` (routing fields) | - `routes`: the node's route groups (`match`, `action`: `block`/`direct`/`proxy`/`dns`, `action_value`).<br>- `custom_outbounds`: `[{tag, protocol, settings, proxy_tag}]` (global proxies synced by the CustomNode plugin).<br>- `custom_routes`: raw sing-box rules. `custom_route_rules`: structured rules. | Converted to sing-box outbounds and rules, merged after `sing_origin.json` and local `CustomOutbounds` (panel wins on a duplicate tag) and applied through the OutboundManager. A routing-only change is applied without recreating the inbound. |
+| `POST /api/v2/server/handshake` | `{ "websocket": { "enabled": true, "ws_url": "wss://panel/ws" } }` | Decides whether the node opens a WebSocket for push updates. |
+| WebSocket `ws_url?token=…&node_id=…` | `auth.success`, then `sync.config` `{config}`, `sync.users` `{users}`, `sync.user.delta` `{action, users}`, `sync.devices` `{users: {uid: [ips]}}`, `ping` every 55s | Applied as they arrive (config and user changes in real time). The node answers `pong`, skips its HTTP poll while connected and falls back to polling when the connection drops. |
 
 ---
 
@@ -185,6 +188,34 @@ sequenceDiagram
     else Parse Failed (Syntax Error)
         Watcher->>Watcher: Log error; preserve running core uninterrupted
     end
+```
+
+### 7.2.1 Panel Route Change Flow (WebSocket push)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Panel Admin
+    participant Panel as Xboard + CustomNode
+    participant WS as Xboard WS server
+    participant Node as FNode Controller (per node)
+    participant Core as sing-box Core
+    participant Gen as generated/ dir
+
+    Node->>Panel: POST /api/v2/server/handshake
+    Panel-->>Node: websocket.enabled, ws_url
+    Node->>WS: connect ws_url?token=..&node_id=..
+    WS-->>Node: auth.success + sync.config + sync.users
+    Admin->>Panel: Edit a route or a global proxy
+    Panel->>WS: NodeSyncService::push(sync.config)
+    WS-->>Node: sync.config {config}
+    alt Only routing fields changed
+        Node->>Core: UpdateNodeRouting (inbound untouched)
+    else Inbound fields changed
+        Node->>Core: DelNode + AddNode + AddUsers
+    end
+    Core->>Core: Merge origin -> local -> panel outbounds, reconcile OutboundManager, replace rules
+    Core->>Gen: write <node>.effective.json and <node>.panel.json
+    Note over Node,WS: If the WS drops, the HTTP poll resumes until it reconnects
 ```
 
 ### 7.3 Device Limit & Client IP Migration Flow

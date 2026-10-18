@@ -70,6 +70,7 @@ func serverHandle(_ *cobra.Command, _ []string) {
 
 	limiter.Init()
 	log.Info("Start FNode...")
+	c.SetGeneratedDirs(config)
 	vc, err := vCore.NewCore(c.CoresConfig)
 	if err != nil {
 		log.WithField("err", err).Error("new core failed")
@@ -97,6 +98,7 @@ func serverHandle(_ *cobra.Command, _ []string) {
 				log.WithField("err", err).Error("Restart node failed")
 				return
 			}
+			c.SetGeneratedDirs(config)
 			vc, err = vCore.NewCore(c.CoresConfig)
 			if err != nil {
 				log.WithField("err", err).Error("New core failed")

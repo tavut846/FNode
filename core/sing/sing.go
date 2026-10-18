@@ -37,6 +37,7 @@ type Sing struct {
 	inboundUsers              map[string][]panel.UserInfo
 	inboundInfo               map[string]*panel.NodeInfo
 	inboundConfig             map[string]*conf.Options
+	inboundOptions            map[string]option.Inbound
 	nodeReportMinTrafficBytes map[string]int64
 	coreConfig                *conf.CoreConfig
 	originRules               []option.Rule
@@ -215,6 +216,7 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 		inboundUsers:              make(map[string][]panel.UserInfo),
 		inboundInfo:               make(map[string]*panel.NodeInfo),
 		inboundConfig:             make(map[string]*conf.Options),
+		inboundOptions:            make(map[string]option.Inbound),
 		nodeReportMinTrafficBytes: make(map[string]int64),
 		coreConfig:                c,
 		originRules:               originRules,
