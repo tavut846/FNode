@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"encoding/json"
+
+	"github.com/tavut846/FNode/conf"
 )
 
 // Security type
@@ -37,6 +39,14 @@ type NodeInfo struct {
 	Hysteria    *HysteriaNode
 	Hysteria2   *Hysteria2Node
 	Common      *CommonNode
+
+	// InboundHash covers every config field except the routing ones
+	// (routes, custom_outbounds, custom_routes, custom_route_rules).
+	// When it is unchanged between two configs, only routing changed and
+	// the inbound does not need to be recreated.
+	InboundHash string
+	// RoutingHash covers only the routing fields listed above.
+	RoutingHash string
 }
 
 type CommonNode struct {
@@ -45,6 +55,62 @@ type CommonNode struct {
 	ServerName string      `json:"server_name"`
 	Routes     []Route     `json:"routes"`
 	BaseConfig *BaseConfig `json:"base_config"`
+
+	// Panel-managed routing (Xboard custom_outbounds / custom_routes columns,
+	// plus structured custom_route_rules when the panel sends them).
+	CustomOutbounds  []CustomOutbound       `json:"custom_outbounds"`
+	CustomRoutes     []map[string]any       `json:"custom_routes"`
+	CustomRouteRules []conf.CustomRouteRule `json:"custom_route_rules"`
+}
+
+// CustomOutbound is one panel-defined outbound in xboard-node shape:
+// {tag, protocol, settings, proxy_tag}. A raw sing-box outbound
+// ({type, tag, server, ...}) is accepted too and folded into Settings.
+type CustomOutbound struct {
+	Tag      string         `json:"tag"`
+	Protocol string         `json:"protocol"`
+	Settings map[string]any `json:"settings,omitempty"`
+	ProxyTag string         `json:"proxy_tag,omitempty"`
+}
+
+func (o *CustomOutbound) UnmarshalJSON(data []byte) error {
+	var raw map[string]any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	str := func(keys ...string) string {
+		for _, k := range keys {
+			if v, ok := raw[k].(string); ok && strings.TrimSpace(v) != "" {
+				return strings.TrimSpace(v)
+			}
+		}
+		return ""
+	}
+	o.Tag = str("tag")
+	o.Protocol = str("protocol", "type")
+	o.ProxyTag = str("proxy_tag", "proxyTag")
+	switch s := raw["settings"].(type) {
+	case map[string]any:
+		o.Settings = s
+	case string:
+		// Some panels store settings as a JSON string
+		if s != "" {
+			if err := json.Unmarshal([]byte(s), &o.Settings); err != nil {
+				return fmt.Errorf("custom outbound %q: decode settings: %w", o.Tag, err)
+			}
+		}
+	default:
+		// Raw sing-box shape: everything except the meta keys is a setting
+		o.Settings = make(map[string]any, len(raw))
+		for k, v := range raw {
+			switch k {
+			case "tag", "protocol", "type", "proxy_tag", "proxyTag", "settings":
+				continue
+			}
+			o.Settings[k] = v
+		}
+	}
+	return nil
 }
 
 type Route struct {
@@ -309,16 +375,101 @@ func (c *Client) GetNodeInfo() (node *NodeInfo, err error) {
 	if err = c.checkResponse(r, path, err); err != nil {
 		return nil, err
 	}
-	hash := sha256.Sum256(r.Body())
-	newBodyHash := hex.EncodeToString(hash[:])
-	if c.responseBodyHash == newBodyHash {
+	node, err = c.ParseNodeConfig(r.Body())
+	if err != nil {
+		return nil, err
+	}
+	if node != nil {
+		c.nodeEtag = r.Header().Get("ETag")
+	}
+	return node, nil
+}
+
+// routingKeys are the config keys that only affect routing, not the inbound.
+var routingKeys = []string{"routes", "custom_outbounds", "custom_routes", "custom_route_rules"}
+
+// configHashes returns a hash of the whole config plus separate hashes of the
+// inbound part and the routing part. The JSON is canonicalised first
+// (encoding/json sorts map keys), so the HTTP body and the WebSocket
+// sync.config payload hash the same when their content is equal.
+func configHashes(body []byte) (full, inbound, routing string, err error) {
+	var m map[string]any
+	if err = json.Unmarshal(body, &m); err != nil {
+		return "", "", "", err
+	}
+	sum := func(v any) string {
+		b, _ := json.Marshal(v)
+		h := sha256.Sum256(b)
+		return hex.EncodeToString(h[:])
+	}
+	routingPart := make(map[string]any, len(routingKeys))
+	for _, k := range routingKeys {
+		if v, ok := m[k]; ok {
+			routingPart[k] = v
+		}
+	}
+	full = sum(m)
+	routing = sum(routingPart)
+	for _, k := range routingKeys {
+		delete(m, k)
+	}
+	inbound = sum(m)
+	return full, inbound, routing, nil
+}
+
+// ParseNodeConfig parses a UniProxy config document (the HTTP /config body or
+// the "config" object of a WebSocket sync.config event). It returns nil, nil
+// when the content is identical to the last config this client parsed.
+func (c *Client) ParseNodeConfig(body []byte) (*NodeInfo, error) {
+	full, inboundHash, routingHash, err := configHashes(body)
+	if err != nil {
+		return nil, fmt.Errorf("decode node config error: %s", err)
+	}
+	c.hashLock.Lock()
+	same := c.responseBodyHash == full
+	c.hashLock.Unlock()
+	if same {
 		return nil, nil
 	}
-	c.responseBodyHash = newBodyHash
-	c.nodeEtag = r.Header().Get("ETag")
+	node, err := ParseNodeInfo(c.NodeType, c.NodeId, body)
+	if err != nil {
+		return nil, err
+	}
+	node.InboundHash = inboundHash
+	node.RoutingHash = routingHash
+	c.hashLock.Lock()
+	c.responseBodyHash = full
+	c.hashLock.Unlock()
+	return node, nil
+}
+
+// routeMatches normalises a route "match" value (comma string or list).
+func routeMatches(m any) []string {
+	var out []string
+	switch v := m.(type) {
+	case string:
+		for _, s := range strings.Split(v, ",") {
+			if s = strings.TrimSpace(s); s != "" {
+				out = append(out, s)
+			}
+		}
+	case []string:
+		out = v
+	case []any:
+		for _, item := range v {
+			if s, ok := item.(string); ok && strings.TrimSpace(s) != "" {
+				out = append(out, strings.TrimSpace(s))
+			}
+		}
+	}
+	return out
+}
+
+// ParseNodeInfo decodes a UniProxy config document for the given node type.
+func ParseNodeInfo(nodeType string, nodeId int, body []byte) (node *NodeInfo, err error) {
 	node = &NodeInfo{
-		Id:   c.NodeId,
-		Type: c.NodeType,
+		Id:   nodeId,
+		Type: nodeType,
 		RawDNS: RawDNS{
 			DNSMap:  make(map[string]map[string]interface{}),
 			DNSJson: []byte(""),
@@ -326,10 +477,10 @@ func (c *Client) GetNodeInfo() (node *NodeInfo, err error) {
 	}
 	// parse protocol params
 	var cm *CommonNode
-	switch c.NodeType {
+	switch nodeType {
 	case "vmess", "vless":
 		rsp := &VAllssNode{}
-		err = json.Unmarshal(r.Body(), rsp)
+		err = json.Unmarshal(body, rsp)
 		if err != nil {
 			return nil, fmt.Errorf("decode v2ray params error: %s", err)
 		}
@@ -346,7 +497,7 @@ func (c *Client) GetNodeInfo() (node *NodeInfo, err error) {
 		node.Security = node.VAllss.Tls
 	case "shadowsocks":
 		rsp := &ShadowsocksNode{}
-		err = json.Unmarshal(r.Body(), rsp)
+		err = json.Unmarshal(body, rsp)
 		if err != nil {
 			return nil, fmt.Errorf("decode shadowsocks params error: %s", err)
 		}
@@ -355,7 +506,7 @@ func (c *Client) GetNodeInfo() (node *NodeInfo, err error) {
 		node.Security = None
 	case "trojan":
 		rsp := &TrojanNode{}
-		err = json.Unmarshal(r.Body(), rsp)
+		err = json.Unmarshal(body, rsp)
 		if err != nil {
 			return nil, fmt.Errorf("decode trojan params error: %s", err)
 		}
@@ -378,7 +529,7 @@ func (c *Client) GetNodeInfo() (node *NodeInfo, err error) {
 		}
 	case "tuic":
 		rsp := &TuicNode{}
-		err = json.Unmarshal(r.Body(), rsp)
+		err = json.Unmarshal(body, rsp)
 		if err != nil {
 			return nil, fmt.Errorf("decode tuic params error: %s", err)
 		}
@@ -387,7 +538,7 @@ func (c *Client) GetNodeInfo() (node *NodeInfo, err error) {
 		node.Security = Tls
 	case "anytls":
 		rsp := &AnyTlsNode{}
-		err = json.Unmarshal(r.Body(), rsp)
+		err = json.Unmarshal(body, rsp)
 		if err != nil {
 			return nil, fmt.Errorf("decode anytls params error: %s", err)
 		}
@@ -396,7 +547,7 @@ func (c *Client) GetNodeInfo() (node *NodeInfo, err error) {
 		node.Security = Tls
 	case "hysteria":
 		rsp := &HysteriaNode{}
-		err = json.Unmarshal(r.Body(), rsp)
+		err = json.Unmarshal(body, rsp)
 		if err != nil {
 			return nil, fmt.Errorf("decode hysteria params error: %s", err)
 		}
@@ -405,28 +556,22 @@ func (c *Client) GetNodeInfo() (node *NodeInfo, err error) {
 		node.Security = Tls
 	case "hysteria2":
 		rsp := &Hysteria2Node{}
-		err = json.Unmarshal(r.Body(), rsp)
+		err = json.Unmarshal(body, rsp)
 		if err != nil {
 			return nil, fmt.Errorf("decode hysteria2 params error: %s", err)
 		}
 		cm = &rsp.CommonNode
 		node.Hysteria2 = rsp
 		node.Security = Tls
+	default:
+		return nil, fmt.Errorf("unsupported node type: %s", nodeType)
 	}
 
 	// parse rules and dns
 	for i := range cm.Routes {
-		var matchs []string
-		if _, ok := cm.Routes[i].Match.(string); ok {
-			matchs = strings.Split(cm.Routes[i].Match.(string), ",")
-		} else if _, ok = cm.Routes[i].Match.([]string); ok {
-			matchs = cm.Routes[i].Match.([]string)
-		} else {
-			temp := cm.Routes[i].Match.([]interface{})
-			matchs = make([]string, len(temp))
-			for i := range temp {
-				matchs[i] = temp[i].(string)
-			}
+		matchs := routeMatches(cm.Routes[i].Match)
+		if len(matchs) == 0 {
+			continue
 		}
 		switch cm.Routes[i].Action {
 		case "block":
@@ -455,18 +600,23 @@ func (c *Client) GetNodeInfo() (node *NodeInfo, err error) {
 	}
 
 	// set interval
-	node.PushInterval = intervalToTime(cm.BaseConfig.PushInterval)
-	node.PullInterval = intervalToTime(cm.BaseConfig.PullInterval)
+	if cm.BaseConfig != nil {
+		node.PushInterval = intervalToTime(cm.BaseConfig.PushInterval)
+		node.PullInterval = intervalToTime(cm.BaseConfig.PullInterval)
+	}
 
 	node.Common = cm
-	// clear
-	cm.Routes = nil
+	// Routes are kept: core/sing compiles them into sing-box route rules, and
+	// proxy/route actions resolve to custom_outbounds tags.
 	cm.BaseConfig = nil
 
 	return node, nil
 }
 
 func intervalToTime(i interface{}) time.Duration {
+	if i == nil {
+		return 0
+	}
 	switch reflect.TypeOf(i).Kind() {
 	case reflect.Int:
 		return time.Duration(i.(int)) * time.Second

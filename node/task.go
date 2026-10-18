@@ -77,6 +77,9 @@ func (c *Controller) nodeInfoMonitor() (err error) {
 		}).Error("Get alive list failed")
 		return nil
 	}
+	if newN != nil && c.applyRoutingOnly(newN) {
+		newN = nil
+	}
 	if newN != nil {
 		c.info = newN
 		// nodeInfo changed
@@ -226,6 +229,38 @@ func (c *Controller) nodeInfoMonitor() (err error) {
 			Infof("%d user deleted, %d user added", len(deleted), len(added))
 	}
 	return nil
+}
+
+// applyRoutingOnly handles a config change that only touches routing fields
+// (routes, custom_outbounds, custom_routes, custom_route_rules): outbounds and
+// rules are reconciled in place and the inbound keeps its connections.
+// It returns false when the inbound must be rebuilt instead.
+func (c *Controller) applyRoutingOnly(newN *panel.NodeInfo) bool {
+	if c.info == nil || newN.InboundHash == "" || c.info.InboundHash != newN.InboundHash {
+		return false
+	}
+	ru, ok := c.server.(vCore.RoutingUpdater)
+	if !ok {
+		return false
+	}
+	if err := ru.UpdateNodeRouting(c.tag, newN); err != nil {
+		log.WithFields(log.Fields{
+			"tag": c.tag,
+			"err": err,
+		}).Error("Apply routing change failed, rebuilding node")
+		return false
+	}
+	if c.limiter != nil {
+		if err := c.limiter.UpdateRule(&newN.Rules); err != nil {
+			log.WithFields(log.Fields{
+				"tag": c.tag,
+				"err": err,
+			}).Error("Update Rule failed")
+		}
+	}
+	c.info = newN
+	log.WithField("tag", c.tag).Info("Node routing changed, applied without inbound reload")
+	return true
 }
 
 func (c *Controller) SpeedChecker() error {

@@ -6,6 +6,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -26,6 +27,7 @@ type Client struct {
 	nodeEtag         string
 	userEtag         string
 	responseBodyHash string
+	hashLock         sync.Mutex
 	UserList         *UserListBody
 	AliveMap         *AliveMap
 }

@@ -77,14 +77,35 @@ func BuildDefaultOutbounds(connectTimeout time.Duration, domainStrategy option.D
 // CompileRouteRules compiles panel routes, custom route rules, anti-SSRF protections,
 // and optional IPv6 blocking into sing-box native rule map representations.
 func CompileRouteRules(disableIPv6 bool, panelRoutes []panel.Route, customRules []conf.CustomRouteRule) []map[string]any {
+	return compileAllRouteRules(disableIPv6, panelRoutes, customRules, nil, nil)
+}
+
+// compileAllRouteRules is CompileRouteRules plus the panel's structured
+// custom_route_rules and raw sing-box custom_routes. The order follows
+// xboard-node: local custom rules, panel custom rules, panel raw routes,
+// anti-SSRF, IPv6 block, panel routes. sing_origin.json rules come after.
+func compileAllRouteRules(disableIPv6 bool, panelRoutes []panel.Route, customRules []conf.CustomRouteRule,
+	panelCustomRules []conf.CustomRouteRule, panelRawRoutes []map[string]any) []map[string]any {
 	var rules []map[string]any
 
-	// 1. Structured custom rules (highest priority)
+	// 1. Structured custom rules (highest priority): local first, then panel
 	for _, cr := range customRules {
 		if cr.Disabled {
 			continue
 		}
 		rules = append(rules, compileCustomRouteRule(cr)...)
+	}
+	for _, cr := range panelCustomRules {
+		if cr.Disabled {
+			continue
+		}
+		rules = append(rules, compileCustomRouteRule(cr)...)
+	}
+	// Raw sing-box rules from the panel's custom_routes
+	for _, r := range panelRawRoutes {
+		if len(r) > 0 {
+			rules = append(rules, r)
+		}
 	}
 
 	// 2. Anti-SSRF Protection: Block private IPv4 and IPv6 addresses

@@ -16,6 +16,7 @@ import (
 	"github.com/tavut846/FNode/common/format"
 	"github.com/tavut846/FNode/conf"
 	"github.com/sagernet/sing-box/option"
+	logrus "github.com/sirupsen/logrus"
 	F "github.com/sagernet/sing/common/format"
 	"github.com/sagernet/sing/common/json/badoption"
 )
@@ -600,7 +601,9 @@ func (b *Sing) AddNode(tag string, info *panel.NodeInfo, config *conf.Options) e
 	if err != nil {
 		return fmt.Errorf("add inbound error: %s", err)
 	}
-	_ = b.UpdateRouterRules()
+	if err := b.applyPanelState(true); err != nil {
+		logrus.WithFields(logrus.Fields{"tag": tag, "err": err}).Error("Apply panel outbounds and routes failed")
+	}
 	return nil
 }
 
@@ -615,6 +618,24 @@ func (b *Sing) DelNode(tag string) error {
 	if err != nil {
 		return fmt.Errorf("delete inbound error: %s", err)
 	}
-	_ = b.UpdateRouterRules()
+	// Keep this node's panel outbounds until the next AddNode: a config
+	// reload removes and re-adds the node, and the outbounds usually survive.
+	if err := b.applyPanelState(false); err != nil {
+		logrus.WithFields(logrus.Fields{"tag": tag, "err": err}).Error("Apply panel outbounds and routes failed")
+	}
 	return nil
+}
+
+// UpdateNodeRouting applies a config whose only changes are routing fields
+// (routes, custom_outbounds, custom_routes, custom_route_rules). The inbound
+// and its users keep running; outbounds and rules are reconciled in place.
+func (b *Sing) UpdateNodeRouting(tag string, info *panel.NodeInfo) error {
+	b.users.mapLock.Lock()
+	if _, ok := b.inboundInfo[tag]; !ok {
+		b.users.mapLock.Unlock()
+		return fmt.Errorf("node %s not found", tag)
+	}
+	b.inboundInfo[tag] = info
+	b.users.mapLock.Unlock()
+	return b.applyPanelState(true)
 }
