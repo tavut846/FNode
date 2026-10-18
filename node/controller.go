@@ -1,8 +1,10 @@
 package node
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/tavut846/FNode/api/panel"
 	"github.com/tavut846/FNode/common/task"
@@ -27,6 +29,11 @@ type Controller struct {
 	dynamicSpeedLimitPeriodic *task.Task
 	onlineIpReportPeriodic    *task.Task
 	lastReportedUIDs          map[int]struct{}
+	// mu serialises the HTTP poll and panel WebSocket events.
+	mu       sync.Mutex
+	closed   bool
+	ws       *panel.WSClient
+	wsCancel context.CancelFunc
 	*conf.Options
 }
 
@@ -95,12 +102,21 @@ func (c *Controller) Start() error {
 	}
 	log.WithField("tag", c.tag).Infof("Added %d new users", added)
 	c.info = node
+	// Hold mu so a WebSocket event cannot run before the tasks exist
+	c.mu.Lock()
+	c.startWS()
 	c.startTasks(node)
+	c.mu.Unlock()
 	return nil
 }
 
 // Close implement the Close() function of the service interface
 func (c *Controller) Close() error {
+	c.stopWS()
+	// Wait for an in-flight poll or WS event, then refuse new ones
+	c.mu.Lock()
+	c.closed = true
+	c.mu.Unlock()
 	limiter.DeleteLimiter(c.tag)
 	if c.nodeInfoMonitorPeriodic != nil {
 		c.nodeInfoMonitorPeriodic.Close()

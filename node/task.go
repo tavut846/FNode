@@ -50,6 +50,16 @@ func (c *Controller) startTasks(node *panel.NodeInfo) {
 }
 
 func (c *Controller) nodeInfoMonitor() (err error) {
+	// While the panel WebSocket is connected it pushes config, users and
+	// devices, so the HTTP poll is skipped. It resumes when the WS drops.
+	if c.wsConnected() {
+		return nil
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.closed {
+		return nil
+	}
 	// get node info
 	newN, err := c.apiClient.GetNodeInfo()
 	if err != nil {
@@ -77,6 +87,12 @@ func (c *Controller) nodeInfoMonitor() (err error) {
 		}).Error("Get alive list failed")
 		return nil
 	}
+	return c.applyUpdate(newN, newU, newA)
+}
+
+// applyUpdate applies a changed node config (newN), user list (newU) and alive
+// list (newA); any of them may be nil when unchanged. The caller holds c.mu.
+func (c *Controller) applyUpdate(newN *panel.NodeInfo, newU []panel.UserInfo, newA map[int]int) (err error) {
 	if newN != nil && c.applyRoutingOnly(newN) {
 		newN = nil
 	}
@@ -114,7 +130,10 @@ func (c *Controller) nodeInfoMonitor() (err error) {
 		if len(c.Options.Name) == 0 {
 			c.tag = c.buildNodeTag(newN)
 		}
-		// Update limiter
+		// Update limiter (keep the current alive list when none was fetched)
+		if newA == nil && c.limiter != nil {
+			newA = c.limiter.AliveList
+		}
 		limiter.DeleteLimiter(oldTag)
 		l := limiter.AddLimiter(c.tag, &c.LimitConfig, c.userList, newA)
 		c.limiter = l
@@ -179,6 +198,12 @@ func (c *Controller) nodeInfoMonitor() (err error) {
 	if len(newU) == 0 {
 		return nil
 	}
+	return c.applyUserList(newU)
+}
+
+// applyUserList diffs newU against the running users and adds/removes the
+// difference. The caller holds c.mu.
+func (c *Controller) applyUserList(newU []panel.UserInfo) (err error) {
 	deleted, added := compareUserList(c.userList, newU)
 	if len(deleted) > 0 {
 		// have deleted users
