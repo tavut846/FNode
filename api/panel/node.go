@@ -454,16 +454,6 @@ func (c *Client) ParseNodeConfig(body []byte) (*NodeInfo, error) {
 	return node, nil
 }
 
-// ForgetNodeConfig drops the cached config ETag and hash, so the next
-// GetNodeInfo or ParseNodeConfig returns the config again even if unchanged.
-// Used when applying a config failed (e.g. its certificate is not there yet).
-func (c *Client) ForgetNodeConfig() {
-	c.hashLock.Lock()
-	c.responseBodyHash = ""
-	c.nodeEtag = ""
-	c.hashLock.Unlock()
-}
-
 // DetectNodeType reads the node type from a config document: its "protocol"
 // field, with Xboard's "hysteria" + "version": 2 meaning hysteria2.
 func DetectNodeType(body []byte) (string, error) {

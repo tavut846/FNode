@@ -51,17 +51,21 @@ func (c *Controller) startTasks(node *panel.NodeInfo) {
 }
 
 func (c *Controller) nodeInfoMonitor() (err error) {
-	// While the panel WebSocket is connected it pushes config, users and
-	// devices, so the HTTP poll is skipped. It resumes when the WS drops.
-	if c.wsConnected() && !c.certPending {
-		return nil
-	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.closed {
 		return nil
 	}
-	// get node info
+	if c.rebuild {
+		// The last reload failed half way: fetch the full config again
+		c.apiClient.ResetConfigCache()
+	}
+	// While the panel WebSocket is connected it pushes config, users and
+	// devices, but the HTTP checks below still run: they are ETag-cached
+	// (304 when unchanged) and catch what the panel did not push.
+	ws := c.wsConnected() && !c.rebuild
+	// get node info: picks up config and route changes the panel did not
+	// push (hidden nodes, missed events)
 	newN, err := c.apiClient.GetNodeInfo()
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -70,14 +74,26 @@ func (c *Controller) nodeInfoMonitor() (err error) {
 		}).Error("Get node info failed")
 		return nil
 	}
-	// get user info
+	// get user info. GET /user is also the panel's heartbeat: Xboard marks
+	// the node as running only when it is called (a 304 counts), so it must
+	// run every pull interval even with the WebSocket up.
 	newU, err := c.apiClient.GetUserList()
 	if err != nil {
 		log.WithFields(log.Fields{
 			"tag": c.tag,
 			"err": err,
 		}).Error("Get user list failed")
-		return nil
+		if !ws {
+			return nil
+		}
+		newU = nil
+	}
+	if ws {
+		// The panel pushes devices over the WebSocket
+		if newN != nil {
+			log.WithField("tag", c.tag).Info("Node config changed on the panel (picked up by the HTTP check)")
+		}
+		return c.applyUpdate(newN, newU, nil)
 	}
 	// get user alive
 	newA, err := c.apiClient.GetUserAlive()
@@ -91,28 +107,36 @@ func (c *Controller) nodeInfoMonitor() (err error) {
 	return c.applyUpdate(newN, newU, newA)
 }
 
+// failReload marks the node for a full rebuild on the next poll after a
+// reload failed half way (the old inbound may already be gone).
+func (c *Controller) failReload(msg string, err error) {
+	c.rebuild = true
+	log.WithFields(log.Fields{
+		"tag": c.tag,
+		"err": err,
+	}).Error(msg + ", retrying on the next config check")
+}
+
 // applyUpdate applies a changed node config (newN), user list (newU) and alive
 // list (newA); any of them may be nil when unchanged. The caller holds c.mu.
 func (c *Controller) applyUpdate(newN *panel.NodeInfo, newU []panel.UserInfo, newA map[int]int) (err error) {
-	if newN != nil && c.applyRoutingOnly(newN) {
+	if newN != nil && !c.rebuild && c.applyRoutingOnly(newN) {
 		newN = nil
 	}
 	// Check cert first before deleting the old node so a cert error doesn't
 	// kill the running node. The config is fetched again on the next check
-	// (even with the WebSocket up) until the certificate is there.
+	// until the certificate is there.
 	if newN != nil && newN.Security == panel.Tls {
 		if err = c.requestCert(newN); err != nil {
 			log.WithFields(log.Fields{
 				"tag": c.tag,
 				"err": err,
 			}).Error("Request cert failed, keeping running node")
-			c.certPending = true
-			c.apiClient.ForgetNodeConfig()
+			c.apiClient.ResetConfigCache()
 			newN = nil
 		}
 	}
 	if newN != nil {
-		c.certPending = false
 		c.info = newN
 		// nodeInfo changed
 		if newU != nil {
@@ -122,12 +146,8 @@ func (c *Controller) applyUpdate(newN *panel.NodeInfo, newU []panel.UserInfo, ne
 
 		// Remove old node
 		log.WithField("tag", c.tag).Info("Node changed, reload")
-		err = c.server.DelNode(c.tag)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"tag": c.tag,
-				"err": err,
-			}).Panic("Delete node failed")
+		if err = c.server.DelNode(c.tag); err != nil && !c.rebuild {
+			c.failReload("Delete node failed", err)
 			return nil
 		}
 
@@ -164,10 +184,7 @@ func (c *Controller) applyUpdate(newN *panel.NodeInfo, newU []panel.UserInfo, ne
 		// add new node
 		err = c.server.AddNode(c.tag, newN, c.Options)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"tag": c.tag,
-				"err": err,
-			}).Panic("Add node failed")
+			c.failReload("Add node failed", err)
 			return nil
 		}
 		_, err = c.server.AddUsers(&vCore.AddUsersParams{
@@ -176,12 +193,10 @@ func (c *Controller) applyUpdate(newN *panel.NodeInfo, newU []panel.UserInfo, ne
 			NodeInfo: newN,
 		})
 		if err != nil {
-			log.WithFields(log.Fields{
-				"tag": c.tag,
-				"err": err,
-			}).Error("Add users failed")
+			c.failReload("Add users failed", err)
 			return nil
 		}
+		c.rebuild = false
 		// Check interval
 		if c.nodeInfoMonitorPeriodic.Interval != newN.PullInterval &&
 			newN.PullInterval != 0 {

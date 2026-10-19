@@ -332,7 +332,7 @@ func (w *WSClient) connect(ctx context.Context) error {
 				return fmt.Errorf("auth failed: %s", string(m.Data))
 			}
 			w.setConnected(true)
-			log.WithField("url", w.logURL).Info("Panel WebSocket connected, HTTP config polling paused")
+			log.WithField("url", w.logURL).Info("Panel WebSocket connected; HTTP config/user checks continue as the panel heartbeat")
 		}
 		switch event {
 		case "ping":

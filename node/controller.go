@@ -49,9 +49,6 @@ type Controller struct {
 	// localCert is the CertConfig of the local config. Options.CertConfig is
 	// the one in use: the dashboard cert_config when the panel sends one.
 	localCert *conf.CertConfig
-	// certPending is set while a node config waits for its certificate; the
-	// config is then polled again even with the WebSocket connected.
-	certPending bool
 	*conf.Options
 }
 

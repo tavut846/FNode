@@ -62,9 +62,6 @@ func TestController_PanelCertMissingThenPresent(t *testing.T) {
 	if core.addNode != 0 || core.delNode != 0 {
 		t.Fatalf("node rebuilt without its certificate: add %d del %d", core.addNode, core.delNode)
 	}
-	if !c.certPending {
-		t.Fatal("certPending not set")
-	}
 	var found bool
 	for _, e := range hook.AllEntries() {
 		msg := e.Message + " " + func() string {
@@ -97,8 +94,8 @@ func TestController_PanelCertMissingThenPresent(t *testing.T) {
 	c.mu.Lock()
 	_ = c.applyUpdate(newN, nil, nil)
 	c.mu.Unlock()
-	if core.addNode != 1 || c.certPending {
-		t.Fatalf("node not started once the files exist: add %d pending %v", core.addNode, c.certPending)
+	if core.addNode != 1 {
+		t.Fatalf("node not started once the files exist: add %d", core.addNode)
 	}
 	cc := c.Options.CertConfig
 	if cc.CertMode != "file" || cc.CertFile != filepath.ToSlash(crt) || cc.KeyFile != filepath.ToSlash(key) || cc.Email != "local@example" {

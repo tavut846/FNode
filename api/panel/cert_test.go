@@ -74,7 +74,7 @@ func TestConfigHashes_CertConfigIsInbound(t *testing.T) {
 	}
 }
 
-func TestClient_ForgetNodeConfig(t *testing.T) {
+func TestClient_ResetConfigCache(t *testing.T) {
 	c, err := New(&conf.ApiConfig{APIHost: "http://127.0.0.1:1", Key: "k", NodeType: "anytls", NodeID: 468})
 	if err != nil {
 		t.Fatal(err)
@@ -86,8 +86,8 @@ func TestClient_ForgetNodeConfig(t *testing.T) {
 	if n, _ := c.ParseNodeConfig(body); n != nil {
 		t.Fatal("unchanged config must parse to nil")
 	}
-	c.ForgetNodeConfig()
+	c.ResetConfigCache()
 	if n, err := c.ParseNodeConfig(body); err != nil || n == nil {
-		t.Fatalf("after ForgetNodeConfig the same config must be returned again: %v %v", n, err)
+		t.Fatalf("after ResetConfigCache the same config must be returned again: %v %v", n, err)
 	}
 }
