@@ -43,11 +43,26 @@ type clock struct{ t time.Time }
 
 func (c *clock) now() time.Time { return c.t }
 
+// newTestShipper returns a shipper in mode warn (the tests below were written
+// for it); NewShipper itself starts in DefaultMode (info).
 func newTestShipper(f *fakeSender) (*Shipper, *clock) {
 	s := NewShipper(f)
+	s.mode = Warn
 	c := &clock{t: time.Unix(1_760_000_000, 0)}
 	s.now = c.now
 	return s, c
+}
+
+func TestNewShipper_DefaultModeIsInfo(t *testing.T) {
+	s := NewShipper(&fakeSender{})
+	if s.Mode() != Info || DefaultMode != Info {
+		t.Fatalf("a new shipper ships info and above until the panel answers, got %v", s.Mode())
+	}
+	s.Add(Info, Entry{Message: "info"})
+	s.Add(Debug, Entry{Message: "debug"})
+	if q, _ := s.Buffered(); q != 1 {
+		t.Fatalf("info queued, debug dropped: got %d", q)
+	}
 }
 
 func TestParseMode(t *testing.T) {

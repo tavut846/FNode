@@ -75,22 +75,15 @@ func init() {
 func New(c *conf.CoreConfig) (vCore.Core, error) {
 	ctx := context.Background()
 	ctx = box.Context(ctx, include.InboundRegistry(), include.OutboundRegistry(), include.EndpointRegistry(), include.DNSTransportRegistry(), include.ServiceRegistry())
-	options := option.Options{}
 	var originRules []option.Rule
 	var originRuleSets []option.RuleSet
-	if len(c.SingConfig.OriginalPath) != 0 {
-		data, err := os.ReadFile(c.SingConfig.OriginalPath)
-		if err != nil {
-			return nil, fmt.Errorf("read original config error: %s", err)
-		}
-		options, err = json.UnmarshalExtendedContext[option.Options](ctx, data)
-		if err != nil {
-			return nil, fmt.Errorf("unmarshal original config error: %s", err)
-		}
-		if options.Route != nil {
-			originRules = options.Route.Rules
-			originRuleSets = options.Route.RuleSet
-		}
+	options, err := loadOrigin(ctx, c.SingConfig.OriginalPath)
+	if err != nil {
+		return nil, err
+	}
+	if options.Route != nil {
+		originRules = options.Route.Rules
+		originRuleSets = options.Route.RuleSet
 	}
 	options.NTP = &option.NTPOptions{
 		Enabled:       c.SingConfig.NtpConfig.Enable,

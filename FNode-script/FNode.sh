@@ -596,6 +596,28 @@ add_node_config() {
     core_type="1"
     core="sing"
     core_sing=true
+    isreality=""
+    istls=""
+    echo -e "${yellow}请选择对接模式：${plain}"
+    echo -e "${green}1. 机器模式 Machine（推荐：与面板「服务器机器」一致，一个 FNode 运行面板分配给该机器的全部节点，避免与面板节点冲突）${plain}"
+    echo -e "${green}2. 单节点模式 Node（通讯密钥 server_token + 节点 ID）${plain}"
+    read -rp "请输入 (默认 1)：" panel_mode
+    if [[ "$panel_mode" == "2" ]]; then
+        machine_mode=false
+    else
+        machine_mode=true
+        NodeType=""
+        while true; do
+            read -rp "请输入机器 Machine ID：" MachineID
+            if [[ "$MachineID" =~ ^[0-9]+$ ]] && [[ "$MachineID" -gt 0 ]]; then
+                break
+            else
+                echo "错误：请输入正确的数字作为 Machine ID。"
+            fi
+        done
+        echo -e "${yellow}机器模式：API Key 需填写该机器的 Token（面板 → 服务器机器）。节点协议由面板决定。${plain}"
+    fi
+    if [ "$machine_mode" != true ]; then
     while true; do
         read -rp "请输入节点Node ID：" NodeID
         # 判断NodeID是否为正整数
@@ -607,6 +629,7 @@ add_node_config() {
     done
 
     echo -e "${yellow}请选择节点传输协议：${plain}"
+    echo -e "${green}0. 自动识别（推荐，使用面板中该节点的协议，避免与面板配置冲突）${plain}"
     echo -e "${green}1. Shadowsocks${plain}"
     echo -e "${green}2. Vless${plain}"
     echo -e "${green}3. Vmess${plain}"
@@ -615,8 +638,9 @@ add_node_config() {
     echo -e "${green}6. Trojan${plain}"  
     echo -e "${green}7. Tuic${plain}"
     echo -e "${green}8. AnyTLS${plain}"
-    read -rp "请输入：" NodeType
+    read -rp "请输入 (默认 0)：" NodeType
     case "$NodeType" in
+        0 | "" ) NodeType="" ;;
         1 ) NodeType="shadowsocks" ;;
         2 ) NodeType="vless" ;;
         3 ) NodeType="vmess" ;;
@@ -627,6 +651,7 @@ add_node_config() {
         8 ) NodeType="anytls" ;;
         * ) NodeType="shadowsocks" ;;
     esac
+    fi
     fastopen=true
     if [ "$NodeType" == "vless" ]; then
         read -rp "请选择是否为reality节点？(y/n)" isreality
@@ -694,21 +719,28 @@ add_node_config() {
         listen_ip="::"
     fi
     node_config=""
+    if [ "$machine_mode" = true ]; then
+        panel_fields="\"MachineID\": $MachineID,"
+    elif [ -n "$NodeType" ]; then
+        panel_fields="\"NodeID\": $NodeID,
+            \"NodeType\": \"$NodeType\","
+    else
+        panel_fields="\"NodeID\": $NodeID,"
+    fi
     node_config=$(cat <<EOF
 {
             "Core": "$core",
             "ApiHost": "$ApiHost",
             "ApiKey": "$ApiKey",
-            "NodeID": $NodeID,
-            "NodeType": "$NodeType",
+            $panel_fields
             "Timeout": 30,
             "ListenIP": "$listen_ip",
             "SendIP": "0.0.0.0",
             "DisableIPv6": $disable_ipv6_node,
             "DeviceOnlineMinTraffic": 200,
-            "MinReportTraffic": 0,
-            "TCPFastOpen": $fastopen,
-            "SniffEnabled": true,
+            "ReportMinTraffic": 0,
+            "EnableTFO": $fastopen,
+            "EnableSniff": true,
             "Masquerade": "$masquerade_target",
             "CertConfig": {
                 "CertMode": "$certmode",
@@ -789,7 +821,7 @@ generate_config_file() {
     {
         \"Type\": \"sing\",
         \"Log\": {
-            \"Level\": \"error\",
+            \"Level\": \"warn\",
             \"Timestamp\": true
         },
         \"DisableIPv6\": ${disable_ipv6_core},
@@ -806,7 +838,7 @@ generate_config_file() {
     cd /etc/FNode
     
     # 备份旧的配置文件
-    mv config.json config.json.bak
+    [ -f config.json ] && cp -f config.json config.json.bak
     nodes_config_str="${nodes_config[*]}"
     formatted_nodes_config="${nodes_config_str%,}"
 
@@ -814,7 +846,7 @@ generate_config_file() {
     cat <<EOF > /etc/FNode/config.json
 {
     "Log": {
-        "Level": "error",
+        "Level": "info",
         "Output": ""
     },
     "Cores": $cores_config,
@@ -908,31 +940,19 @@ EOF
     }
 EOF
 
-    ipv6_support=$(check_ipv6_support)
-    dnsstrategy="ipv4_only"
-    if [ "$ipv6_support" -eq 1 ]; then
-        dnsstrategy="prefer_ipv4"
-    fi
-    # 创建 sing_origin.json 文件
-    cat <<EOF > /etc/FNode/sing_origin.json
+    # 创建 sing_origin.json 文件（FNode 默认出站与路由，与内置默认一致）
+    cat <<'EOF' > /etc/FNode/sing_origin.json
 {
-  "dns": {
-    "servers": [
-      {
-        "tag": "cf",
-        "address": "1.1.1.1"
-      }
-    ],
-    "strategy": "$dnsstrategy"
-  },
   "outbounds": [
     {
       "tag": "direct",
       "type": "direct",
-      "domain_resolver": {
-        "server": "cf",
-        "strategy": "$dnsstrategy"
-      }
+      "domain_strategy": "prefer_ipv4"
+    },
+    {
+      "tag": "direct6",
+      "type": "direct",
+      "domain_strategy": "prefer_ipv6"
     },
     {
       "type": "block",
@@ -947,44 +967,56 @@ EOF
         "outbound": "block"
       },
       {
+        "protocol": [
+          "bittorrent"
+        ],
+        "outbound": "block"
+      },
+      {
+        "port": [
+          25,
+          465,
+          587
+        ],
+        "network": [
+          "tcp"
+        ],
+        "outbound": "block"
+      },
+      {
         "domain_regex": [
-            "(api|ps|sv|offnavi|newvector|ulog.imap|newloc)(.map|).(baidu|n.shifen).com",
-            "(.+.|^)(360|so).(cn|com)",
-            "(Subject|HELO|SMTP)",
-            "(torrent|.torrent|peer_id=|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=)",
-            "(^.@)(guerrillamail|guerrillamailblock|sharklasers|grr|pokemail|spam4|bccto|chacuo|027168).(info|biz|com|de|net|org|me|la)",
-            "(.?)(xunlei|sandai|Thunder|XLLiveUD)(.)",
-            "(..||)(dafahao|mingjinglive|botanwang|minghui|dongtaiwang|falunaz|epochtimes|ntdtv|falundafa|falungong|wujieliulan|zhengjian).(org|com|net)",
-            "(ed2k|.torrent|peer_id=|announce|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=|magnet:|xunlei|sandai|Thunder|XLLiveUD|bt_key)",
-            "(.+.|^)(360).(cn|com|net)",
-            "(.*.||)(guanjia.qq.com|qqpcmgr|QQPCMGR)",
-            "(.*.||)(rising|kingsoft|duba|xindubawukong|jinshanduba).(com|net|org)",
-            "(.*.||)(netvigator|torproject).(com|cn|net|org)",
-            "(..||)(visa|mycard|gash|beanfun|bank).",
-            "(.*.||)(gov|12377|12315|talk.news.pts.org|creaders|zhuichaguoji|efcc.org|cyberpolice|aboluowang|tuidang|epochtimes|zhengjian|110.qq|mingjingnews|inmediahk|xinsheng|breakgfw|chengmingmag|jinpianwang|qi-gong|mhradio|edoors|renminbao|soundofhope|xizang-zhiye|bannedbook|ntdtv|12321|secretchina|dajiyuan|boxun|chinadigitaltimes|dwnews|huaglad|oneplusnews|epochweekly|cn.rfi).(cn|com|org|net|club|net|fr|tw|hk|eu|info|me)",
-            "(.*.||)(miaozhen|cnzz|talkingdata|umeng).(cn|com)",
-            "(.*.||)(mycard).(com|tw)",
-            "(.*.||)(gash).(com|tw)",
-            "(.bank.)",
-            "(.*.||)(pincong).(rocks)",
-            "(.*.||)(taobao).(com)",
-            "(.*.||)(laomoe|jiyou|ssss|lolicp|vv1234|0z|4321q|868123|ksweb|mm126).(com|cloud|fun|cn|gs|xyz|cc)",
-            "(flows|miaoko).(pages).(dev)"
+          "(api|ps|sv|offnavi|newvector|ulog.imap|newloc)(.map|).(baidu|n.shifen).com",
+          "(.+.|^)(360|so).(cn|com)",
+          "(Subject|HELO|SMTP)",
+          "(torrent|.torrent|peer_id=|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=)",
+          "(^.@)(guerrillamail|guerrillamailblock|sharklasers|grr|pokemail|spam4|bccto|chacuo|027168).(info|biz|com|de|net|org|me|la)",
+          "(.?)(xunlei|sandai|Thunder|XLLiveUD)(.)",
+          "(..||)(dafahao|mingjinglive|botanwang|minghui|dongtaiwang|falunaz|epochtimes|ntdtv|falundafa|falungong|wujieliulan|zhengjian).(org|com|net)",
+          "(ed2k|.torrent|peer_id=|announce|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=|magnet:|xunlei|sandai|Thunder|XLLiveUD|bt_key)",
+          "(.+.|^)(360).(cn|com|net)",
+          "(.*.||)(guanjia.qq.com|qqpcmgr|QQPCMGR)",
+          "(.*.||)(rising|kingsoft|duba|xindubawukong|jinshanduba).(com|net|org)",
+          "(.*.||)(netvigator|torproject).(com|cn|net|org)",
+          "(..||)(visa|mycard|gash|beanfun).",
+          "(.*.||)(gov|12377|12315|talk.news.pts.org|creaders|zhuichaguoji|efcc.org|cyberpolice|aboluowang|tuidang|epochtimes|zhengjian|110.qq|mingjingnews|inmediahk|xinsheng|breakgfw|chengmingmag|jinpianwang|qi-gong|mhradio|edoors|renminbao|soundofhope|xizang-zhiye|bannedbook|ntdtv|12321|secretchina|dajiyuan|boxun|chinadigitaltimes|dwnews|huaglad|oneplusnews|epochweekly|cn.rfi).(cn|com|org|net|club|net|fr|tw|hk|eu|info|me)",
+          "(.*.||)(miaozhen|cnzz|talkingdata|umeng).(cn|com)",
+          "(.*.||)(mycard).(com|tw)",
+          "(.*.||)(gash).(com|tw)",
+          "(.*.||)(pincong).(rocks)",
+          "(.*.||)(taobao).(com)",
+          "(.*.||)(laomoe|jiyou|ssss|lolicp|vv1234|0z|4321q|868123|ksweb|mm126).(com|cloud|fun|cn|gs|xyz|cc)",
+          "(flows|miaoko).(pages).(dev)"
         ],
         "outbound": "block"
       },
       {
         "outbound": "direct",
         "network": [
-          "udp","tcp"
+          "udp",
+          "tcp"
         ]
       }
     ]
-  },
-  "experimental": {
-    "cache_file": {
-      "enabled": true
-    }
   }
 }
 EOF

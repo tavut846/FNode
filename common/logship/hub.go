@@ -26,6 +26,9 @@ type Hub struct {
 	floorFns map[int]func(Level)
 	nextFn   int
 	floor    Level
+	// pending holds outbound requests for node tags not mapped yet (the core
+	// applies routes before the controller maps its tag).
+	pending map[string][]string
 }
 
 // Default is the process-wide hub used by the logrus hook and the sing-box
@@ -38,6 +41,7 @@ func NewHub() *Hub {
 		byTag:    make(map[string]nodeRoute),
 		floorFns: make(map[int]func(Level)),
 		floor:    Off,
+		pending:  make(map[string][]string),
 	}
 }
 
@@ -70,14 +74,45 @@ func (h *Hub) MapNode(tag string, nodeID int, s *Shipper) {
 	}
 	h.mu.Lock()
 	h.byTag[tag] = nodeRoute{shipper: s, nodeID: nodeID}
+	tags, ok := h.pending[tag]
+	delete(h.pending, tag)
 	h.mu.Unlock()
+	if ok {
+		s.SetMissing(nodeID, tags)
+	}
 }
 
-// UnmapNode forgets a node tag.
+// ReportMissing records the outbound tags a node's routes need but FNode does
+// not have (empty clears it); its shipper asks the panel for them.
+func (h *Hub) ReportMissing(nodeTag string, tags []string) {
+	if nodeTag == "" {
+		return
+	}
+	h.mu.Lock()
+	r, ok := h.byTag[nodeTag]
+	if !ok {
+		if len(tags) == 0 {
+			delete(h.pending, nodeTag)
+		} else {
+			h.pending[nodeTag] = append([]string(nil), tags...)
+		}
+	}
+	h.mu.Unlock()
+	if ok {
+		r.shipper.SetMissing(r.nodeID, tags)
+	}
+}
+
+// UnmapNode forgets a node tag (and its outbound request).
 func (h *Hub) UnmapNode(tag string) {
 	h.mu.Lock()
+	r, ok := h.byTag[tag]
 	delete(h.byTag, tag)
+	delete(h.pending, tag)
 	h.mu.Unlock()
+	if ok {
+		r.shipper.SetMissing(r.nodeID, nil)
+	}
 }
 
 // Floor is the most verbose level any shipper wants; Off when none does.
