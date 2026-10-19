@@ -274,7 +274,7 @@ func (w *WSClient) Run(ctx context.Context) {
 
 func (w *WSClient) connect(ctx context.Context) error {
 	dialCtx, cancel := context.WithTimeout(ctx, w.HandshakeTimeout)
-	conn, _, err := websocket.Dial(dialCtx, w.url, nil)
+	conn, _, err := websocket.Dial(dialCtx, w.url, &websocket.DialOptions{HTTPHeader: userAgentHeader()})
 	cancel()
 	if err != nil {
 		return fmt.Errorf("dial: %w", err)

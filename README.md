@@ -58,6 +58,8 @@ A `Nodes` entry connects in one of three ways:
 }
 ```
 
+Every panel request (HTTP and the WebSocket dial) carries `User-Agent: FNode/<version>`.
+
 In machine mode FNode calls `POST /api/v2/server/machine/nodes` on start and runs one node for every node the panel assigns to the machine (types FNode cannot serve, such as `mieru` or `naive`, are skipped with a warning). `Options` is the template for all of them; a `Name` gets `-<node id>` appended. Nodes added to or removed from the machine are started or stopped when the panel pushes `sync.nodes` over the machine WebSocket (`ws_url?token=..&machine_id=..`) and on every pull interval. Every push interval FNode posts `POST /api/v2/server/machine/status` with `cpu`, `mem`, `swap`, `disk`, `net` and `"client": "fnode", "version": "<version>"`.
 
 ### Generated files

@@ -78,6 +78,7 @@ func New(c *conf.ApiConfig) (*Client, error) {
 		}
 	})
 	client.SetBaseURL(c.APIHost)
+	client.SetHeader("User-Agent", UserAgent())
 
 	token := c.Token()
 	params := map[string]string{"token": token}
