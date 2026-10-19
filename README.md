@@ -62,6 +62,12 @@ Every panel request (HTTP and the WebSocket dial) carries `User-Agent: FNode/<ve
 
 In machine mode FNode calls `POST /api/v2/server/machine/nodes` on start and runs one node for every node the panel assigns to the machine (types FNode cannot serve, such as `mieru` or `naive`, are skipped with a warning). `Options` is the template for all of them; a `Name` gets `-<node id>` appended. Nodes added to or removed from the machine are started or stopped when the panel pushes `sync.nodes` over the machine WebSocket (`ws_url?token=..&machine_id=..`) and on every pull interval. Every push interval FNode posts `POST /api/v2/server/machine/status` with `cpu`, `mem`, `swap`, `disk`, `net` and `"client": "fnode", "version": "<version>"`.
 
+### REALITY (vless / trojan) notes
+
+- FNode maps the panel's `reality_settings` (`server_name`, `server_port`, `private_key`, `short_id`) to a sing-box REALITY inbound: the camouflage destination is `server_name:server_port` (443 when `server_port` is empty), `short_id` may be a single id, a comma-separated list, or empty (clients with an empty `short_id`), and the private key may be raw base64url or padded standard base64. An invalid short id (odd length, not hex, longer than 8 bytes) or key is reported with the field name when the node starts. A loopback test (`core/sing/reality_test.go`) connects a real sing-box vless+reality client with `xtls-rprx-vision`, with and without a short id.
+- **"REALITY: processed invalid connection" is not a client error by itself.** sing-box logs it whenever a ClientHello fails REALITY authentication and is forwarded to the camouflage site. Internet scanners cause it constantly; a real client with a wrong public key, short id, SNI or a clock off by minutes causes the same line, and the two cannot be told apart from the server. FNode logs these at debug level only and writes `REALITY: rejected N probes in the last 5m (inbound ..., top sources: ...)` at info. If a specific client cannot connect, check its `public_key`, `short_id`, `serverName` and system time first.
+- The REALITY implementation is `github.com/xtls/reality`, pulled in by the sing-box fork. `dependabot.yml` tracks it so new upstream versions arrive as pull requests.
+
 ### Generated files
 
 After every apply FNode writes, per node, into `GeneratedDir` (default: `generated/` next to `config.json`; set `"GeneratedDir"` in the sing core config to change it):

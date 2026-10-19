@@ -108,8 +108,16 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 		if tlsSettings == nil {
 			return option.Inbound{}, fmt.Errorf("reality tls settings missing for tag %s", tag)
 		}
-		if tlsSettings.PrivateKey == "" {
+		if strings.TrimSpace(tlsSettings.PrivateKey) == "" {
 			return option.Inbound{}, fmt.Errorf("reality tls requires private_key for tag %s", tag)
+		}
+		privateKey, err := NormalizeRealityPrivateKey(tlsSettings.PrivateKey)
+		if err != nil {
+			return option.Inbound{}, fmt.Errorf("reality private_key for tag %s: %w", tag, err)
+		}
+		shortIDs, err := ValidateRealityShortIDs(tlsSettings.GetShortIds())
+		if err != nil {
+			return option.Inbound{}, fmt.Errorf("reality short_id for tag %s: %w", tag, err)
 		}
 
 		serverName := strings.TrimSpace(tlsSettings.ServerName)
@@ -157,8 +165,8 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 
 		tls.Reality = &option.InboundRealityOptions{
 			Enabled:    true,
-			ShortID:    tlsSettings.GetShortIds(),
-			PrivateKey: tlsSettings.PrivateKey,
+			ShortID:    shortIDs,
+			PrivateKey: privateKey,
 			Handshake: option.InboundRealityHandshakeOptions{
 				ServerOptions: option.ServerOptions{
 					Server:     destHost,

@@ -44,6 +44,7 @@ type Sing struct {
 	originRuleSets            []option.RuleSet
 	routeFinal                string
 	endpointTags              []string
+	capture                   *logCapture
 
 	// baseOutbounds is the static outbound set (sing_origin.json, local
 	// CustomOutbounds and builtin direct/block) the box was created with.
@@ -87,12 +88,6 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 			originRules = options.Route.Rules
 			originRuleSets = options.Route.RuleSet
 		}
-	}
-	options.Log = &option.LogOptions{
-		Disabled:  c.SingConfig.LogConfig.Disabled,
-		Level:     c.SingConfig.LogConfig.Level,
-		Timestamp: c.SingConfig.LogConfig.Timestamp,
-		Output:    c.SingConfig.LogConfig.Output,
 	}
 	options.NTP = &option.NTPOptions{
 		Enabled:       c.SingConfig.NtpConfig.Enable,
@@ -192,14 +187,34 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 		endpointTags = append(endpointTags, ep.Tag)
 	}
 
+	// sing-box logs through a capture (core/sing/logcapture.go) so FNode can
+	// demote REALITY probe noise and ship logs to the panel. The destination
+	// and level the user configured are honoured by the capture.
+	capture, err := newLogCapture(&c.SingConfig.LogConfig)
+	if err != nil {
+		return nil, err
+	}
+	logLevel := c.SingConfig.LogConfig.Level
+	if c.SingConfig.LogConfig.Disabled {
+		logLevel = "error"
+	}
+	options.Log = &option.LogOptions{
+		Level:     logLevel,
+		Timestamp: c.SingConfig.LogConfig.Timestamp,
+		Output:    "stderr",
+	}
 	os.Setenv("SING_DNS_PATH", "")
+	restoreStderr := capture.install()
 	b, err := box.New(box.Options{
 		Context: ctx,
 		Options: options,
 	})
+	restoreStderr()
 	if err != nil {
+		capture.Close()
 		return nil, err
 	}
+	capture.start()
 	hs := &HookServer{
 		counter: sync.Map{},
 	}
@@ -223,6 +238,7 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 		originRuleSets:            originRuleSets,
 		routeFinal:                options.Route.Final,
 		endpointTags:              endpointTags,
+		capture:                   capture,
 		baseOutbounds:             baseOutbounds,
 		appliedOutbounds:          appliedOutbounds,
 		lastRaw:                   lastRaw,
@@ -240,7 +256,11 @@ func (b *Sing) Start() error {
 }
 
 func (b *Sing) Close() error {
-	return b.box.Close()
+	err := b.box.Close()
+	if b.capture != nil {
+		b.capture.Close()
+	}
+	return err
 }
 
 func (b *Sing) Protocols() []string {
