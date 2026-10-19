@@ -105,3 +105,54 @@ func TestInstallScript_RejectsBadFlags(t *testing.T) {
 		t.Errorf("--help: %v\n%s", err, out)
 	}
 }
+
+// A dashboard install over an existing config must apply the panel flags:
+// the old node entries go, Log/Cores stay, and an error log level becomes
+// info so the panel connection shows in the journal.
+func TestInstallScript_MergeReplacesExistingNodes(t *testing.T) {
+	if _, err := exec.LookPath("jq"); err != nil {
+		t.Skip("jq not available")
+	}
+	existing := filepath.Join(t.TempDir(), "config.json")
+	old := `{
+  "Log": {"Level": "error", "Output": ""},
+  "Cores": [{"Type": "sing", "Log": {"Level": "info", "Timestamp": true}, "OriginalPath": "/etc/FNode/sing_origin.json"}],
+  "Nodes": [
+    {"Core": "sing", "ApiHost": "https://old.example", "ApiKey": "old", "NodeID": 468, "NodeType": "anytls", "ListenIP": "::"},
+    {"Core": "sing", "ApiHost": "https://old.example", "ApiKey": "old", "NodeID": 469, "NodeType": "anytls", "ListenIP": "::"}
+  ]
+}`
+	if err := os.WriteFile(existing, []byte(old), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runInstaller(t, "--print-config", "--existing", existing, "--mode", "machine", "--panel", "https://panel.example.com", "--token", "machine-token", "--machine-id", "7")
+	if err != nil {
+		t.Fatalf("merge: %v\n%s", err, out)
+	}
+	c := loadRendered(t, out)
+	if len(c.NodeConfig) != 1 {
+		t.Fatalf("old node entries kept: %d nodes\n%s", len(c.NodeConfig), out)
+	}
+	api := c.NodeConfig[0].ApiConfig
+	if !api.IsMachine() || api.MachineID != 7 || api.Token() != "machine-token" || api.APIHost != "https://panel.example.com" {
+		t.Errorf("machine entry: %+v", api)
+	}
+	if c.LogConfig.Level != "info" {
+		t.Errorf("log level %q, want info", c.LogConfig.Level)
+	}
+	if len(c.CoresConfig) != 1 || c.CoresConfig[0].SingConfig.LogConfig.Level != "info" {
+		t.Errorf("cores not kept: %+v", c.CoresConfig)
+	}
+
+	// A deliberate warn level is left alone.
+	if err := os.WriteFile(existing, []byte(strings.Replace(old, `"Level": "error"`, `"Level": "warn"`, 1)), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	out, err = runInstaller(t, "--print-config", "--existing", existing, "--mode", "node", "--panel", "https://p.example", "--token", "t", "--node-id", "5")
+	if err != nil {
+		t.Fatalf("merge: %v\n%s", err, out)
+	}
+	if lvl := loadRendered(t, out).LogConfig.Level; lvl != "warn" {
+		t.Errorf("warn level changed to %q", lvl)
+	}
+}

@@ -25,9 +25,12 @@ Options:
                                tuic, anytls. Omit it to let FNode read the type from the panel (v2 API)
   --cert-mode MODE             none (default), http, dns, self or file
   --cert-domain DOMAIN         certificate domain for http/dns/self/file
-  --force                      replace an existing /etc/FNode/config.json (a backup is kept)
+  --keep-config                leave an existing /etc/FNode/config.json untouched. By default its
+                               Nodes block is replaced by the panel flags (a backup is kept)
+  --force                      accepted for older dashboard commands; replacing is now the default
   -y, --yes                    do not ask for confirmation (uninstall)
   --print-config               print the config.json the flags produce and exit (dry run)
+  --existing PATH              with --print-config: print PATH merged with the flags instead
   -h, --help                   show this help
 USAGE
 }
@@ -44,9 +47,10 @@ arg_node_id=""
 arg_type=""
 arg_cert_mode="none"
 arg_cert_domain=""
-arg_force=false
+arg_keep_config=false
 arg_yes=false
 arg_print=false
+arg_existing=""
 noninteractive=false
 
 need_value() {
@@ -78,7 +82,10 @@ while [[ $# -gt 0 ]]; do
         --cert-mode=*) arg_cert_mode="${1#*=}"; shift ;;
         --cert-domain) need_value "$1" "$2"; arg_cert_domain="$2"; shift 2 ;;
         --cert-domain=*) arg_cert_domain="${1#*=}"; shift ;;
-        --force) arg_force=true; shift ;;
+        --force) shift ;;
+        --keep-config) arg_keep_config=true; shift ;;
+        --existing) need_value "$1" "$2"; arg_existing="$2"; shift 2 ;;
+        --existing=*) arg_existing="${1#*=}"; shift ;;
         -y|--yes) arg_yes=true; shift ;;
         --print-config) arg_print=true; shift ;;
         -h|--help) usage; exit 0 ;;
@@ -181,7 +188,7 @@ render_config() {
     cat <<EOF
 {
     "Log": {
-        "Level": "error",
+        "Level": "info",
         "Output": ""
     },
     "Cores": [
@@ -208,12 +215,30 @@ ${entry}
 EOF
 }
 
+# Prints the config at $1 with its Nodes replaced by the entry in $2, keeping
+# Log/Cores. A FNode log level of error (or quieter) is raised to info so the
+# panel connection shows in the journal. Fails when jq is missing or the file
+# is not plain JSON (JSON5 comments).
+merge_panel_config() {
+    command -v jq >/dev/null 2>&1 || return 1
+    jq -e . "$1" >/dev/null 2>&1 || return 1
+    printf '%s' "$2" | jq -s --slurpfile cfg "$1" '
+        $cfg[0] + {Nodes: .}
+        | if ((.Log.Level // "") | ascii_downcase) as $l
+             | ["error", "fatal", "panic"] | index($l)
+          then .Log.Level = "info" else . end'
+}
+
 # --print-config: show the config the flags would produce and exit (no root,
 # nothing installed). Used by the tests and for a dry run.
 if [[ "$arg_print" == true ]]; then
     if [[ "$noninteractive" != true ]]; then
         echo "--print-config needs --mode, --panel, --token and --machine-id/--node-id" >&2
         exit 1
+    fi
+    if [[ -n "$arg_existing" ]]; then
+        merge_panel_config "$arg_existing" "$(panel_node_entry)" || { echo "cannot merge $arg_existing (needs jq and plain JSON)" >&2; exit 1; }
+        exit 0
     fi
     render_config "$(panel_node_entry)"
     exit 0
@@ -289,23 +314,23 @@ fi
 
 install_base() {
     if [[ x"${release}" == x"centos" ]]; then
-        yum install epel-release wget curl unzip tar crontabs socat ca-certificates -y >/dev/null 2>&1
+        yum install epel-release wget curl unzip tar crontabs socat ca-certificates jq -y >/dev/null 2>&1
         update-ca-trust force-enable >/dev/null 2>&1
     elif [[ x"${release}" == x"alpine" ]]; then
-        apk add wget curl unzip tar socat ca-certificates >/dev/null 2>&1
+        apk add wget curl unzip tar socat ca-certificates jq >/dev/null 2>&1
         update-ca-certificates >/dev/null 2>&1
     elif [[ x"${release}" == x"debian" ]]; then
         apt-get update -y >/dev/null 2>&1
-        apt install wget curl unzip tar cron socat ca-certificates -y >/dev/null 2>&1
+        apt install wget curl unzip tar cron socat ca-certificates jq -y >/dev/null 2>&1
         update-ca-certificates >/dev/null 2>&1
     elif [[ x"${release}" == x"ubuntu" ]]; then
         apt-get update -y >/dev/null 2>&1
-        apt install wget curl unzip tar cron socat -y >/dev/null 2>&1
+        apt install wget curl unzip tar cron socat jq -y >/dev/null 2>&1
         apt-get install ca-certificates wget -y >/dev/null 2>&1
         update-ca-certificates >/dev/null 2>&1
     elif [[ x"${release}" == x"arch" ]]; then
         pacman -Sy --noconfirm >/dev/null 2>&1
-        pacman -S --noconfirm --needed wget curl unzip tar cron socat >/dev/null 2>&1
+        pacman -S --noconfirm --needed wget curl unzip tar cron socat jq >/dev/null 2>&1
         pacman -S --noconfirm --needed ca-certificates wget >/dev/null 2>&1
     fi
 }
@@ -379,30 +404,35 @@ write_default_sing_origin() {
 EOF
 }
 
-# Writes /etc/FNode/config.json for --mode machine|node. An existing config is
-# kept unless --force; with --force it is backed up and its Nodes block is
-# replaced (whole file when jq is missing or cannot parse it).
+# Writes /etc/FNode/config.json for --mode machine|node. The dashboard flags
+# win: an existing config is backed up and its Nodes block replaced (the
+# whole file when jq is missing or cannot parse it). --keep-config leaves it.
 write_panel_config() {
     mkdir -p /etc/FNode
     write_default_sing_origin
     local entry
     entry=$(panel_node_entry)
-    if [[ "$had_config" == true && "$arg_force" != true ]]; then
-        echo -e "${yellow}已存在 /etc/FNode/config.json，未修改 (existing config kept; add --force to replace its panel block)${plain}"
+    if [[ "$had_config" == true && "$arg_keep_config" == true ]]; then
+        echo -e "${yellow}已存在 /etc/FNode/config.json，未修改 (--keep-config: existing config kept, the --panel/--token flags are NOT applied)${plain}"
         return 0
     fi
     if [[ -f /etc/FNode/config.json ]]; then
-        cp /etc/FNode/config.json "/etc/FNode/config.json.bak.$(date +%Y%m%d%H%M%S)"
+        local backup
+        backup="/etc/FNode/config.json.bak.$(date +%Y%m%d%H%M%S)"
+        cp /etc/FNode/config.json "$backup"
+        echo -e "${yellow}已备份旧配置 (old config backed up): ${backup}${plain}"
     fi
-    if [[ "$had_config" == true ]] && command -v jq >/dev/null 2>&1 && jq -e . /etc/FNode/config.json >/dev/null 2>&1; then
+    if [[ "$had_config" == true ]]; then
         local tmp
         tmp=$(mktemp /etc/FNode/.config.json.XXXXXX.tmp)
-        if printf '%s' "$entry" | jq -s --slurpfile cfg /etc/FNode/config.json '$cfg[0] + {Nodes: .}' > "$tmp" 2>/dev/null; then
+        if merge_panel_config /etc/FNode/config.json "$entry" > "$tmp" 2>/dev/null; then
             mv -f "$tmp" /etc/FNode/config.json
-            echo -e "${green}已替换 /etc/FNode/config.json 的 Nodes 配置 (panel block replaced, Log/Cores kept)${plain}"
+            chmod 600 /etc/FNode/config.json
+            echo -e "${green}已替换 /etc/FNode/config.json 的 Nodes 配置为面板 ${arg_panel} (${arg_mode} mode; panel block replaced, Log/Cores kept)${plain}"
             return 0
         fi
         rm -f "$tmp"
+        echo -e "${yellow}无法合并旧配置 (jq missing or config is not plain JSON): rewriting the whole file, Log/Cores reset to defaults${plain}"
     fi
     render_config "$entry" > /etc/FNode/config.json
     chmod 600 /etc/FNode/config.json
@@ -632,7 +662,7 @@ EOF
     echo "FNode start        - 启动 FNode"
     echo "FNode stop         - 停止 FNode"
     echo "FNode restart      - 重启 FNode"
-    echo "FNode status       - 查看 FNode 状态"
+    echo "FNode status       - 查看 FNode 状态 (含面板地址、令牌、节点标签)"
     echo "FNode enable       - 设置 FNode 开机自启"
     echo "FNode disable      - 取消 FNode 开机自启"
     echo "FNode log          - 查看 FNode 日志"
@@ -644,6 +674,7 @@ EOF
     echo "FNode install      - 安装 FNode (可选参数: latest/pre/指定版本)"
     echo "FNode uninstall    - 卸载 FNode (--yes 跳过确认)"
     echo "FNode config show  - 查看生效配置与出站来源 (--node 标签 --summary)"
+    echo "FNode config status - 查看面板地址、令牌(部分)与节点标签"
     echo "FNode version      - 查看 FNode 版本"
     echo "------------------------------------------"
     if [[ "$noninteractive" == true ]]; then

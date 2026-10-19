@@ -322,12 +322,21 @@ restart() {
     fi
 }
 
+# Panel, masked token and node tags of each config entry (FNode config status)
+show_panel_info() {
+    if [[ -x /usr/local/FNode/FNode && -f /etc/FNode/config.json ]]; then
+        echo ""
+        /usr/local/FNode/FNode config status -c /etc/FNode/config.json 2>/dev/null || echo -e "${yellow}无法读取面板信息 (this FNode version has no 'config status'; run FNode update)${plain}"
+    fi
+}
+
 status() {
     if [[ x"${release}" == x"alpine" ]]; then
         service FNode status
     else
         systemctl status FNode --no-pager -l
     fi
+    show_panel_info
     if [[ $# == 0 ]]; then
         before_show_menu
     fi
@@ -1288,7 +1297,7 @@ show_usage() {
     echo "FNode start        - 启动 FNode"
     echo "FNode stop         - 停止 FNode"
     echo "FNode restart      - 重启 FNode"
-    echo "FNode status       - 查看 FNode 状态"
+    echo "FNode status       - 查看 FNode 状态 (含面板地址、令牌、节点标签)"
     echo "FNode enable       - 设置 FNode 开机自启"
     echo "FNode disable      - 取消 FNode 开机自启"
     echo "FNode log          - 查看 FNode 日志"
@@ -1301,6 +1310,7 @@ show_usage() {
     echo "FNode install      - 安装 FNode (可选: --mode machine|node --panel --token --machine-id|--node-id)"
     echo "FNode uninstall    - 卸载 FNode (--yes 跳过确认)"
     echo "FNode config show  - 查看生效配置与出站来源 (--node 标签 --summary)"
+    echo "FNode config status - 查看面板地址、令牌(部分)与节点标签"
     echo "FNode caddy        - 安装/配置 Caddy (支持 Cloudflare DNS 反代与证书)"
     echo "FNode version      - 查看 FNode 版本"
     echo "------------------------------------------"
@@ -1383,9 +1393,10 @@ if [[ $# > 0 ]]; then
         "clearlog"|"cleanlog"|"clean_log") check_install 0 && clean_log 0 ;;
         "update") check_install 0 && update 0 $2 ;;
         "config")
-            if [[ "$2" == "show" ]]; then
+            if [[ "$2" == "show" || "$2" == "status" ]]; then
                 # FNode config show [--node tag] [--summary]: effective config per node
-                /usr/local/FNode/FNode config show -c /etc/FNode/config.json "${@:3}"
+                # FNode config status: panel, masked token and node tags per entry
+                /usr/local/FNode/FNode config "$2" -c /etc/FNode/config.json "${@:3}"
             else
                 config $*
             fi

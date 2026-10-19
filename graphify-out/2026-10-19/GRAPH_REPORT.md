@@ -1,16 +1,16 @@
 # Graph Report - FNode  (2026-10-19)
 
 ## Corpus Check
-- 1700 files · ~1,083,240 words
+- 1719 files · ~1,099,748 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 18046 nodes · 39400 edges · 967 communities (840 shown, 127 thin omitted)
-- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 3125 edges (avg confidence: 0.85)
+- 18248 nodes · 39980 edges · 954 communities (831 shown, 123 thin omitted)
+- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 3183 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e1b1b725`
+- Built from commit: `68c68daa`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -30,25 +30,25 @@
 - v2board/assets/umi.js
 - started_service.pb.go
 - n
-- sync.RWMutex
+- SpeedTracker
 - io.Writer
 - Illuminate\Foundation\Http\FormRequest
 - github.com/sagernet/sing/common/json/badoption.Listable
 - i
-- .count
+- ServerService
 - serverConfig.go
-- ApiException
+- Closure
 - sniffer
-- TransportAdapter
+- User
 - net/http.Request
 - Server
-- effective.go
+- newTestSing
 - i
-- User
+- Plan
 - TaildropSendClientMessage
 - Zo
 - searcher_linux_shared.go
-- resolve1Manager
+- DBusResolvedResolver
 - GiftCardCode
 - D
 - USBURBRequest
@@ -67,17 +67,17 @@
 - google.golang.org/protobuf/types/known/emptypb.Empty
 - o
 - WSClient
-- zr
+- fe
 - T
 - github.com/sagernet/sing/common/buf.Buffer
 - Client
-- io.Reader
+- HTTP2Conn
 - e
 - Coupon
 - ccm/service_usage.go
 - QUICClientHello
 - a
-- MailService
+- SendEmailJob
 - rule/rule_action.go
 - rule_set_semantics_test.go
 - Default Fields
@@ -87,20 +87,20 @@
 - AbstractPlugin
 - TailscaleSSHStart
 - Fields
-- Options
+- NodeInfo
 - Core
 - c
 - Connection
 - CommandClient
 - github.com/sagernet/sing/common/logger.ContextLogger
 - EarlyWebsocketConn
-- NewDefaultHeadlessRule
+- DefaultHeadlessRule
 - file_daemon_started_service_proto_rawDescGZIP
 - NetworkQualityTestProgress
-- natDeviceWrapper
+- HookManager
 - n
 - srs/compat_test.go
-- DNSRecordOptions
+- _DNSRule
 - ContextLogger
 - Conn
 - OpenVPNChallenge
@@ -114,17 +114,17 @@
 - command_types.go
 - Default Fields
 - 默认字段
-- DBusResolvedResolver
-- New
+- Shipper
+- validateNodeRuntime
 - PluginManager
 - UserInfo
 - github.com/sagernet/sing-box/option.Options
-- platformInterfaceStub
+- github.com/sagernet/sing/common/network.CountFunc
 - Load
-- mu
+- Illuminate\Support\Str
 - t
 - t
-- client_test.go
+- MailService
 - nopFactory
 - Machine
 - Controller
@@ -139,47 +139,47 @@
 - Fields
 - CacheFile
 - context.Context
-- Config
+- Watcher
 - TaildropInbox
-- Setting
-- testSuitLargeUDP
+- Illuminate\Support\ServiceProvider
+- logCapture
 - option/rule_set.go
 - Transport
-- sync.Once
+- systemDevice
 - USBDeviceDescriptor
 - Xboard-Node/install.sh
 - github.com/miekg/dns.Msg
 - testing.T
-- PlatformInterface
+- ConnectionOwner
 - Manager
 - 1.9.0
 - route-options
 - route-options
-- DefaultDNSRule
-- defaultFactory
-- deviceEndpoint
+- NewDefaultDNSRule
+- Level
+- stackDevice
 - TaildropSendServerMessage
-- Illuminate\Contracts\Routing\Registrar
+- AdminRoute.php
 - QUIC 字段
 - o
 - FNode.sh
 - evaluate
 - evaluate
-- Reader
+- command_client.go
 - memory
 - QUIC 字段
 - remote_profile.go
-- userEmail
+- newTestDispatcher
 - Default Fields
 - Formatter
 - 1.14.0
 - RemoteRuleSet
-- New
+- DefaultRule
 - 1.14.0
 - V2bX.sh
-- Controller
+- New
 - C
-- Xray
+- UserSpec
 - 字段
 - SingBox
 - Manager
@@ -196,22 +196,22 @@
 - api/panel/node.go
 - ktls_cipher_suites_linux.go
 - V2bX/conf/limit.go
-- DefaultDispatcher
-- option/hysteria2.go
+- ConnectionManager
+- .getClientForCall
 - time.Time
 - Default Fields
 - XBoard Plugin Development Guide
-- outboundEntry
+- New
 - GeoLoader
-- tunDeviceAdapter
+- Hub
 - Fields
 - require
 - 🖥️ Complete Plugin Artisan Commands Guide
-- nlog.go
+- buildConfig
 - 1.8.0
 - Fields
 - 字段
-- Service
+- ccm/service.go
 - TrafficCounter
 - DeprecatedWarning
 - HTTP
@@ -226,39 +226,39 @@
 - Store
 - oauthCredentials
 - Router
-- OpenVPNChallengeSubmission
+- StartedServiceClient
 - github.com/spf13/cobra.Command
 - regexp.Regexp
 - QUIC Fields
 - common.sh
 - g
-- Service
+- Listener
 - CommandServer
 - Fields
 - 字段
-- compareUserList
+- .applyUpdate
 - LimitDispatcher
 - 1.3.0
 - 1.6.0
 - 1.7.0
 - panel/types.go
 - octane.php
-- TunPlatformOptions
+- bridgeSessionWrapper
 - Projects
-- UserEmail
+- ConnectionEvent
 - Fields
 - 字段
 - testConn
-- option/dns.go
+- DNSServerAddressOptions
 - Version
-- HTTPResponse
-- ContextFrom
+- HTTPClient
+- Endpoint
 - libbox/platform.go
 - Fields
 - option/tailscale.go
 - Admin API Documentation
 - net/http.Handler
-- ExperimentalOptions
+- DNSRecordOptions
 - User API Documentation
 - UserInfo
 - Online Device Limit Design
@@ -271,19 +271,19 @@
 - unsafe.Pointer
 - Tracker
 - kernelCipher
-- Sing
+- Node
 - GroupItem
-- github.com/sagernet/sing/common/tls.Conn
+- TrackerMetadata
 - 字段
 - Xboard Deployment Guide for aaPanel + Docker Environment
 - Universal Auth & Email Architecture Guide
 - h
 - FNode — AI Agent Context
-- NewCertConfig
+- Lego
 - config/standalone.go
 - 1.0-beta1
-- inlineCertificateProvider
-- conf/sing.go
+- std_server.go
+- New
 - 1.4.0
 - File
 - Err
@@ -301,7 +301,7 @@
 - STDServerConfig
 - FNode Supported Components & Configuration Reference
 - 字段
-- HookManager
+- .request
 - sync/atomic.Pointer
 - Fields
 - Fields
@@ -316,11 +316,11 @@
 - Build from source
 - 从源代码构建
 - github.com/sagernet/sing-box/schema.Node
-- NodeInfo
+- subscribeStatus
 - Universal Design & UX Strategy Guide
 - 可用命令
 - Xboard
-- systemDevice
+- realityClientConnWrapper
 - Illuminate\Database\Schema\Blueprint
 - Illuminate\Support\Facades\Schema
 - Fields
@@ -331,7 +331,7 @@
 - V2bX/api/panel/node.go
 - Fields
 - ktls_handshake_messages.go
-- adapter/dns.go
+- DNSTransport
 - 字段
 - 字段
 - Fields
@@ -339,9 +339,9 @@
 - TransportRegistry
 - Authentication (Passport)
 - AlipayF2F
-- Lego
+- User
 - AndroidSystemProxy
-- NewNodeMailbox
+- zr
 - RouteServiceProvider
 - Fields
 - QUIC Fields
@@ -358,7 +358,7 @@
 - ValidateCustomRouteRules
 - build_info.go
 - 字段
-- Transport
+- sync.RWMutex
 - ACME Fields
 - Map[K, V]
 - ACME 字段
@@ -366,7 +366,7 @@
 - baseContext
 - V2bX
 - OnDemandRule
-- Server
+- IsExist
 - DNSTransport
 - composer.json
 - Fields
@@ -386,8 +386,8 @@
 - Performance Comparison Report
 - Universal API Architecture Design Guide
 - s
-- HookServer
-- github.com/sagernet/sing/common/logger.Logger
+- Setting
+- ConnCounter
 - CustomRouteRule
 - Searcher
 - tun_bench/main.go
@@ -396,9 +396,9 @@
 - app_store_connect/main.go
 - Registry
 - Registry
-- Status
+- google.golang.org/protobuf/runtime/protoimpl.SizeCache
 - cachedReader
-- DeviceOptions
+- User
 - WIFIState
 - 1.9.4
 - 1.10.2
@@ -406,7 +406,7 @@
 - sync.Mutex
 - dns/fakeip.md
 - Fields
-- Transport
+- NewLego
 - 字段
 - ProxyListener
 - tunDeviceAdapter
@@ -418,9 +418,9 @@
 - server/index.md
 - Reader
 - inbound/shadowsocks.md
-- FNode Comprehensive Project Guide & Architecture
+- PROJECT_GUIDE.md
 - 字段
-- stackDevice
+- UserManager
 - RoutePrefix
 - Fields
 - 字段
@@ -431,14 +431,14 @@
 - Fields
 - 字段
 - adguard.md
-- sync/atomic.Int64
+- ConnTracker
 - adguard.zh.md
 - 规则集
 - StartStage
-- Conf
-- DNSQueryType
-- RouteOptions
-- context.CancelFunc
+- serverHandle
+- Conn
+- ProtocolManager
+- Orchestrator
 - _ACMEDNS01ChallengeOptions
 - FNode-script/install.sh
 - FNode-script Logic and Installation Guide
@@ -462,7 +462,7 @@
 - OCM
 - V2bX-script/initconfig.sh
 - 2. Basic Environment Setup
-- SystemController.php
+- NewManager
 - sysinfo.go
 - endpoint/tailscale.md
 - endpoint/wireguard.md
@@ -470,14 +470,14 @@
 - Fields
 - 字段
 - Fields
-- testShadowsocksMux
+- .downloadExternalUI
 - 字段
 - Fields
 - 字段
 - Fields
 - route/rule.md
 - Client
-- .nodeInfoMonitor
+- Lego
 - require-dev
 - export.go
 - github.com/sagernet/sing-box/common/trafficcontrol.Manager
@@ -511,18 +511,18 @@
 - 支持的动作
 - Status
 - getTestLego
-- Notification
+- libbox/log.go
 - platformHandler
 - Custom Routes
-- NewSTDServer
+- cmd_merge.go
 - .uint16
 - STUNTestProgress
-- RuleSetItem
+- InboundContext
 - Parse
 - Illuminate\Database\Seeder
 - SSH
 - xorNonceAEAD
-- fakednssniffer.go
+- Plugin
 - 1.9.5
 - sing-box for Apple platforms
 - Hosts
@@ -556,10 +556,10 @@
 - V2board 1.7.4 Migration Guide
 - V2board Dev Migration Guide
 - Install
-- Hunk
+- started_service_grpc.pb.go
 - keywords
 - HasPluginConfig.php
-- NetworkQualityTestRequest
+- Plugin
 - protogen/main.go
 - 1.9.1
 - :material-decagram: Features
@@ -597,8 +597,8 @@
 - Custom Outbounds
 - de
 - Client
-- Plugin
-- sync.Map
+- PluginManager.php
+- .uint32
 - net.Flags
 - QueryOperators.php
 - github.com/sagernet/sing-box
@@ -610,7 +610,7 @@
 - 1.11.4
 - 1.11.6
 - sing-box for Android
-- RawHalfConn
+- RawConn
 - 旧版地址筛选字段
 - inbound/socks.zh.md
 - Custom TLS support
@@ -620,14 +620,14 @@
 - Shadowsocks
 - Trojan
 - Client
-- ProcessInfo
+- NewTransport
 - 2025_01_05_131425_create_v2_server_table.php
 - 🎯 Best Practices
 - Configuration Migration Guide
-- UserSpec
+- NodeSpec
 - dependencies
 - FNode-script/README.md
-- cmd/version.go
+- serverHandle
 - CompareSemver
 - 1.11.14
 - tun.zh.md
@@ -642,7 +642,7 @@
 - 2019_08_19_000000_create_failed_jobs_table.php
 - 2023_08_14_221234_create_v2_settings_table.php
 - 2023_09_24_040317_add_column_network_and_network_settings_to_v2_server_trojan.php
-- Conf
+- io.Reader
 - 2025_06_21_000001_optimize_v2_settings_table.php
 - 2025_06_21_000002_create_traffic_reset_logs_table.php
 - 2025_07_27_000001_create_v2_subscribe_templates_table.php
@@ -679,7 +679,7 @@
 - build_openwrt_apk.sh
 - contextKey
 - update_clients.sh
-- LinkManager
+- Plugin
 - net/netip.AddrPort
 - BitTorrent
 - Conn
@@ -731,66 +731,53 @@
 - WireGuardListener
 - UserDeleter
 - xray/node.go
-- PluginConfigService
+- Plugin
 - HandshakeResponse
-- New
+- Limiter
 - Sing
-- NewDefaultDNSRule
+- NewDefaultRule
 - net.Addr
-- HTTPClient
-- ShadowTLSInboundOptions
+- ClientItem
+- WildcardSNI
 - System Communication & Information Flow Logic
-- New
-- Groups
-- SetGroupExpandRequest
-- wpaSupplicantMonitor
-- realityConnWrapper
-- Hysteria2
+- Context
+- InboundItem
+- NewIPIsPrivateItem
+- IPVersionItem
+- RealityServerConfig
+- UserIdItem
 - HTTPHost
 - NTP
 - outbound/index.zh.md
-- HTTPRequest
+- UserItem
 - ft
 - 7. Dynamic Environment & Configuration Lifecycle Flows
 - 2023_09_29_044957_add_column_version_and_is_obfs_to_server_hysteria_table.php
-- NewConn
+- InitializePlugins.php
 - App\Contracts\PaymentInterface
 - 5. Certificate Management & Caddy Integration
 - 2. Component Roles & Ecosystem
 - ClashModeItem
-- fakeKernel
-- LogicalDNSRule
-- credentials.go
 - PluginController
 - 4. Configuration Reference (`/etc/FNode/config.json`)
 - FNode AI Agent Directives & Rules
-- .WritePackets
 - WindowsSystemProxy
 - RegisterClashServerConstructor
 - PreferredByItem
 - HTTPObfs
 - acmeWrapper
-- ResetTransport
-- 6. Build & Test Instructions
+- FNode Comprehensive Project Guide & Architecture
 - customcfg.go
-- RawConn
 - CleanLogs
-- DialTCPWithBind
-- newTestMachine
-- NewDefaultInterfaceAddressItem
-- Server
+- logship/logship_test.go
 - Dir
 - PProfServer
 - net/netip.Addr
 - ServerOptions
-- NewDomainKeywordItem
-- NewNetworkInterfaceAddressItem
+- NewDefaultHeadlessRule
 - Response Match Fields
-- XrayTrafficCounter
+- sync/atomic.Int64
 - Relationship with sing-box
-- _Inbound
-- tproxy_linux.go
-- tproxy_other.go
 - update_android_version/main.go
 - cmd_version.go
 - Test_printFailed
@@ -822,43 +809,43 @@
 ## Import Cycles
 - None detected.
 
-## Communities (967 total, 127 thin omitted)
+## Communities (954 total, 123 thin omitted)
 
 ### Community 0 - ""assets/umi.js""
 Cohesion: 0.01
-Nodes (137): Cr(), "assets/umi.js"(), Ai(), al(), am(), Ar(), au(), Bm() (+129 more)
+Nodes (131): Cr(), "assets/umi.js"(), Ai(), al(), am(), Ar(), au(), Bm() (+123 more)
 
 ### Community 1 - "xbctl/main.go"
-Cohesion: 0.08
-Nodes (60): cleanupFiles(), collectInstanceRows(), collectRowsFromConfig(), collectRowsFromMeta(), copyFile(), downloadFile(), ensureRoot(), fileExists() (+52 more)
+Cohesion: 0.06
+Nodes (71): KernelOverride, MachineConfig, cleanupFiles(), collectInstanceRows(), collectRowsFromConfig(), collectRowsFromMeta(), copyFile(), downloadFile() (+63 more)
 
 ### Community 2 - "Router"
-Cohesion: 0.13
-Nodes (18): dnsArmedRule, dnsEvaluatedFuture, dnsExchangeContext, dnsPendingExchange, dnsRuleWalkState, dnsWalkSuspension, exchangeWithRulesResult, github.com/sagernet/sing-box/constant.DomainStrategy (+10 more)
+Cohesion: 0.12
+Nodes (21): dnsArmedRule, dnsEvaluatedFuture, dnsExchangeContext, dnsPendingExchange, dnsRuleWalkState, dnsWalkSuspension, exchangeWithRulesResult, github.com/sagernet/sing-box/constant.DomainStrategy (+13 more)
 
 ### Community 3 - "Illuminate\Http\Request"
 Cohesion: 0.02
-Nodes (51): App\Traits\QueryOperators, Illuminate\Auth\Middleware\Authenticate, Illuminate\Database\Eloquent\Builder, Illuminate\Database\Query\Builder, Illuminate\Foundation\Bus\DispatchesJobs, Illuminate\Foundation\Validation\ValidatesRequests, Illuminate\Http\JsonResponse, Illuminate\Http\Middleware\TrustProxies (+43 more)
+Nodes (61): App\Http\Requests\Admin\CouponSave, App\Models\ServerShadowsocks, App\Models\ServerTrojan, Illuminate\Auth\Middleware\Authenticate, Illuminate\Database\Eloquent\ModelNotFoundException, Illuminate\Foundation\Bus\DispatchesJobs, Illuminate\Foundation\Validation\ValidatesRequests, Illuminate\Http\Middleware\TrustProxies (+53 more)
 
 ### Community 4 - "Helper"
 Cohesion: 0.02
 Nodes (20): Illuminate\Encryption\Encrypter, Illuminate\Support\Arr, Illuminate\Support\Env, Illuminate\Support\Facades\File, XboardInstall, subscribe_template(), Clash, ClashMeta (+12 more)
 
 ### Community 5 - "admin_setting"
-Cohesion: 0.06
-Nodes (12): Illuminate\Http\UploadedFile, Illuminate\Support\Facades\Route, Illuminate\Support\Facades\View, admin_setting(), ClientController, ConfigController, AppController, ConfigSave (+4 more)
+Cohesion: 0.04
+Nodes (19): Illuminate\Http\UploadedFile, Illuminate\Support\Facades\View, admin_setting(), ResponseEnum, AuthController, ConfigController, AppController, AuthForget (+11 more)
 
 ### Community 6 - "github.com/sagernet/sing/common/json/badjson.TypedMap"
-Cohesion: 0.18
-Nodes (10): github.com/sagernet/sing/common/json/badjson.TypedMap, InterfaceAddressItem, Cache, EndpointCache, NewInterfaceAddressItem(), Service, T, sortTypedMap() (+2 more)
+Cohesion: 0.26
+Nodes (8): github.com/sagernet/sing/common/json/badjson.TypedMap, Cache, EndpointCache, Service, T, sortTypedMap(), typedAtomicInt64Map(), typedMap()
 
 ### Community 7 - "Illuminate\Database\Eloquent\Model"
-Cohesion: 0.04
-Nodes (15): Illuminate\Database\Eloquent\Model, ResetLog, XboardStatistics, MailTemplateController, StatController, AdminAuditLog, CommissionLog, MailLog (+7 more)
+Cohesion: 0.03
+Nodes (20): Illuminate\Database\Eloquent\Model, Illuminate\Support\Facades\Redis, CheckTicket, ResetLog, XboardStatistics, StatController, TicketController, AdminAuditLog (+12 more)
 
 ### Community 8 - "Illuminate\Console\Command"
 Cohesion: 0.04
-Nodes (21): Google\Cloud\Storage\StorageClient, Illuminate\Console\Command, Illuminate\Support\Facades\Artisan, BackupDatabase, CheckOrder, CheckTicket, CleanupExpiredOnlineStatus, CleanupOnlineStatus (+13 more)
+Nodes (19): Google\Cloud\Storage\StorageClient, Illuminate\Console\Command, Illuminate\Support\Facades\Artisan, BackupDatabase, CheckServer, CleanupExpiredOnlineStatus, CleanupOnlineStatus, ClearUser (+11 more)
 
 ### Community 9 - "changelog.md"
 Cohesion: 0.02
@@ -866,11 +853,11 @@ Nodes (127): 1.10.0, 1.10.1, 1.11.0, 1.12.0, 1.12.1, 1.12.10, 1.12.11, 1.12.12 (
 
 ### Community 10 - "vendors.async.js"
 Cohesion: 0.04
-Nodes (111): aa(), Al(), ao(), as(), Au(), ba(), Bl(), bo() (+103 more)
+Nodes (122): a(), aa(), Al(), ao(), as(), Au(), ba(), Bl() (+114 more)
 
 ### Community 11 - "ServerMachine"
-Cohesion: 0.05
-Nodes (16): Illuminate\Foundation\Testing\RefreshDatabase, Illuminate\Support\Facades\Bus, Illuminate\Support\Facades\Validator, MachineController, ServerMachine, ServerMachineLoadHistory, LoginService, User (+8 more)
+Cohesion: 0.06
+Nodes (12): Illuminate\Foundation\Testing\RefreshDatabase, Illuminate\Support\Facades\Bus, Illuminate\Support\Facades\Validator, MachineController, ServerV2, ServerMachine, SelfVerifyRouteTest, Server (+4 more)
 
 ### Community 12 - "v2board/assets/umi.js"
 Cohesion: 0.06
@@ -878,15 +865,15 @@ Nodes (98): be(), ae(), An(), at(), Be(), bn(), bt(), ce() (+90 more)
 
 ### Community 13 - "started_service.pb.go"
 Cohesion: 0.02
-Nodes (25): CancelTaildropReceivingRequest, isOpenConnectAuthResponseSubmission_Response, isTailscaleSSHServerMessage_Message, OpenConnectAuthFormResponse, OpenConnectAuthResponseSubmission, OpenConnectAuthResponseSubmission_Browser, OpenConnectAuthResponseSubmission_Form, OpenConnectBrowserCookie (+17 more)
+Nodes (23): isOpenConnectAuthResponseSubmission_Response, isTailscaleSSHServerMessage_Message, OpenConnectAuthFormResponse, OpenConnectAuthResponseSubmission, OpenConnectAuthResponseSubmission_Browser, OpenConnectAuthResponseSubmission_Form, OpenConnectBrowserCookie, OpenConnectBrowserHeader (+15 more)
 
 ### Community 14 - "n"
 Cohesion: 0.07
 Nodes (90): w(), i(), r(), c(), a(), b(), c(), d() (+82 more)
 
-### Community 15 - "sync.RWMutex"
-Cohesion: 0.09
-Nodes (8): UserManager, sync/atomic.Uint64, sync.RWMutex, LimiterMetrics, SpeedTrackerLogCallback, UserManager, Limiter, SpeedTracker
+### Community 15 - "SpeedTracker"
+Cohesion: 0.32
+Nodes (3): Limiter, SpeedTrackerLogCallback, SpeedTracker
 
 ### Community 16 - "io.Writer"
 Cohesion: 0.08
@@ -894,75 +881,75 @@ Nodes (6): io.Writer, naiveConn, naiveH2Conn, paddingConn, generatePaddingHeader
 
 ### Community 17 - "Illuminate\Foundation\Http\FormRequest"
 Cohesion: 0.02
-Nodes (31): Illuminate\Contracts\Validation\Validator, Illuminate\Foundation\Http\FormRequest, Illuminate\Http\Exceptions\HttpResponseException, ResponseEnum, AuthController, KnowledgeCategorySave, KnowledgeCategorySort, KnowledgeSave (+23 more)
+Nodes (27): Illuminate\Contracts\Validation\Validator, Illuminate\Foundation\Http\FormRequest, Illuminate\Http\Exceptions\HttpResponseException, ConfigSave, KnowledgeCategorySave, KnowledgeCategorySort, KnowledgeSave, KnowledgeSort (+19 more)
 
 ### Community 18 - "github.com/sagernet/sing/common/json/badoption.Listable"
-Cohesion: 0.08
-Nodes (35): CertificateProviderOptions, github.com/sagernet/sing/common/byteformats.NetworkBytesCompat, github.com/sagernet/sing/common/json/badoption.Duration, github.com/sagernet/sing/common/json/badoption.Listable, AnyTLSUser, ClientAuthType, CurvePreference, HysteriaUser (+27 more)
+Cohesion: 0.02
+Nodes (143): CertificateProviderOptions, DNSRule, github.com/sagernet/sing/common/byteformats.NetworkBytesCompat, github.com/sagernet/sing/common/json/badoption.Addr, github.com/sagernet/sing/common/json/badoption.Duration, github.com/sagernet/sing/common/json/badoption.Listable, github.com/sagernet/sing/common/json/badoption.Prefixable, HTTP2Options (+135 more)
 
 ### Community 19 - "i"
 Cohesion: 0.08
 Nodes (74): On(), i(), aw(), b(), $c(), cn(), s(), co() (+66 more)
 
-### Community 20 - ".count"
-Cohesion: 0.07
-Nodes (9): ResetTraffic, NodeRegistry, TcpConnection, NodeEventHandlers, Server, NodeWorker, Worker, Workerman\Connection\TcpConnection (+1 more)
+### Community 20 - "ServerService"
+Cohesion: 0.05
+Nodes (15): Illuminate\Support\Collection, UniProxyController, DeviceStateService, NodeRegistry, TcpConnection, Server, ServerService, UserOnlineService (+7 more)
 
 ### Community 21 - "serverConfig.go"
-Cohesion: 0.13
-Nodes (30): github.com/apernet/hysteria/core/v2/server.Outbound, github.com/apernet/hysteria/extras/v2/outbounds.PluggableOutbound, serverConfig, serverConfigACL, serverConfigACME, serverConfigAuth, serverConfigAuthHTTP, serverConfigBandwidth (+22 more)
+Cohesion: 0.09
+Nodes (36): github.com/apernet/hysteria/core/v2/server.BandwidthConfig, github.com/apernet/hysteria/core/v2/server.Config, github.com/apernet/hysteria/core/v2/server.Outbound, github.com/apernet/hysteria/core/v2/server.QUICConfig, github.com/apernet/hysteria/core/v2/server.RequestHook, github.com/apernet/hysteria/core/v2/server.TLSConfig, github.com/apernet/hysteria/extras/v2/outbounds.PluggableOutbound, serverConfig (+28 more)
 
-### Community 22 - "ApiException"
-Cohesion: 0.03
-Nodes (37): App\Helpers\ApiResponse, App\User, Auth, Closure, Exception, Illuminate\Foundation\Exceptions\Handler, Illuminate\Pagination\LengthAwarePaginator, Illuminate\Support\Facades\App (+29 more)
+### Community 22 - "Closure"
+Cohesion: 0.06
+Nodes (16): Auth, Closure, Illuminate\Support\Facades\App, Illuminate\Support\Facades\Auth, Illuminate\Support\Facades\URL, Admin, ApplyRuntimeSettings, Client (+8 more)
 
 ### Community 23 - "sniffer"
-Cohesion: 0.20
-Nodes (12): compositeResult, protocolSniffer, protocolSnifferWithMetadata, Sniffer, SnifferIsProtoSubsetOf, SnifferResultComposite, SniffResult, github.com/xtls/xray-core/common/net.Network (+4 more)
+Cohesion: 0.11
+Nodes (17): compositeResult, DNSThenOthersSniffResult, fakeDNSExtraOpts, fakeDNSSniffResult, ipAddressInRangeOpt, protocolSniffer, protocolSnifferWithMetadata, Sniffer (+9 more)
 
-### Community 24 - "TransportAdapter"
-Cohesion: 0.09
-Nodes (12): Transport, TransportAdapter, quic.Conn, isQUICRetryError(), queryMultiplexer, NewTCPRaw(), ReadMessage(), WriteMessage() (+4 more)
+### Community 24 - "User"
+Cohesion: 0.04
+Nodes (24): Carbon, Carbon\Carbon, Illuminate\Database\Eloquent\Relations\HasMany, Illuminate\Foundation\Auth\User, Illuminate\Http\JsonResponse, Illuminate\Pagination\LengthAwarePaginator, Laravel\Sanctum\HasApiTokens, ResetTraffic (+16 more)
 
 ### Community 25 - "net/http.Request"
-Cohesion: 0.11
-Nodes (23): net/http.Request, net/http.ResponseWriter, APIServer, cacheRouter(), flushDNS(), flushFakeip(), updateConfigs(), subscribeTracing() (+15 more)
+Cohesion: 0.10
+Nodes (22): PatchScriptRequest, net/http.Request, net/http.ResponseWriter, APIServer, cacheRouter(), flushDNS(), flushFakeip(), getProvider() (+14 more)
 
 ### Community 26 - "Server"
-Cohesion: 0.02
-Nodes (38): App\Http\Controllers\V1\Server\DeepbworkController, App\Models\ServerShadowsocks, App\Models\ServerTrojan, Illuminate\Console\Scheduling\Schedule, Illuminate\Database\Eloquent\Casts\Attribute, Illuminate\Foundation\Console\Kernel, Illuminate\Support\Collection, Illuminate\Support\Facades\Cache (+30 more)
+Cohesion: 0.04
+Nodes (17): Illuminate\Database\Eloquent\Casts\Attribute, Illuminate\Foundation\Support\Providers\EventServiceProvider, Illuminate\Support\Facades\Event, CheckTrafficExceeded, GroupController, ManageController, Attribute, Server (+9 more)
 
-### Community 27 - "effective.go"
-Cohesion: 0.10
-Nodes (26): configShow(), TestConfigShow(), writeSummary(), buildPanelDump(), EffectiveFile, Sing, T, isProtected() (+18 more)
+### Community 27 - "newTestSing"
+Cohesion: 0.09
+Nodes (32): buildPanelDump(), EffectiveFile, Sing, T, isProtected(), NodeFileStem(), nonNil(), ReadEffectiveFiles() (+24 more)
 
 ### Community 28 - "i"
 Cohesion: 0.12
 Nodes (73): F(), c(), cn(), D(), dt(), E(), f(), gt() (+65 more)
 
-### Community 29 - "User"
-Cohesion: 0.02
-Nodes (36): Carbon, Carbon\Carbon, Illuminate\Database\Eloquent\Collection, Illuminate\Database\Eloquent\Factories\HasFactory, Illuminate\Database\Eloquent\Relations\HasOne, Illuminate\Foundation\Auth\User, Illuminate\Foundation\Support\Providers\EventServiceProvider, Illuminate\Support\Facades\DB (+28 more)
+### Community 29 - "Plan"
+Cohesion: 0.03
+Nodes (18): Illuminate\Database\Eloquent\Collection, Illuminate\Database\Eloquent\Factories\HasFactory, Illuminate\Database\Eloquent\Relations\HasOne, InvalidArgumentException, CheckCommission, CheckOrder, OrderController, User (+10 more)
 
 ### Community 30 - "TaildropSendClientMessage"
 Cohesion: 0.04
 Nodes (9): isTaildropSendClientMessage_Message, TaildropFileChunk, TaildropFileDone, TaildropOutgoingFile, TaildropSendClientMessage, TaildropSendClientMessage_Chunk, TaildropSendClientMessage_FileDone, TaildropSendClientMessage_Start (+1 more)
 
 ### Community 31 - "Zo"
-Cohesion: 0.07
-Nodes (64): ae(), at(), br(), Ct(), dd(), _e(), Ee(), et() (+56 more)
+Cohesion: 0.06
+Nodes (70): ae(), at(), br(), Cf(), Ct(), dd(), _e(), Ee() (+62 more)
 
 ### Community 32 - "searcher_linux_shared.go"
 Cohesion: 0.13
 Nodes (21): syscall.NetlinkMessage, socketDiagConn, uidProcessPathCache, buildProcessPathByUIDCache(), uidProcessPaths, uidProcessPaths, isIgnorableProcError(), isPid() (+13 more)
 
-### Community 33 - "resolve1Manager"
-Cohesion: 0.15
-Nodes (17): dbus.Error, dbus.ObjectPath, dbus.Sender, Address, LinkDomain, Name, resolve1Manager, ResourceRecord (+9 more)
+### Community 33 - "DBusResolvedResolver"
+Cohesion: 0.07
+Nodes (34): dbus.BusObject, dbus.Error, dbus.ObjectPath, dbus.Sender, DBusResolvedResolver, resolvedServer, resolvedServerSet, resolvedServerSpecification (+26 more)
 
 ### Community 34 - "GiftCardCode"
-Cohesion: 0.03
-Nodes (16): Dflydev\DotAccessData\Data, Illuminate\Database\Eloquent\Relations\BelongsTo, Illuminate\Database\Eloquent\Relations\HasMany, Illuminate\Validation\Rule, Laravel\Sanctum\HasApiTokens, Rule, GiftCardController, GiftCardCode (+8 more)
+Cohesion: 0.04
+Nodes (13): Dflydev\DotAccessData\Data, Illuminate\Database\Eloquent\Relations\BelongsTo, Rule, GiftCardController, GiftCardCode, User, GiftCardTemplate, GiftCardUsage (+5 more)
 
 ### Community 35 - "D"
 Cohesion: 0.05
@@ -989,20 +976,24 @@ Cohesion: 0.05
 Nodes (8): isUSBServerMessage_Message, USBDeviceReady, USBEndpointAbort, USBError, USBServerMessage, USBServerMessage_Abort, USBServerMessage_Error, USBServerMessage_Ready
 
 ### Community 41 - "platformTransport"
-Cohesion: 0.12
-Nodes (7): RcodeError, github.com/sagernet/sing-box/dns/transport/local.PreferredDomainResolver, ExchangeContext, Func, LocalDNSTransport, platformTransport, newPlatformTransport()
+Cohesion: 0.15
+Nodes (5): github.com/sagernet/sing-box/dns/transport/local.PreferredDomainResolver, ExchangeContext, Func, LocalDNSTransport, platformTransport
 
 ### Community 42 - "Endpoint"
 Cohesion: 0.11
 Nodes (15): github.com/sagernet/sing/common/control.InterfaceFinder, github.com/sagernet/sing/service/pause.Callback, github.com/sagernet/wireguard-go/device.AllowedIPs, github.com/sagernet/wireguard-go/device.Peer, returnDeviceWrapper, Endpoint, NewEndpoint(), tun.Handler (+7 more)
 
 ### Community 43 - "NetworkManager"
-Cohesion: 0.04
-Nodes (27): InterfaceUpdateListener, github.com/sagernet/sing/common/control.DefaultInterfaceFinder, github.com/sagernet/sing/common/control.Func, github.com/sagernet/sing/common/network.PacketBatchReadWaiter, github.com/sagernet/sing/common/ranges.Range, github.com/sagernet/sing/common/winpowrprof.EventListener, net.ListenConfig, packetWriter (+19 more)
+Cohesion: 0.08
+Nodes (8): github.com/sagernet/sing/common/control.DefaultInterfaceFinder, github.com/sagernet/sing/common/control.Func, github.com/sagernet/sing/common/winpowrprof.EventListener, NetworkInterface, NetworkManager, tun.DefaultInterfaceMonitor, tun.NetworkUpdateMonitor, tun.PackageManager
+
+### Community 44 - "TrafficCounter"
+Cohesion: 0.23
+Nodes (3): TrafficCounter, TrafficStorage, NewTrafficCounter()
 
 ### Community 45 - "startInstance"
 Cohesion: 0.04
-Nodes (88): github.com/sagernet/sing-box/option.V2RayTransportOptions, math/big.Int, generateECHKeyPair(), ECHKeygenDefault(), marshalECHConfig(), box.Box, startInstance(), testSuit() (+80 more)
+Nodes (109): github.com/sagernet/sing-box/option.V2RayTransportOptions, math/big.Int, testing.M, generateECHKeyPair(), ECHKeygenDefault(), marshalECHConfig(), box.Box, startInstance() (+101 more)
 
 ### Community 46 - "l"
 Cohesion: 0.05
@@ -1013,12 +1004,12 @@ Cohesion: 0.07
 Nodes (4): OpenConnectAuthChallenge_Form, OpenConnectAuthForm, OpenConnectAuthFormChoice, OpenConnectAuthFormField
 
 ### Community 48 - "Service"
-Cohesion: 0.10
-Nodes (14): io.ReadWriter, net/http.Response, sync.WaitGroup, webSocketSession, AggregatedUsage, oauthCredentials, Service, UserManager (+6 more)
+Cohesion: 0.08
+Nodes (24): io.ReadWriter, net/http.Header, net/http.Response, sync.Once, errorDetails, errorResponse, webSocketSession, extractWeeklyCycleHint() (+16 more)
 
 ### Community 49 - "google.golang.org/protobuf/types/known/emptypb.Empty"
 Cohesion: 0.02
-Nodes (114): ConnectionEvent, ClashMode, connectionSnapshot, Instance, ManagedHandler, OverrideOptions, PlatformHandler, ServiceOptions (+106 more)
+Nodes (69): ConnectionEvent, ClashMode, connectionSnapshot, endpointStatusProvider, Instance, ManagedHandler, OverrideOptions, PlatformHandler (+61 more)
 
 ### Community 50 - "o"
 Cohesion: 0.06
@@ -1028,49 +1019,49 @@ Nodes (56): $a(), Av(), Bb(), o(), r(), Cu(), a(), i() (+48 more)
 Cohesion: 0.11
 Nodes (20): syncConfigPayload, syncDevicesPayload, syncNodesPayload, syncUserDeltaPayload, syncUsersPayload, WSClientConfig, MachineNode, NodeConfig (+12 more)
 
-### Community 52 - "zr"
-Cohesion: 0.08
-Nodes (41): r(), Ar(), fe(), Be(), bi(), br(), ce(), De() (+33 more)
+### Community 52 - "fe"
+Cohesion: 0.13
+Nodes (20): fe(), Be(), ce(), De(), Fe(), ge(), He(), hr() (+12 more)
 
 ### Community 53 - "T"
 Cohesion: 0.23
 Nodes (10): golang.org/x/sync/semaphore.Weighted, T, ConnPool, NewConnPool(), newConnPoolState(), ConnPool[T], connPoolConnect, ConnPoolMode (+2 more)
 
 ### Community 54 - "github.com/sagernet/sing/common/buf.Buffer"
-Cohesion: 0.02
-Nodes (41): ReadWaitConn, ConnCounter, PacketConnCounter, TrafficStorage, NewConnCounter(), NewPacketConnCounter(), directPacketBatchWriter, directPacketWriter (+33 more)
+Cohesion: 0.03
+Nodes (28): ReadWaitConn, directPacketBatchWriter, directPacketWriter, Inbound, github.com/sagernet/sing/common/buf.Buffer, github.com/sagernet/sing/common/network.PacketBatchWriter, github.com/sagernet/sing/common/network.ReadWaitOptions, github.com/sagernet/sing-tun.NetworkUpdateCallback (+20 more)
 
 ### Community 55 - "Client"
-Cohesion: 0.12
-Nodes (9): io.ReadCloser, net/url.Values, HandshakeResponse, MachineNodesResponse, APIMetrics, drainAndClose(), NodeConfig, Client (+1 more)
+Cohesion: 0.09
+Nodes (12): io.ReadCloser, net/url.Values, sync/atomic.Uint64, HandshakeResponse, LimiterMetrics, MachineNodesResponse, APIMetrics, Limiter (+4 more)
 
-### Community 56 - "io.Reader"
-Cohesion: 0.06
-Nodes (13): readCounter, bufio.Reader, io.Reader, net/http.Flusher, newGunConn(), newLateGunConn(), NewHTTP1Conn(), NewHTTPConn() (+5 more)
+### Community 56 - "HTTP2Conn"
+Cohesion: 0.09
+Nodes (8): NewHTTP1Conn(), NewHTTP2Wrapper(), NewHTTPConn(), NewLateHTTPConn(), HTTP2Conn, HTTP2ConnWrapper, HTTPConn, ServerHTTPConn
 
 ### Community 57 - "e"
 Cohesion: 0.07
 Nodes (27): a(), b(), o(), b(), e(), d(), O(), w() (+19 more)
 
 ### Community 58 - "Coupon"
-Cohesion: 0.12
-Nodes (5): App\Http\Requests\Admin\CouponSave, CouponController, CouponGenerate, Coupon, CouponService
+Cohesion: 0.20
+Nodes (3): CouponController, CouponGenerate, Coupon
 
 ### Community 59 - "ccm/service_usage.go"
 Cohesion: 0.16
 Nodes (21): AggregatedUsage, AggregatedUsageJSON, CostCombination, CostCombinationJSON, CostsSummaryJSON, modelFamily, ModelPricing, UsageStats (+13 more)
 
 ### Community 60 - "QUICClientHello"
-Cohesion: 0.10
-Nodes (18): testing.F, qCryptoFragment, Compute(), ClientHello, isQUICGo(), TestSniffQUICInitialFromQuicGo(), TestSniffQUICQuicGoFingerprint(), count() (+10 more)
+Cohesion: 0.09
+Nodes (19): testing.F, qCryptoFragment, Compute(), ClientHello, isQUICGo(), TestSniffQUICInitialFromQuicGo(), TestSniffQUICQuicGoFingerprint(), count() (+11 more)
 
 ### Community 61 - "a"
 Cohesion: 0.06
 Nodes (55): Af(), ah(), an(), Bp(), ch(), df(), Dp(), c() (+47 more)
 
-### Community 62 - "MailService"
-Cohesion: 0.07
-Nodes (17): Illuminate\Bus\Queueable, Illuminate\Contracts\Queue\ShouldQueue, Illuminate\Foundation\Bus\Dispatchable, Illuminate\Queue\InteractsWithQueue, Illuminate\Queue\SerializesModels, Illuminate\Support\Carbon, NodeUserSyncJob, OrderHandleJob (+9 more)
+### Community 62 - "SendEmailJob"
+Cohesion: 0.12
+Nodes (15): Illuminate\Bus\Queueable, Illuminate\Contracts\Queue\ShouldQueue, Illuminate\Foundation\Bus\Dispatchable, Illuminate\Queue\InteractsWithQueue, Illuminate\Queue\SerializesModels, Illuminate\Support\Carbon, Illuminate\Support\Facades\Hash, NodeUserSyncJob (+7 more)
 
 ### Community 63 - "rule/rule_action.go"
 Cohesion: 0.05
@@ -1078,7 +1069,7 @@ Nodes (18): github.com/sagernet/sing-box/common/sniff.PacketSniffer, github.com/
 
 ### Community 64 - "rule_set_semantics_test.go"
 Cohesion: 0.10
-Nodes (63): abstractDefaultRule, NetworkItem, RuleItem, ruleMatchState, matchAnyItem(), NewNetworkItem(), addDestinationAddressItem(), addDestinationIPAcceptAnyItem() (+55 more)
+Nodes (66): abstractDefaultRule, NetworkItem, PortItem, PortRangeItem, rangeItem, RuleItem, NewNetworkItem(), NewPortItem() (+58 more)
 
 ### Community 65 - "Default Fields"
 Cohesion: 0.04
@@ -1097,8 +1088,8 @@ Cohesion: 0.15
 Nodes (28): net/http.Client, fdroidAPIPackage, fdroidAPIResponse, fdroidCache, fdroidEntry, fdroidEntryFile, fdroidIndexV1, fdroidIndexV2 (+20 more)
 
 ### Community 69 - "AbstractPlugin"
-Cohesion: 0.07
-Nodes (5): Curl\Curl, AbstractPlugin, Schedule, Plugin, View
+Cohesion: 0.08
+Nodes (3): AbstractPlugin, Schedule, View
 
 ### Community 70 - "TailscaleSSHStart"
 Cohesion: 0.04
@@ -1108,57 +1099,61 @@ Nodes (8): isTailscaleSSHClientMessage_Message, TailscaleSSHClientMessage, Tails
 Cohesion: 0.04
 Nodes (50): address, auto_redirect, auto_redirect_input_mark, auto_redirect_iproute2_fallback_rule_index, auto_redirect_nfqueue, auto_redirect_output_mark, auto_redirect_reset_mark, auto_route (+42 more)
 
-### Community 72 - "Options"
-Cohesion: 0.10
-Nodes (23): XrayOptions, github.com/sagernet/sing-box/option.Inbound, github.com/xtls/xray-core/core.InboundHandlerConfig, github.com/xtls/xray-core/core.OutboundHandlerConfig, github.com/xtls/xray-core/infra/conf.InboundDetourConfig, github.com/xtls/xray-core/infra/conf.TrojanInboundFallback, github.com/xtls/xray-core/infra/conf.VLessInboundFallback, CertConfig (+15 more)
+### Community 72 - "NodeInfo"
+Cohesion: 0.06
+Nodes (37): XrayOptions, github.com/sagernet/sing-box/option.Inbound, github.com/xtls/xray-core/core.InboundHandlerConfig, github.com/xtls/xray-core/core.OutboundHandlerConfig, github.com/xtls/xray-core/infra/conf.InboundDetourConfig, github.com/xtls/xray-core/infra/conf.TrojanInboundFallback, github.com/xtls/xray-core/infra/conf.VLessInboundFallback, AnyTlsNode (+29 more)
 
 ### Community 73 - "Core"
-Cohesion: 0.08
-Nodes (31): apiBackoff, pullResult, Service, ControlPlane, Sink, Source, atomicDownload(), Ensure() (+23 more)
+Cohesion: 0.06
+Nodes (41): log/slog.Level, ctxKey, nodeInfo, StartupSummary, apiBackoff, pullResult, Service, atomicDownload() (+33 more)
 
 ### Community 74 - "c"
 Cohesion: 0.28
 Nodes (31): a(), a(), b(), d(), E(), et(), f(), g() (+23 more)
 
 ### Community 76 - "CommandClient"
-Cohesion: 0.03
-Nodes (59): github.com/sagernet/sing-box/daemon.ManagedServiceClient, google.golang.org/grpc.BidiStreamingClient, google.golang.org/grpc.ClientConn, google.golang.org/grpc.ClientStream, google.golang.org/grpc.ServerStreamingClient, google.golang.org/grpc.StreamDesc, google.golang.org/grpc.Streamer, google.golang.org/grpc.UnaryInvoker (+51 more)
+Cohesion: 0.08
+Nodes (9): github.com/sagernet/sing-box/daemon.ManagedServiceClient, CommandClient, DeprecatedNoteIterator, OpenConnectAuthResponse, OpenVPNChallengeResponse, remoteConnection, callManagedWithResult(), callWithResult() (+1 more)
 
 ### Community 77 - "github.com/sagernet/sing/common/logger.ContextLogger"
 Cohesion: 0.02
-Nodes (93): myUpstreamContextHandlerWrapper, myUpstreamHandlerWrapper, PacketConnectionHandler, routeContextHandlerWrapper, TCPInjectableInbound, UDPInjectableInbound, UpstreamHandlerAdapter, Inbound (+85 more)
+Nodes (76): UpstreamHandlerAdapter, Inbound, inboundHandler, github.com/anytls/sing-anytls.Service, github.com/sagernet/sing-box/common/tls.ServerConfig, github.com/sagernet/sing-box/dns/transport/local/systemconfig.Source, github.com/sagernet/sing/common/json/badoption.HTTPHeader, github.com/sagernet/sing/common/logger.ContextLogger (+68 more)
 
 ### Community 78 - "EarlyWebsocketConn"
 Cohesion: 0.08
 Nodes (13): github.com/sagernet/sing/common/network.ExtendedWriter, github.com/sagernet/ws.State, github.com/sagernet/ws/wsutil.FrameHandlerFunc, github.com/sagernet/ws/wsutil.Reader, T, NewConn(), wrapWsError(), wrapWsError0() (+5 more)
 
-### Community 79 - "NewDefaultHeadlessRule"
-Cohesion: 0.06
-Nodes (36): agdguardRuleLine, github.com/sagernet/sing-box/option.HeadlessRule, github.com/sagernet/sing/common/domain.AdGuardMatcher, github.com/sagernet/sing/common/domain.Matcher, AdGuardDomainItem, DefaultHeadlessRule, DomainItem, LogicalHeadlessRule (+28 more)
+### Community 79 - "DefaultHeadlessRule"
+Cohesion: 0.11
+Nodes (22): agdguardRuleLine, github.com/sagernet/sing-box/option.HeadlessRule, decompileRuleSet(), hasRule(), FromOptions(), ignoreIPCIDRRegexp(), parseAdGuardHostLine(), parseADGuardIPCIDRLine() (+14 more)
 
 ### Community 80 - "file_daemon_started_service_proto_rawDescGZIP"
 Cohesion: 0.03
-Nodes (17): ConnectionEventType, DefaultLogLevel, Log, Log_Message, LogLevel, ServiceStatus, ServiceStatus_Type, USBBackend (+9 more)
+Nodes (16): ConnectionEventType, DefaultLogLevel, Log, Log_Message, LogLevel, ServiceStatus, ServiceStatus_Type, USBBackend (+8 more)
 
-### Community 82 - "natDeviceWrapper"
-Cohesion: 0.14
-Nodes (8): github.com/sagernet/sing-tun/ping.SourceRewriter, NatDevice, NewNATDevice(), tun.DirectRouteContext, tun.DirectRouteDestination, tun.DirectRouteSession, natDestination, natDeviceWrapper
+### Community 81 - "NetworkQualityTestProgress"
+Cohesion: 0.03
+Nodes (9): NetworkQualityTestProgress, NetworkQualityTestRequest, SubscribeConnectionsRequest, SubscribeStatusRequest, google.golang.org/grpc.ServerStreamingClient, ConnectionEvents, Status, Groups (+1 more)
+
+### Community 82 - "HookManager"
+Cohesion: 0.05
+Nodes (13): App\Traits\QueryOperators, Illuminate\Database\Eloquent\Builder, Illuminate\Database\Query\Builder, ClientController, PaymentController, OrderController, User, UserController (+5 more)
 
 ### Community 83 - "n"
-Cohesion: 0.10
-Nodes (48): ae(), a(), i(), o(), u(), le(), o(), b() (+40 more)
+Cohesion: 0.09
+Nodes (57): ae(), a(), i(), o(), u(), ai(), le(), o() (+49 more)
 
 ### Community 84 - "srs/compat_test.go"
-Cohesion: 0.06
+Cohesion: 0.07
 Nodes (56): github.com/sagernet/sing/common/varbin.Reader, github.com/sagernet/sing/common/varbin.Writer, go4.org/netipx.IPSet, IPCIDRItem, myIPRange, myIPSet, oldIPRangeData, ruleSetMatch() (+48 more)
 
-### Community 85 - "DNSRecordOptions"
-Cohesion: 0.08
-Nodes (12): github.com/miekg/dns.RR, LogicalDNSRule, DNSRCode, DNSRecordOptions, DNSRuleMatchResponse, RawDefaultDNSRule, RawLogicalDNSRule, parseDNSRecord() (+4 more)
+### Community 85 - "_DNSRule"
+Cohesion: 0.13
+Nodes (6): LogicalDNSRule, DNSRuleMatchResponse, RawLogicalDNSRule, DefaultDNSRule, _DNSRule, LogicalDNSRule
 
 ### Community 86 - "ContextLogger"
 Cohesion: 0.03
-Nodes (143): FlowOutbound, OutboundWithMultiplex, Options, PacketDialerWithDestination, ParallelNetworkDialer, github.com/sagernet/sing-box/option.DirectOutboundOptions, github.com/sagernet/sing-box/option.DomainResolveOptions, github.com/sagernet/sing-box/option.ResolvedServiceOptions (+135 more)
+Nodes (126): FlowOutbound, OutboundWithMultiplex, Options, PacketDialerWithDestination, ParallelNetworkDialer, github.com/sagernet/sing-box/option.CertificateProviderOptions, github.com/sagernet/sing-box/option.DirectOutboundOptions, github.com/sagernet/sing-box/option.DomainResolveOptions (+118 more)
 
 ### Community 87 - "Conn"
 Cohesion: 0.20
@@ -1173,16 +1168,16 @@ Cohesion: 0.04
 Nodes (49): 1.0, 1.0.1, 1.0.2, 1.0.3, 1.0.4, 1.0.5, 1.0.6, 1.0.7 (+41 more)
 
 ### Community 90 - "platformInterfaceWrapper"
-Cohesion: 0.06
-Nodes (6): github.com/sagernet/sing-box/adapter.ShellSession, platformInterfaceWrapper, BridgeOptions, BridgeSession, PlatformUser, PlatformInterface
+Cohesion: 0.03
+Nodes (7): github.com/sagernet/sing-box/adapter.NeighborUpdateListener, github.com/sagernet/sing-box/adapter.ShellSession, github.com/sagernet/sing-tun.DefaultInterfaceMonitor, platformInterfaceStub, platformInterfaceWrapper, PlatformUser, PlatformInterface
 
 ### Community 91 - "sing-box.bash"
 Cohesion: 0.06
 Nodes (13): sing-box.bash script, __sing-box_contains_word(), __sing-box_debug(), __sing-box_handle_command(), __sing-box_handle_flag(), __sing-box_handle_go_custom_completion(), __sing-box_handle_noun(), __sing-box_handle_reply() (+5 more)
 
 ### Community 92 - "CoreConfig"
-Cohesion: 0.10
-Nodes (21): Hysteria2LogConfig, XrayLogConfig, github.com/xtls/xray-core/infra/conf.Policy, CoreConfig, Hysteria2Config, SingConfig, Hysteria2Config, NewHysteria2Config() (+13 more)
+Cohesion: 0.07
+Nodes (22): XrayLogConfig, github.com/xtls/xray-core/features/inbound.Manager, github.com/xtls/xray-core/infra/conf.Policy, CoreConfig, Hysteria2Config, SingConfig, XrayConfig, XrayConnectionConfig (+14 more)
 
 ### Community 93 - "components.async.js"
 Cohesion: 0.07
@@ -1208,65 +1203,61 @@ Nodes (47): auth_user, clash_mode, client, Default Fields, default_interface_add
 Cohesion: 0.04
 Nodes (47): action, auth_user, clash_mode, client, default_interface_address, domain, domain_keyword, domain_regex (+39 more)
 
-### Community 99 - "DBusResolvedResolver"
-Cohesion: 0.13
-Nodes (17): dbus.BusObject, DBusResolvedResolver, resolvedServer, resolvedServerSet, resolvedServerSpecification, buildResolvedServerSpecification(), dbus.Conn, dbus.Signal (+9 more)
+### Community 99 - "Shipper"
+Cohesion: 0.09
+Nodes (18): TestParseLogsResponse_EmptyNodeModes(), Client, ParseLogsResponse(), TestParseLogsResponse(), Entry, Meta, MetaSender, Response (+10 more)
 
-### Community 100 - "New"
-Cohesion: 0.21
-Nodes (15): Limiter, New(), TestGetDeviceLimitByUUID(), TestNew(), TestSnapshotMetrics(), TestUpdateUsers(), TestUpdateUsers_DetectsMultipleRemoved(), TestUpdateUsers_DetectsRemoved() (+7 more)
-
-### Community 101 - "PluginManager"
-Cohesion: 0.11
-Nodes (4): Migrator, InitializePlugins, Plugin, PluginManager
+### Community 100 - "validateNodeRuntime"
+Cohesion: 0.12
+Nodes (26): New(), TestGetDeviceLimitByUUID(), TestNew(), TestSnapshotMetrics(), TestUpdateUsers(), TestUpdateUsers_DetectsMultipleRemoved(), TestUpdateUsers_DetectsRemoved(), TestUpdateUsers_NoRemovals() (+18 more)
 
 ### Community 102 - "UserInfo"
-Cohesion: 0.07
-Nodes (11): AliveMap, Client, OnlineUser, UserInfo, UserListBody, UserTraffic, AddUsersParams, RoutingUpdater (+3 more)
+Cohesion: 0.08
+Nodes (10): AliveMap, Client, OnlineUser, UserInfo, UserListBody, UserTraffic, AddUsersParams, Limiter (+2 more)
 
 ### Community 103 - "github.com/sagernet/sing-box/option.Options"
-Cohesion: 0.13
-Nodes (20): github.com/sagernet/sing-box/option.Options, OptionsEntry, check(), format(), merge(), mergePathResources(), mergeSSHOutboundOptions(), mergeTLSInboundOptions() (+12 more)
+Cohesion: 0.18
+Nodes (13): loadOrigin(), github.com/sagernet/sing-box/option.Options, OptionsEntry, check(), format(), closeMonitor(), create(), box.Box (+5 more)
 
-### Community 104 - "platformInterfaceStub"
-Cohesion: 0.06
-Nodes (3): github.com/sagernet/sing-box/adapter.NeighborUpdateListener, platformInterfaceStub, Notification
+### Community 104 - "github.com/sagernet/sing/common/network.CountFunc"
+Cohesion: 0.08
+Nodes (9): ConnCounter, PacketConnCounter, TrafficStorage, NewConnCounter(), NewPacketConnCounter(), github.com/sagernet/sing/common/network.CountFunc, github.com/sagernet/sing/common/network.PacketReader, trackedPacketConn (+1 more)
 
 ### Community 105 - "Load"
-Cohesion: 0.13
-Nodes (28): Conf, configBaseDir(), Load(), LoadRoot(), TestConfig_AutoInstanceIDStable(), TestInheritFrom_AutoTLSInheritedWhenChildHasNoCertConfig(), TestInheritFrom_AutoTLSNotForcedWhenChildHasCertMode(), TestLoad_AutoTLS_NoDomain() (+20 more)
-
-### Community 106 - "mu"
 Cohesion: 0.12
-Nodes (33): a(), ai(), A(), ci(), di(), Ei(), fi(), gi() (+25 more)
+Nodes (29): NodeConfig, configBaseDir(), envFirst(), Load(), LoadRoot(), TestConfig_AutoInstanceIDStable(), TestInheritFrom_AutoTLSInheritedWhenChildHasNoCertConfig(), TestInheritFrom_AutoTLSNotForcedWhenChildHasCertMode() (+21 more)
+
+### Community 106 - "Illuminate\Support\Str"
+Cohesion: 0.07
+Nodes (14): App\Helpers\ApiResponse, App\User, Exception, Illuminate\Foundation\Exceptions\Handler, Illuminate\Support\Str, Illuminate\View\ViewException, Laravel\Sanctum\PersonalAccessToken, Linfo\Linfo (+6 more)
 
 ### Community 107 - "t"
-Cohesion: 0.09
-Nodes (58): at(), ae(), B(), ce(), ee(), G(), I(), ie() (+50 more)
+Cohesion: 0.08
+Nodes (69): r(), at(), A(), ae(), B(), ce(), ee(), G() (+61 more)
 
 ### Community 108 - "t"
 Cohesion: 0.07
 Nodes (43): aP(), bC(), Bs(), bt(), bv(), ce(), ck(), dc() (+35 more)
 
-### Community 109 - "client_test.go"
-Cohesion: 0.14
-Nodes (21): net/http/httptest.Server, newPanelTestServer(), TestPanelControlPlaneInitialRejectsInvalidCustomOutbounds(), TestPanelControlPlanePollRejectsInvalidCustomOutbounds(), TestTranslateWSEventRejectsInvalidCustomOutbounds(), TestTranslateWSEventRejectsUnsupportedProtocolForKernel(), decodeWeakRaw(), newTestServer() (+13 more)
+### Community 109 - "MailService"
+Cohesion: 0.09
+Nodes (7): Illuminate\Support\Facades\Config, Illuminate\Support\Facades\Mail, MailTemplateController, MailLog, MailTemplate, MailService, User
 
 ### Community 110 - "nopFactory"
 Cohesion: 0.08
-Nodes (5): github.com/sagernet/sing/common/observable.Subscription, nopFactory, Level, Entry, Level
+Nodes (3): github.com/sagernet/sing/common/observable.Subscription, nopFactory, Entry
 
 ### Community 111 - "Machine"
-Cohesion: 0.14
-Nodes (14): DiffMachineNodes(), Client, MachineBaseConfig, MachineNode, MachineNodesResponse, MachineStatus, MachineStatusPayload(), ParseMachineNodes() (+6 more)
+Cohesion: 0.15
+Nodes (13): DiffMachineNodes(), Client, MachineBaseConfig, MachineNode, MachineNodesResponse, MachineStatus, MachineStatusPayload(), ParseMachineNodes() (+5 more)
 
 ### Community 112 - "Controller"
-Cohesion: 0.07
-Nodes (20): AliveMap, Client, resty.Client, UserListBody, New(), serverHandle(), showVersion(), NewTrimNodeReader() (+12 more)
+Cohesion: 0.10
+Nodes (15): AliveMap, Client, resty.Client, UserListBody, New(), NewTrimNodeReader(), Task, ApiConfig (+7 more)
 
 ### Community 113 - "profile_import.go"
-Cohesion: 0.13
-Nodes (15): bufio.Writer, ErrorMessage, ProfileContent, ProfileContentRequest, ProfileDecoder, ProfileEncoder, ProfilePreview, ProfilePreviewIterator (+7 more)
+Cohesion: 0.12
+Nodes (16): bufio.Writer, io.ByteReader, ErrorMessage, ProfileContent, ProfileContentRequest, ProfileDecoder, ProfileEncoder, ProfilePreview (+8 more)
 
 ### Community 114 - "testSuitSimple"
 Cohesion: 0.19
@@ -1281,8 +1272,8 @@ Cohesion: 0.13
 Nodes (4): source_base_url(), PaymentController, Payment, PaymentService
 
 ### Community 117 - "github.com/juju/ratelimit.Bucket"
-Cohesion: 0.11
-Nodes (9): Conn, Writer, NewRateLimitWriter(), github.com/juju/ratelimit.Bucket, github.com/xtls/xray-core/common/buf.Writer, determineSpeedLimit(), Writer, NewRateLimitWriter() (+1 more)
+Cohesion: 0.08
+Nodes (13): Conn, Conn, NewConnRateLimiter(), Writer, NewRateLimitWriter(), github.com/juju/ratelimit.Bucket, github.com/xtls/xray-core/common/buf.Writer, determineSpeedLimit() (+5 more)
 
 ### Community 118 - "NotificationEvent"
 Cohesion: 0.09
@@ -1293,51 +1284,51 @@ Cohesion: 0.09
 Nodes (13): context.CancelCauseFunc, google.golang.org/grpc.Server, google.golang.org/grpc.ServiceDesc, GunService_TunClient, NewGRPCConn(), GunService_TunClient, gunServiceClient, RegisterGunServiceCustomNameServer() (+5 more)
 
 ### Community 120 - "Endpoint"
-Cohesion: 0.05
-Nodes (21): github.com/sagernet/sing-box/option.TailscaleSSHServerOptions, github.com/sagernet/sing-box/protocol/tailscale/tailssh.Server, github.com/sagernet/tailscale/ipn/ipnlocal.LocalBackend, github.com/sagernet/tailscale/net/dns.OSConfig, github.com/sagernet/tailscale/tsnet.Server, github.com/sagernet/tailscale/types/nettype.PacketConn, github.com/sagernet/tailscale/wgengine.ExportedUserspaceEngine, github.com/sagernet/tailscale/wgengine.ReconfigListener (+13 more)
+Cohesion: 0.07
+Nodes (19): github.com/sagernet/sing-box/option.TailscaleSSHServerOptions, github.com/sagernet/sing-box/protocol/tailscale/tailssh.Server, github.com/sagernet/tailscale/ipn/ipnlocal.LocalBackend, github.com/sagernet/tailscale/net/dns.OSConfig, github.com/sagernet/tailscale/tsnet.Server, github.com/sagernet/tailscale/wgengine.ExportedUserspaceEngine, github.com/sagernet/tailscale/wgengine.ReconfigListener, Adapter (+11 more)
 
 ### Community 121 - "Fields"
 Cohesion: 0.05
 Nodes (38): cache_id, enabled, Fields, path, rdrc_timeout, store_dns, store_fakeip, store_rdrc (+30 more)
 
 ### Community 122 - "CacheFile"
-Cohesion: 0.11
-Nodes (8): saveCacheKey, saveDNSCacheEntry, github.com/sagernet/bbolt.Bucket, github.com/sagernet/bbolt.DB, github.com/sagernet/bbolt.Tx, SavedBinary, checkDatabase(), CacheFile
+Cohesion: 0.10
+Nodes (11): URLTestGroup, saveCacheKey, saveDNSCacheEntry, github.com/sagernet/bbolt.Bucket, github.com/sagernet/bbolt.DB, github.com/sagernet/bbolt.Tx, OutboundGroup, SavedBinary (+3 more)
 
 ### Community 123 - "context.Context"
 Cohesion: 0.02
-Nodes (99): routeHandlerWrapper, InterfaceType, NetworkStrategy, ParallelInterfaceResolveDialer, ResolveDialer, resolveParallelNetworkDialer, Outbound, Outbound (+91 more)
+Nodes (83): anytlsDialer, Outbound, Outbound, InterfaceType, NetworkStrategy, clientHandshakeInfoKey, requestInfoKey, DefaultOutboundDialer (+75 more)
 
-### Community 124 - "Config"
-Cohesion: 0.06
-Nodes (32): KernelOverride, LogConfig, MachineConfig, NodeConfig, Watcher, LocalControlPlane, applyRuntimeConfig(), main() (+24 more)
+### Community 124 - "Watcher"
+Cohesion: 0.24
+Nodes (11): LogConfig, Watcher, applyRuntimeConfig(), main(), parseMemLimit(), runWithReload(), RuntimeConfig, InitLogger() (+3 more)
 
 ### Community 125 - "TaildropInbox"
 Cohesion: 0.06
 Nodes (4): SubscribeTaildropInboxRequest, TaildropFile, TaildropInbox, TaildropReceivingFile
 
-### Community 126 - "Setting"
-Cohesion: 0.07
-Nodes (11): Illuminate\Contracts\Cache\Repository, Illuminate\Contracts\Container\Container, Illuminate\Contracts\Foundation\Application, Illuminate\Support\Facades\Broadcast, Illuminate\Support\ServiceProvider, BroadcastServiceProvider, PluginServiceProvider, ProtocolServiceProvider (+3 more)
+### Community 126 - "Illuminate\Support\ServiceProvider"
+Cohesion: 0.10
+Nodes (10): Illuminate\Contracts\Foundation\Application, Illuminate\Support\Facades\Broadcast, Illuminate\Support\ServiceProvider, Laravel\Octane\Events\WorkerStarting, Laravel\Octane\Facades\Octane, BroadcastServiceProvider, OctaneServiceProvider, PluginServiceProvider (+2 more)
 
-### Community 127 - "testSuitLargeUDP"
-Cohesion: 0.14
-Nodes (22): testing.M, init(), TestMain(), testQUIC(), testSuitLargeUDP(), testSuitSimple1(), testSuitWg(), listen() (+14 more)
+### Community 127 - "logCapture"
+Cohesion: 0.12
+Nodes (19): SingLogConfig, formatWindow(), isRealityProbe(), levelToVerbosity(), newLogCapture(), nodeTagOfLogTag(), parseLogLine(), shipToPanel() (+11 more)
 
 ### Community 128 - "option/rule_set.go"
 Cohesion: 0.09
 Nodes (17): github.com/sagernet/sing/common/json.RawMessage, LocalRuleSet, RemoteRuleSet, removedLegacyDNSOptions, compileRuleSet(), downgradeRuleSetVersion(), DefaultHeadlessRule, HTTPClientOptions (+9 more)
 
 ### Community 129 - "Transport"
-Cohesion: 0.16
-Nodes (8): transportState, github.com/insomniacslk/dhcp/dhcpv4.DHCPv4, github.com/insomniacslk/dhcp/dhcpv4.TransactionID, github.com/sagernet/sing/common/control.Interface, closeServerTransports(), Transport, tun.DefaultInterfaceUpdateCallback, NewRawTransport()
+Cohesion: 0.17
+Nodes (6): github.com/insomniacslk/dhcp/dhcpv4.DHCPv4, github.com/insomniacslk/dhcp/dhcpv4.TransactionID, github.com/sagernet/sing/common/control.Interface, closeServerTransports(), Transport, tun.DefaultInterfaceUpdateCallback
 
-### Community 130 - "sync.Once"
-Cohesion: 0.13
-Nodes (7): github.com/sagernet/wireguard-go/device.Device, sync.Once, streamSession, tun.ICMPForwarder, tun.UDPForwarder, newSystemStackDevice(), systemStackDevice
+### Community 130 - "systemDevice"
+Cohesion: 0.06
+Nodes (23): github.com/sagernet/gvisor/pkg/tcpip/adapters/gonet.TCPConn, github.com/sagernet/gvisor/pkg/tcpip.FullAddress, github.com/sagernet/gvisor/pkg/tcpip.NetworkProtocolNumber, github.com/sagernet/gvisor/pkg/tcpip/stack.Stack, github.com/sagernet/wireguard-go/device.Device, tun.Handler, tun.NATFiltering, tun.NATMapping (+15 more)
 
 ### Community 131 - "USBDeviceDescriptor"
-Cohesion: 0.04
+Cohesion: 0.03
 Nodes (8): isUSBProviderMessage_Message, USBDeviceAttach, USBDeviceDescriptor, USBDeviceDetach, USBInterface, USBProviderMessage, USBProviderMessage_Attach, USBProviderMessage_Detach
 
 ### Community 132 - "Xboard-Node/install.sh"
@@ -1345,20 +1336,20 @@ Cohesion: 0.14
 Nodes (40): backup_existing_state(), check_root(), cleanup_tmp(), confirm_uninstall(), detect_arch(), detect_current_state(), detect_os(), ensure_dirs() (+32 more)
 
 ### Community 133 - "github.com/miekg/dns.Msg"
-Cohesion: 0.09
-Nodes (34): Client, dnsCacheKey, exchangeOperation, exchangeStatus, github.com/miekg/dns.Msg, github.com/miekg/dns.Question, github.com/sagernet/sing/contrab/freelru.Cache, net.MX (+26 more)
+Cohesion: 0.06
+Nodes (45): dnsTransportTagKey, inboundContextKey, Client, ClientOptions, dnsCacheKey, exchangeOperation, exchangeStatus, RcodeError (+37 more)
 
 ### Community 134 - "testing.T"
-Cohesion: 0.05
-Nodes (93): newTestClient(), TestParseNodeConfig_NoBaseConfig(), TestParseNodeConfig_PanelRouting(), TestParseNodeConfig_RoutingOnlyChangeKeepsInboundHash(), TestDiffMachineNodes(), TestMachineAPI_NodesAndStatus(), TestNew_ModesAndPaths(), TestParseMachineNodes() (+85 more)
+Cohesion: 0.03
+Nodes (107): newTestClient(), TestParseNodeConfig_NoBaseConfig(), TestParseNodeConfig_PanelRouting(), TestParseNodeConfig_RoutingOnlyChangeKeepsInboundHash(), TestBuildLogsRequest_AuthPerMode(), TestParseWSMessage_LogMode(), TestSendLogs_HTTP(), TestDiffMachineNodes() (+99 more)
 
-### Community 135 - "PlatformInterface"
-Cohesion: 0.14
-Nodes (8): SystemProxyStatus, net.IP, platformSearcher, FindConnectionOwnerRequest, PlatformInterface, nativeEndianIP(), ResolveSocketByProcSearch(), newPlatformSearcher()
+### Community 135 - "ConnectionOwner"
+Cohesion: 0.09
+Nodes (13): SystemProxyStatus, net.IP, platformSearcher, BridgeOptions, BridgeSession, ConnectionOwner, FindConnectionOwnerRequest, Notification (+5 more)
 
 ### Community 136 - "Manager"
-Cohesion: 0.10
-Nodes (20): certMaterial, github.com/caddyserver/certmagic.DNS01Solver, github.com/caddyserver/certmagic.DNSProvider, github.com/caddyserver/certmagic.Storage, os.FileMode, acmeFingerprint(), atomicWriteFile(), Manager (+12 more)
+Cohesion: 0.14
+Nodes (10): certMaterial, github.com/caddyserver/certmagic.DNS01Solver, github.com/caddyserver/certmagic.DNSProvider, github.com/caddyserver/certmagic.Storage, os.FileMode, atomicWriteFile(), Manager, pemEqual() (+2 more)
 
 ### Community 137 - "1.9.0"
 Cohesion: 0.05
@@ -1372,33 +1363,33 @@ Nodes (38): bypass, client_subnet, disable_cache, disable_optimistic_cache, fall
 Cohesion: 0.05
 Nodes (38): bypass, client_subnet, disable_cache, disable_optimistic_cache, fallback_delay, fallback_network_type, hijack-dns, method (+30 more)
 
-### Community 140 - "DefaultDNSRule"
-Cohesion: 0.09
-Nodes (6): abstractLogicalRule, DefaultDNSRule, HeadlessRule, RuleAction, IsFinalAction(), extractIPSetFromRule()
+### Community 140 - "NewDefaultDNSRule"
+Cohesion: 0.05
+Nodes (20): abstractLogicalRule, AuthUserItem, DefaultDNSRule, IPAcceptAnyItem, LogicalDNSRule, OutboundItem, ProtocolItem, HeadlessRule (+12 more)
 
-### Community 141 - "defaultFactory"
-Cohesion: 0.12
-Nodes (6): github.com/sagernet/sing/common/observable.Observer, defaultFactory, observableLogger, pendingEntry, Level, PlatformWriter
+### Community 141 - "Level"
+Cohesion: 0.07
+Nodes (16): Level, github.com/sagernet/sing/common/observable.Observer, defaultFactory, observableLogger, Options, overrideLevelKey, pendingEntry, init() (+8 more)
 
-### Community 142 - "deviceEndpoint"
-Cohesion: 0.08
-Nodes (7): github.com/sagernet/gvisor/pkg/tcpip/header.ARPHardwareType, github.com/sagernet/gvisor/pkg/tcpip.LinkAddress, github.com/sagernet/gvisor/pkg/tcpip/stack.LinkEndpointCapabilities, github.com/sagernet/gvisor/pkg/tcpip/stack.NetworkDispatcher, github.com/sagernet/gvisor/pkg/tcpip/stack.PacketBuffer, deviceEndpoint, wireEndpoint
+### Community 142 - "stackDevice"
+Cohesion: 0.05
+Nodes (13): github.com/sagernet/gvisor/pkg/tcpip.Error, github.com/sagernet/gvisor/pkg/tcpip/header.ARPHardwareType, github.com/sagernet/gvisor/pkg/tcpip.LinkAddress, github.com/sagernet/gvisor/pkg/tcpip/stack.LinkEndpointCapabilities, github.com/sagernet/gvisor/pkg/tcpip/stack.NetworkDispatcher, github.com/sagernet/gvisor/pkg/tcpip/stack.PacketBuffer, github.com/sagernet/gvisor/pkg/tcpip/stack.PacketBufferList, tun.ICMPForwarder (+5 more)
 
 ### Community 143 - "TaildropSendServerMessage"
 Cohesion: 0.10
 Nodes (4): isTaildropSendServerMessage_Message, TaildropSendProgress, TaildropSendServerMessage, TaildropSendServerMessage_Progress
 
-### Community 144 - "Illuminate\Contracts\Routing\Registrar"
-Cohesion: 0.08
-Nodes (11): Illuminate\Contracts\Routing\Registrar, CommController, CommSendEmailVerify, ClientRoute, GuestRoute, PassportRoute, ServerRoute, ClientRoute (+3 more)
+### Community 144 - "AdminRoute.php"
+Cohesion: 0.06
+Nodes (19): App\Http\Controllers\V1\Server\DeepbworkController, Illuminate\Contracts\Routing\Registrar, JobRepository, Laravel\Horizon\Contracts\JobRepository, Laravel\Horizon\Contracts\MasterSupervisorRepository, Laravel\Horizon\Contracts\MetricsRepository, Laravel\Horizon\Contracts\SupervisorRepository, Laravel\Horizon\Contracts\WorkloadRepository (+11 more)
 
 ### Community 145 - "QUIC 字段"
 Cohesion: 0.06
 Nodes (35): bbr_profile, brutal_debug, ignore_client_bandwidth, masquerade, masquerade.content, masquerade.directory, masquerade.headers, masquerade.rewrite_host (+27 more)
 
 ### Community 146 - "o"
-Cohesion: 0.13
-Nodes (35): Mt(), an(), l(), bt(), t(), ct(), u(), ft() (+27 more)
+Cohesion: 0.11
+Nodes (44): Mt(), an(), l(), bt(), t(), ct(), u(), et() (+36 more)
 
 ### Community 147 - "FNode.sh"
 Cohesion: 0.18
@@ -1412,9 +1403,9 @@ Nodes (33): action, answer, client_subnet, client_subnet, disable_cache, disable
 Cohesion: 0.06
 Nodes (33): action, answer, client_subnet, client_subnet, disable_cache, disable_cache, disable_optimistic_cache, disable_optimistic_cache (+25 more)
 
-### Community 150 - "Reader"
-Cohesion: 0.47
-Nodes (3): Reader, maxminddb.Reader, Open()
+### Community 150 - "command_client.go"
+Cohesion: 0.09
+Nodes (22): google.golang.org/grpc.ClientConn, google.golang.org/grpc.ClientStream, google.golang.org/grpc.DialOption, google.golang.org/grpc.StreamDesc, google.golang.org/grpc.Streamer, google.golang.org/grpc.UnaryInvoker, CommandClientHandler, CommandClientOptions (+14 more)
 
 ### Community 151 - "memory"
 Cohesion: 0.24
@@ -1424,29 +1415,29 @@ Nodes (8): Memory, chi.Router, Server, inuseMemory(), memory(), Server, updateEx
 Cohesion: 0.06
 Nodes (31): bbr_profile, brutal_debug, disable_chrome_parrot, hop_interval, hop_interval_max, network, obfs.max_packet_size, obfs.min_packet_size (+23 more)
 
-### Community 154 - "userEmail"
-Cohesion: 0.07
-Nodes (69): github.com/xtls/xray-core/features/stats.Counter, github.com/xtls/xray-core/features/stats.Manager, applyStreamSettings(), buildConfig(), buildHTTP(), buildHysteria(), buildInbound(), buildRealitySettings() (+61 more)
+### Community 154 - "newTestDispatcher"
+Cohesion: 0.14
+Nodes (25): github.com/xtls/xray-core/features/stats.Counter, github.com/xtls/xray-core/features/stats.Manager, newTestDispatcher(), TestLimitDispatcher_CloseTrackingWriterReleasesConn(), TestLimitDispatcher_DelConn(), TestLimitDispatcher_DeviceLimitCheck(), TestLimitDispatcher_GetConnectionState(), TestLimitDispatcher_ResetConns() (+17 more)
 
 ### Community 155 - "Default Fields"
 Cohesion: 0.06
 Nodes (31): Default Fields, default_interface_address, domain, domain_keyword, domain_regex, domain_suffix, invert, ip_cidr (+23 more)
 
 ### Community 156 - "Formatter"
-Cohesion: 0.22
-Nodes (13): strings.Builder, Formatter, ID, idKey, colorForID(), FormatDuration(), Level, writeDuration() (+5 more)
+Cohesion: 0.23
+Nodes (12): strings.Builder, Formatter, ID, idKey, colorForID(), FormatDuration(), writeDuration(), writeInt() (+4 more)
 
 ### Community 157 - "1.14.0"
 Cohesion: 0.06
 Nodes (31): 1.10.0, 1.11.0, 1.12.0, 1.14.0, 1.6.0, 1.8.0, Cache file and related features in Clash API, Deprecated Feature List (+23 more)
 
 ### Community 158 - "RemoteRuleSet"
-Cohesion: 0.05
-Nodes (17): github.com/sagernet/sing-box/adapter.HTTPStartContext, github.com/sagernet/sing-box/adapter.HTTPTransport, github.com/sagernet/sing-box/option.RuleSet, github.com/sagernet/sing/common/x/list.Element, github.com/sagernet/sing-tun.DefaultInterfaceUpdateCallback, fakeRuleSet, LocalRuleSet, RemoteRuleSet (+9 more)
+Cohesion: 0.04
+Nodes (17): github.com/sagernet/sing-box/adapter.HTTPStartContext, github.com/sagernet/sing-box/adapter.HTTPTransport, github.com/sagernet/sing-box/option.RuleSet, github.com/sagernet/sing/common/x/list.Element, github.com/sagernet/sing-tun.DefaultInterfaceUpdateCallback, platformDefaultInterfaceMonitor, fakeRuleSet, LocalRuleSet (+9 more)
 
-### Community 159 - "New"
-Cohesion: 0.25
-Nodes (14): New(), TestFlushAliveIPs(), TestFlushAliveIPs_DedupSameIP(), TestFlushTraffic(), TestHasTraffic(), TestProcess_CounterReset(), TestProcess_DeltaCalculation(), TestProcess_InitialTraffic() (+6 more)
+### Community 159 - "DefaultRule"
+Cohesion: 0.09
+Nodes (16): github.com/sagernet/sing-box/option.DNSServerOptions, RuleAction, searchGeositeMatcher, geositeExport(), geositeLookup(), newSearchGeositeMatcher(), Compile(), Merge() (+8 more)
 
 ### Community 160 - "1.14.0"
 Cohesion: 0.06
@@ -1456,41 +1447,41 @@ Nodes (31): 1.10.0, 1.11.0, 1.12.0, 1.14.0, 1.6.0, 1.8.0, Clash API 中的 Cache
 Cohesion: 0.21
 Nodes (30): add_node_config(), before_show_menu(), check_enabled(), check_install(), check_status(), check_uninstall(), config(), confirm() (+22 more)
 
-### Community 162 - "Controller"
+### Community 162 - "New"
 Cohesion: 0.10
-Nodes (14): AliveMap, Client, resty.Client, UserListBody, Task, ApiConfig, ApiConfig, NodeConfig (+6 more)
+Nodes (14): contains(), TestSendLogsMeta(), TestUseAutoType(), AliveMap, Client, resty.Client, UserListBody, New() (+6 more)
 
 ### Community 163 - "C"
 Cohesion: 0.12
 Nodes (17): ac(), C(), ce(), Cn(), ec(), Ee(), gc(), je() (+9 more)
 
-### Community 164 - "Xray"
-Cohesion: 0.08
-Nodes (13): github.com/xtls/xray-core/common/protocol.MemoryUser, github.com/xtls/xray-core/core.Instance, golang.org/x/time/rate.Limiter, ConnTracker, closeOld(), drainConns(), Xray, hexEncode() (+5 more)
+### Community 164 - "UserSpec"
+Cohesion: 0.04
+Nodes (48): github.com/xtls/xray-core/common/protocol.MemoryUser, github.com/xtls/xray-core/core.Instance, github.com/xtls/xray-core/proxy/shadowsocks.CipherType, fakeKernel, SingBox, NewNOPFactory(), ComputeHash(), Capabilities (+40 more)
 
 ### Community 165 - "字段"
 Cohesion: 0.07
 Nodes (28): accept_routes, advertise_exit_node, advertise_routes, advertise_tags, auth_key, control_url, ephemeral, exit_node (+20 more)
 
 ### Community 167 - "Manager"
-Cohesion: 0.07
-Nodes (13): github.com/sagernet/sing/common/observable.Subscriber, Snapshot, uuid.UUID, NewManager(), uuid.UUID, Tracker, ConnectionEvent, ConnectionEventType (+5 more)
+Cohesion: 0.14
+Nodes (9): github.com/sagernet/sing/common/observable.Subscriber, Snapshot, uuid.UUID, NewManager(), Tracker, ConnectionEvent, ConnectionEventType, Manager (+1 more)
 
 ### Community 168 - "dns/router.go"
-Cohesion: 0.08
-Nodes (41): dnsRouteStatus, dnsRuleModeFlags, dnsRuleResponseUse, github.com/sagernet/sing-box/option.DNSRule, github.com/sagernet/sing-box/option.DNSRuleAction, github.com/sagernet/sing-box/option.DNSServerOptions, RuleSetMetadata, closeRules() (+33 more)
+Cohesion: 0.14
+Nodes (28): dnsRouteStatus, dnsRuleModeFlags, dnsRuleResponseUse, github.com/sagernet/sing-box/option.DNSRule, github.com/sagernet/sing-box/option.DNSRuleAction, RuleSetMetadata, closeRules(), defaultRuleDisablesLegacyDNSMode() (+20 more)
 
 ### Community 169 - "google.golang.org/protobuf/reflect/protoreflect.Message"
 Cohesion: 0.03
-Nodes (20): google.golang.org/protobuf/reflect/protoreflect.Message, NewStatsServiceClient(), RegisterStatsServiceServer(), _StatsService_GetStats_Handler(), _StatsService_GetSysStats_Handler(), _StatsService_QueryStats_Handler(), file_experimental_v2rayapi_stats_proto_init(), file_experimental_v2rayapi_stats_proto_rawDescGZIP() (+12 more)
+Nodes (19): google.golang.org/protobuf/reflect/protoreflect.Message, RegisterStatsServiceServer(), _StatsService_GetStats_Handler(), _StatsService_GetSysStats_Handler(), _StatsService_QueryStats_Handler(), file_experimental_v2rayapi_stats_proto_init(), file_experimental_v2rayapi_stats_proto_rawDescGZIP(), init() (+11 more)
 
 ### Community 170 - "inbound/index.md"
 Cohesion: 0.08
 Nodes (22): Fields, Inbound, Structure, tag, tag, 入站, 字段, 结构 (+14 more)
 
 ### Community 171 - "NodeInfo"
-Cohesion: 0.09
-Nodes (19): AnyTlsNode, CommonNode, Hysteria2Node, HysteriaNode, NodeInfo, RawDNS, Rules, ShadowsocksNode (+11 more)
+Cohesion: 0.08
+Nodes (21): AnyTlsNode, CommonNode, Hysteria2Node, HysteriaNode, NodeInfo, RawDNS, Rules, ShadowsocksNode (+13 more)
 
 ### Community 172 - "Fields"
 Cohesion: 0.07
@@ -1498,7 +1489,7 @@ Nodes (28): alpn, certificate, certificate_path, certificate_provider, certifica
 
 ### Community 173 - "Adapter"
 Cohesion: 0.04
-Nodes (30): anytlsDialer, Outbound, Outbound, cronet.NaiveClient, github.com/anytls/sing-anytls.Client, github.com/anytls/sing-anytls.ClientConfig, github.com/anytls/sing-anytls/session.Client, github.com/cretz/bine/control.Event (+22 more)
+Nodes (30): cronet.NaiveClient, github.com/cretz/bine/control.Event, github.com/cretz/bine/tor.StartConf, github.com/cretz/bine/tor.Tor, github.com/sagernet/sing-box/common/proxybridge.Bridge, github.com/sagernet/sing/common/uot.Client, github.com/sagernet/sing/protocol/socks.Client, github.com/sagernet/sing-quic/hysteria2.Client (+22 more)
 
 ### Community 174 - "字段"
 Cohesion: 0.07
@@ -1525,16 +1516,16 @@ Cohesion: 0.20
 Nodes (8): kernelCryptoAES128CCM, kernelCryptoAES128GCM, kernelCryptoAES256GCM, kernelCryptoARIA128GCM, kernelCryptoARIA256GCM, kernelCryptoChacha20Poly1035, kernelCryptoCipherType, kernelCryptoInfo
 
 ### Community 180 - "V2bX/conf/limit.go"
-Cohesion: 0.32
-Nodes (7): DynamicSpeedLimitConfig, IpReportConfig, LimitConfig, RecorderConfig, RedisConfig, DynamicSpeedLimitConfig, IpReportConfig
+Cohesion: 0.60
+Nodes (4): DynamicSpeedLimitConfig, IpReportConfig, RecorderConfig, RedisConfig
 
-### Community 181 - "DefaultDispatcher"
-Cohesion: 0.13
-Nodes (10): github.com/xtls/xray-core/features/dns.FakeDNSEngine, github.com/xtls/xray-core/features/inbound.Manager, github.com/xtls/xray-core/features/outbound.Manager, github.com/xtls/xray-core/features/policy.Manager, github.com/xtls/xray-core/features/routing.Router, Config, DefaultDispatcher, init() (+2 more)
+### Community 181 - "ConnectionManager"
+Cohesion: 0.10
+Nodes (8): io.Closer, groupConnItem, Inbound, trackedConn, trackedPacketConn, rejectHTTP(), ConnectionManager, NewConnectionManager()
 
-### Community 182 - "option/hysteria2.go"
-Cohesion: 0.14
-Nodes (18): HTTP2Options, Hysteria2InboundRealm, _Hysteria2Masquerade, Hysteria2MasqueradeFile, Hysteria2MasqueradeProxy, Hysteria2MasqueradeString, _Hysteria2Obfs, Hysteria2ObfsGecko (+10 more)
+### Community 182 - ".getClientForCall"
+Cohesion: 0.10
+Nodes (16): NetworkQualityTestHandler, NetworkQualityTestSession, STUNTestHandler, STUNTestSession, TaildropDownloadHandler, TaildropDownloadSession, TaildropSendHandler, TaildropSendOptions (+8 more)
 
 ### Community 183 - "time.Time"
 Cohesion: 0.05
@@ -1548,17 +1539,17 @@ Nodes (26): Default Fields, default_interface_address, domain, domain_keyword, d
 Cohesion: 0.08
 Nodes (25): 1. Create Configuration File `config.json`, 1. Logging, 2. Configuration Checking, 2. Create Main Plugin Class `Plugin.php`, 3. Create Controller, 3. Development Mode, 4. Create Routes `routes/api.php`, Automatic Command Registration (+17 more)
 
-### Community 186 - "outboundEntry"
-Cohesion: 0.08
-Nodes (39): Route, CustomRouteAction, CustomRouteMatch, CustomRouteRule, filterRules(), Sing, ruleOutbound(), ConvertPanelOutbound() (+31 more)
+### Community 186 - "New"
+Cohesion: 0.04
+Nodes (76): Route, CoreConfig, SingConfig, CustomRouteAction, CustomRouteMatch, BrutalOptions, BrutalOptions, CustomRouteRule (+68 more)
 
 ### Community 187 - "GeoLoader"
-Cohesion: 0.13
-Nodes (13): github.com/apernet/hysteria/core/v2/server.EventLogger, github.com/apernet/hysteria/core/v2/server.Server, github.com/apernet/hysteria/core/v2/server.TrafficLogger, github.com/apernet/hysteria/extras/v2/masq.MasqTCPServer, github.com/apernet/hysteria/extras/v2/outbounds/acl/v2geo.GeoIP, github.com/apernet/hysteria/extras/v2/outbounds/acl/v2geo.GeoSite, go.uber.org/zap.Logger, GeoLoader (+5 more)
+Cohesion: 0.09
+Nodes (16): github.com/apernet/hysteria/core/v2/server.EventLogger, github.com/apernet/hysteria/core/v2/server.HyStream, github.com/apernet/hysteria/core/v2/server.Server, github.com/apernet/hysteria/core/v2/server.StreamStats, github.com/apernet/hysteria/core/v2/server.TrafficLogger, github.com/apernet/hysteria/extras/v2/masq.MasqTCPServer, github.com/apernet/hysteria/extras/v2/outbounds/acl/v2geo.GeoIP, github.com/apernet/hysteria/extras/v2/outbounds/acl/v2geo.GeoSite (+8 more)
 
-### Community 188 - "tunDeviceAdapter"
-Cohesion: 0.13
-Nodes (4): github.com/sagernet/sing-tun.NativeTun, github.com/sagernet/sing-tun.WinTun, github.com/sagernet/wireguard-go/tun.Event, tunDeviceAdapter
+### Community 188 - "Hub"
+Cohesion: 0.15
+Nodes (9): InstallLogrus(), levelOfLogrus(), logrusLevelOf(), github.com/sirupsen/logrus.Entry, github.com/sirupsen/logrus.Formatter, github.com/sirupsen/logrus.Level, Hub, logrusBridge (+1 more)
 
 ### Community 189 - "Fields"
 Cohesion: 0.08
@@ -1572,9 +1563,9 @@ Nodes (25): require, bacon/bacon-qr-code, doctrine/dbal, google/cloud-storage, g
 Cohesion: 0.08
 Nodes (25): 1. Command Naming Conventions, 1. Command Testing, 1. Multi-Command Plugins, 1. Telegram Plugin Commands, 2. Error Handling Pattern, 2. Inter-Command Communication, 2. Logging, 2. TelegramExtra Plugin Commands (+17 more)
 
-### Community 192 - "nlog.go"
-Cohesion: 0.16
-Nodes (15): log/slog.Level, ctxKey, nodeInfo, StartupSummary, ConfigUpdated(), formatMsg(), FromContext(), FullRestart() (+7 more)
+### Community 192 - "buildConfig"
+Cohesion: 0.17
+Nodes (22): buildConfig(), buildRouting(), mergeRouteList(), TestBuildConfig_AllProtocols_ValidJSON(), TestBuildConfig_LogLevel(), TestBuildConfig_OutboundPriority(), TestBuildConfig_Shadowsocks_MultiUser(), TestBuildConfig_Shadowsocks_MultiUserTraditional() (+14 more)
 
 ### Community 193 - "1.8.0"
 Cohesion: 0.08
@@ -1588,53 +1579,57 @@ Nodes (23): bind_address_no_port, bind_interface, connect_timeout, detour, disab
 Cohesion: 0.08
 Nodes (23): bind_address_no_port, bind_interface, connect_timeout, detour, disable_tcp_keep_alive, domain_resolver, domain_strategy, fallback_delay (+15 more)
 
-### Community 196 - "Service"
-Cohesion: 0.11
-Nodes (21): errorDetails, errorResponse, Service, net/http.Header, errorDetails, errorResponse, detectContextWindow(), extractWeeklyCycleHint() (+13 more)
+### Community 196 - "ccm/service.go"
+Cohesion: 0.19
+Nodes (9): errorDetails, errorResponse, detectContextWindow(), extractWeeklyCycleHint(), errorDetails, WeeklyCycleHint, isHopByHopHeader(), parseInt64Header() (+1 more)
 
 ### Community 199 - "HTTP"
 Cohesion: 0.08
 Nodes (23): early_data_header_name, gRPC, headers, headers, headers, host, host, HTTP (+15 more)
 
 ### Community 200 - "DarwinSystemProxy"
-Cohesion: 0.26
-Nodes (4): DarwinSystemProxy, getInterfaceDisplayName(), tun.DefaultInterfaceMonitor, tun.DefaultInterfaceUpdateCallback
+Cohesion: 0.24
+Nodes (5): DarwinSystemProxy, getInterfaceDisplayName(), tun.DefaultInterfaceMonitor, tun.DefaultInterfaceUpdateCallback, NewSystemProxy()
 
 ### Community 201 - "ValidateNodeSpec"
-Cohesion: 0.19
-Nodes (17): outboundTagSource, additionalTagNames(), collectAdditionalOutboundTagSources(), collectCustomConfigOutboundTagSources(), collectRawOutboundTagSources(), OutboundConfig, TestValidateOutboundTagCollisions_RejectsDuplicateRawSources(), toMap() (+9 more)
+Cohesion: 0.20
+Nodes (16): outboundTagSource, additionalTagNames(), collectAdditionalOutboundTagSources(), collectCustomConfigOutboundTagSources(), collectRawOutboundTagSources(), OutboundConfig, TestValidateOutboundTagCollisions_RejectsDuplicateRawSources(), toMap() (+8 more)
 
 ### Community 202 - "ClientBind"
 Cohesion: 0.13
-Nodes (6): github.com/sagernet/wireguard-go/conn.Endpoint, github.com/sagernet/wireguard-go/conn.ReceiveFunc, NewClientBind(), ClientBind, remoteEndpoint, wireConn
+Nodes (5): github.com/sagernet/wireguard-go/conn.Endpoint, github.com/sagernet/wireguard-go/conn.ReceiveFunc, ClientBind, remoteEndpoint, wireConn
 
 ### Community 203 - "windowsWIFIMonitor"
 Cohesion: 0.29
 Nodes (5): github.com/sagernet/sing/common/winwlanapi.Dot11MacAddress, golang.org/x/sys/windows.Handle, windowsWIFIMonitor, formatBSSID(), NewWIFIMonitor()
 
 ### Community 204 - "Note"
-Cohesion: 0.18
-Nodes (4): deprecatedManager, DeprecatedNote, DeprecatedNoteIterator, Note
+Cohesion: 0.22
+Nodes (3): deprecatedManager, DeprecatedNote, Note
 
 ### Community 205 - "HTTP"
 Cohesion: 0.08
 Nodes (23): early_data_header_name, gRPC, headers, headers, headers, host, host, HTTP (+15 more)
 
 ### Community 207 - "outbound/index.md"
-Cohesion: 0.12
-Nodes (13): Fields, Structure, Features, Fields, Outbound, Outbounds that support IP connection, Structure, tag (+5 more)
+Cohesion: 0.15
+Nodes (11): Features, Fields, Outbound, Outbounds that support IP connection, Structure, tag, default, Fields (+3 more)
 
 ### Community 208 - "Store"
-Cohesion: 0.12
-Nodes (13): bytes.Buffer, crypto/x509.CertPool, github.com/sagernet/fswatch.Watcher, github.com/sagernet/sing-box/option.CertificateOptions, io/fs.DirEntry, storePlatform, chromeIncludedPEM(), mozillaIncludedPEM() (+5 more)
+Cohesion: 0.13
+Nodes (11): bytes.Buffer, crypto/x509.CertPool, github.com/sagernet/fswatch.Watcher, io/fs.DirEntry, storePlatform, chromeIncludedPEM(), mozillaIncludedPEM(), appendPEMBlock() (+3 more)
 
 ### Community 209 - "oauthCredentials"
 Cohesion: 0.13
 Nodes (15): os/user.User, oauthCredentials, tokenData, oauthCredentials, platformReadCredentials(), platformWriteCredentials(), getDefaultCredentialsPath(), getRealUser() (+7 more)
 
 ### Community 210 - "Router"
+Cohesion: 0.05
+Nodes (26): github.com/sagernet/sing-box/adapter.HTTPClientManager, github.com/sagernet/sing-box/adapter.NeighborResolver, github.com/sagernet/sing-box/route/rule.RuleSetUpdater, github.com/sagernet/sing/common/ranges.Range, HeadlessRule, processCacheEntry, processCacheKey, ConnectionTracker (+18 more)
+
+### Community 211 - "StartedServiceClient"
 Cohesion: 0.03
-Nodes (37): NewTrafficCounter(), Conn, NewConnRateLimiter(), github.com/sagernet/sing-box/adapter.HTTPClientManager, github.com/sagernet/sing-box/adapter.NeighborResolver, github.com/sagernet/sing-box/route/rule.RuleSetUpdater, HeadlessRule, GetLimiter() (+29 more)
+Nodes (8): OpenConnectAuthChallengeCancel, OpenVPNChallengeSubmission, SelectOutboundRequest, SetGroupExpandRequest, SetTailscaleExitNodeRequest, StartedAt, google.golang.org/grpc.BidiStreamingClient, StartedServiceClient
 
 ### Community 212 - "github.com/spf13/cobra.Command"
 Cohesion: 0.33
@@ -1656,13 +1651,13 @@ Nodes (13): build_sing_box(), install_binary(), setup_config(), setup_environmen
 Cohesion: 0.13
 Nodes (6): y(), g(), C(), E(), k(), S()
 
-### Community 217 - "Service"
-Cohesion: 0.21
-Nodes (12): derpConfig, Service, github.com/sagernet/sing-box/option.DERPVerifyClientURLOptions, github.com/sagernet/tailscale/derp/derpserver.Server, github.com/sagernet/tailscale/types/key.NodePrivate, net/http.HandlerFunc, addWebSocketSupport(), checkMeshKey() (+4 more)
+### Community 217 - "Listener"
+Cohesion: 0.03
+Nodes (41): PacketConnectionHandler, TCPInjectableInbound, UDPInjectableInbound, derpConfig, Service, github.com/sagernet/sing-box/option.DERPVerifyClientURLOptions, github.com/sagernet/sing/common/network.PacketBatchReadWaiter, github.com/sagernet/tailscale/derp/derpserver.Server (+33 more)
 
 ### Community 218 - "CommandServer"
-Cohesion: 0.09
-Nodes (14): github.com/sagernet/sing-box/daemon.ManagedService, github.com/sagernet/sing-box/service/oomkiller.Recorder, github.com/sagernet/sing-box/service/powerreport.Manager, google.golang.org/grpc.StreamHandler, google.golang.org/grpc.StreamServerInfo, google.golang.org/grpc.UnaryHandler, google.golang.org/grpc.UnaryServerInfo, CommandServer (+6 more)
+Cohesion: 0.11
+Nodes (11): github.com/sagernet/sing-box/daemon.ManagedService, github.com/sagernet/sing-box/service/oomkiller.Recorder, github.com/sagernet/sing-box/service/powerreport.Manager, google.golang.org/grpc.UnaryHandler, google.golang.org/grpc.UnaryServerInfo, CommandServer, CommandServerHandler, OverrideOptions (+3 more)
 
 ### Community 219 - "Fields"
 Cohesion: 0.09
@@ -1672,13 +1667,13 @@ Nodes (21): bind_interface, detour, disable_tcp_keep_alive, domain_strategy, Fie
 Cohesion: 0.09
 Nodes (21): bind_interface, detour, disable_tcp_keep_alive, domain_strategy, listen, listen_port, netns, reuse_addr (+13 more)
 
-### Community 221 - "compareUserList"
+### Community 221 - ".applyUpdate"
 Cohesion: 0.15
-Nodes (7): compareUserList(), TestCompareUserList(), applyUserDelta(), devicesToAlive(), Controller, TestApplyUserDelta(), TestDevicesToAlive()
+Nodes (7): Controller, compareUserList(), TestCompareUserList(), applyUserDelta(), devicesToAlive(), TestApplyUserDelta(), TestDevicesToAlive()
 
 ### Community 222 - "LimitDispatcher"
-Cohesion: 0.21
-Nodes (5): github.com/xtls/xray-core/common/net.Destination, github.com/xtls/xray-core/common/session.SniffingRequest, github.com/xtls/xray-core/features/routing.Dispatcher, github.com/xtls/xray-core/transport.Link, LimitDispatcher
+Cohesion: 0.08
+Nodes (17): github.com/xtls/xray-core/common/net.Destination, github.com/xtls/xray-core/common/session.SniffingRequest, github.com/xtls/xray-core/features/dns.FakeDNSEngine, github.com/xtls/xray-core/features/outbound.Manager, github.com/xtls/xray-core/features/policy.Manager, github.com/xtls/xray-core/features/routing.Dispatcher, github.com/xtls/xray-core/features/routing.Router, github.com/xtls/xray-core/transport.Link (+9 more)
 
 ### Community 223 - "1.3.0"
 Cohesion: 0.10
@@ -1694,23 +1689,23 @@ Nodes (21): 1.6.1, 1.6.2, 1.6.3, 1.6.4, 1.6.5, 1.6.6, 1.6.7, 1.7.0 (+13 more)
 
 ### Community 226 - "panel/types.go"
 Cohesion: 0.05
-Nodes (39): MachineBaseConfig, BrutalConfig, MultiplexConfig, BrutalConfig, CertConfig, CustomRouteRule, MultiplexConfig, OutboundConfig (+31 more)
+Nodes (44): MachineBaseConfig, BrutalConfig, MultiplexConfig, BrutalConfig, CertConfig, CustomRouteRule, MultiplexConfig, OutboundConfig (+36 more)
 
 ### Community 227 - "octane.php"
 Cohesion: 0.10
 Nodes (19): Laravel\Octane\Contracts\OperationTerminated, Laravel\Octane\Events\RequestHandled, Laravel\Octane\Events\RequestReceived, Laravel\Octane\Events\RequestTerminated, Laravel\Octane\Events\TaskReceived, Laravel\Octane\Events\TaskTerminated, Laravel\Octane\Events\TickReceived, Laravel\Octane\Events\TickTerminated (+11 more)
 
-### Community 228 - "TunPlatformOptions"
-Cohesion: 0.11
-Nodes (11): BridgeSession, github.com/sagernet/sing-tun.Options, github.com/sagernet/sing-tun.Tun, bridgeSessionWrapper, neighborUpdateListenerWrapper, NeighborEntryIterator, HTTPProxyOptions, AvailablePort() (+3 more)
+### Community 228 - "bridgeSessionWrapper"
+Cohesion: 0.18
+Nodes (5): BridgeSession, bridgeSessionWrapper, neighborUpdateListenerWrapper, NeighborEntryIterator, AvailablePort()
 
 ### Community 229 - "Projects"
 Cohesion: 0.09
 Nodes (20): [mihomo-Meta](./mihomo-Meta), Projects, [sing-box](./sing-box), Support Project Introduction, [V2bX-script](./V2bX-script), [V2bX](./V2bX), [Xboard-Node](./Xboard-Node), [Xboard](./Xboard) (+12 more)
 
-### Community 230 - "UserEmail"
-Cohesion: 0.18
-Nodes (12): ExtractTagUUID(), ExtractUUID(), TestExtractTagUUID(), TestExtractUUID(), TestUserEmail(), TestUserTag(), UserEmail(), Sing (+4 more)
+### Community 230 - "ConnectionEvent"
+Cohesion: 0.11
+Nodes (3): Connection, ConnectionEvent, ConnectionEvents
 
 ### Community 231 - "Fields"
 Cohesion: 0.10
@@ -1721,24 +1716,20 @@ Cohesion: 0.10
 Nodes (19): auth, auth_str, disable_mtu_discovery, hop_interval, network, obfs, QUIC 字段, recv_window (+11 more)
 
 ### Community 233 - "testConn"
-Cohesion: 0.20
-Nodes (9): testConn, NewConnTracker(), TestConnTrackerCheckDeviceGateMergesFreshGlobalDevices(), TestConnTrackerCloseByIDClosesTrackedConnection(), TestConnTrackerRateLimitHonorsContextCancellation(), TestConnTrackerRoutedConnectionRejectsWhenDeviceLimitExceeded(), TestConnTrackerRoutedConnectionTracksTrafficAndAliveIPs(), testInboundContext() (+1 more)
-
-### Community 234 - "option/dns.go"
-Cohesion: 0.07
-Nodes (31): DNSRule, github.com/sagernet/quic-go/http3.Transport, github.com/sagernet/sing-box/common/tls.STDConfig, DNSClientOptions, DNSServerAddressOptions, MDNSDNSServerOptions, _OptimisticDNSOptions, RawDNSOptions (+23 more)
+Cohesion: 0.21
+Nodes (8): testConn, NewConnTracker(), TestConnTrackerCheckDeviceGateMergesFreshGlobalDevices(), TestConnTrackerCloseByIDClosesTrackedConnection(), TestConnTrackerRateLimitHonorsContextCancellation(), TestConnTrackerRoutedConnectionRejectsWhenDeviceLimitExceeded(), TestConnTrackerRoutedConnectionTracksTrafficAndAliveIPs(), testInboundContext()
 
 ### Community 235 - "Version"
 Cohesion: 0.20
 Nodes (4): ReadTagVersionRev(), TestFlightVersion(), Version, parsePreReleaseIdentifier()
 
-### Community 236 - "HTTPResponse"
-Cohesion: 0.26
-Nodes (4): HTTPResponse, HTTPResponseWriteToProgressHandler, progressWriter, NewHTTPClient()
+### Community 236 - "HTTPClient"
+Cohesion: 0.10
+Nodes (8): crypto/tls.CipherSuite, net/http.Transport, HTTPClient, HTTPRequest, HTTPResponse, HTTPResponseWriteToProgressHandler, progressWriter, NewHTTPClient()
 
-### Community 237 - "ContextFrom"
-Cohesion: 0.13
-Nodes (17): ConnectionRouter, legacyRouteContextHandlerWrapper, legacyRouteHandlerWrapper, legacyUpstreamContextHandlerWrapper, LegacyUpstreamHandlerAdapter, legacyUpstreamHandlerWrapper, github.com/sagernet/sing/common/exceptions.Handler, github.com/sagernet/sing/common/metadata.Metadata (+9 more)
+### Community 237 - "Endpoint"
+Cohesion: 0.06
+Nodes (26): ConnectionRouter, DNSRuleSetUpdateValidator, legacyRouteContextHandlerWrapper, legacyRouteHandlerWrapper, legacyUpstreamContextHandlerWrapper, LegacyUpstreamHandlerAdapter, legacyUpstreamHandlerWrapper, github.com/sagernet/sing/common/exceptions.Handler (+18 more)
 
 ### Community 238 - "libbox/platform.go"
 Cohesion: 0.13
@@ -1749,8 +1740,8 @@ Cohesion: 0.10
 Nodes (19): Dial Fields, Fields, gso, interface_name, local_address, mtu, network, peer_public_key (+11 more)
 
 ### Community 240 - "option/tailscale.go"
-Cohesion: 0.14
-Nodes (11): _DERPSTUNListenOptions, _DERPVerifyClientURLBase, TailscaleCertificateProviderOptions, HTTPClientOptions, DERPMeshOptions, DERPServiceOptions, _DERPVerifyClientURLOptions, TailscaleDNSServerOptions (+3 more)
+Cohesion: 0.12
+Nodes (7): _DERPSTUNListenOptions, _DERPVerifyClientURLBase, TailscaleCertificateProviderOptions, HTTPClientOptions, _DERPVerifyClientURLOptions, TailscaleDNSServerOptions, _TailscaleSSHServerOptions
 
 ### Community 241 - "Admin API Documentation"
 Cohesion: 0.10
@@ -1758,19 +1749,19 @@ Nodes (19): Admin API Documentation, Batch Generate Users (Download API), Config
 
 ### Community 242 - "net/http.Handler"
 Cohesion: 0.10
-Nodes (22): Log, PatchScriptRequest, Rule, Traffic, net/http.Handler, getEscapeParam(), dnsRouter(), queryDNS() (+14 more)
+Nodes (24): Log, Rule, Traffic, github.com/sagernet/sing/common/observable.Observable, net/http.Handler, getEscapeParam(), dnsRouter(), queryDNS() (+16 more)
 
-### Community 243 - "ExperimentalOptions"
-Cohesion: 0.60
-Nodes (5): ExperimentalOptions, CacheFileOptions, ClashAPIOptions, V2RayAPIOptions, V2RayStatsServiceOptions
+### Community 243 - "DNSRecordOptions"
+Cohesion: 0.13
+Nodes (6): github.com/miekg/dns.RR, DNSRCode, DNSRecordOptions, RuleActionPredefined, parseDNSRecord(), rewriteRecords()
 
 ### Community 244 - "User API Documentation"
 Cohesion: 0.10
 Nodes (19): Authentication and Profile, Change Password, Checkout Order, Create Order, Current Status, Fetch Available Servers, Fetch Knowledge Base, Fetch Plans (+11 more)
 
 ### Community 245 - "UserInfo"
-Cohesion: 0.07
-Nodes (28): github.com/xtls/xray-core/common/protocol.User, github.com/xtls/xray-core/proxy/shadowsocks.CipherType, github.com/xtls/xray-core/proxy.UserManager, AliveMap, Client, OnlineUser, UserInfo, UserListBody (+20 more)
+Cohesion: 0.08
+Nodes (22): github.com/xtls/xray-core/common/protocol.User, github.com/xtls/xray-core/proxy.UserManager, AliveMap, Client, OnlineUser, UserInfo, UserListBody, UserTraffic (+14 more)
 
 ### Community 246 - "Online Device Limit Design"
 Cohesion: 0.10
@@ -1786,23 +1777,23 @@ Nodes (14): oauthCredentials, getKeychainServiceName(), oauthCredentials, platfo
 
 ### Community 249 - "github.com/sagernet/sing/common/network.Dialer"
 Cohesion: 0.02
-Nodes (82): syscallConn, github.com/sagernet/sing-box/common/mux.Client, github.com/sagernet/sing-box/common/tls.Config, github.com/sagernet/sing/common/network.Dialer, github.com/sagernet/sing-vmess/vless.Client, golang.org/x/net/http2.Transport, google.golang.org/grpc/credentials.AuthInfo, google.golang.org/grpc/credentials.ProtocolInfo (+74 more)
+Nodes (87): syscallConn, github.com/sagernet/quic-go/http3.Transport, github.com/sagernet/sing-box/common/mux.Client, github.com/sagernet/sing-box/common/tls.Config, github.com/sagernet/sing-box/common/tls.STDConfig, github.com/sagernet/sing/common/network.Dialer, github.com/sagernet/sing-vmess/vless.Client, github.com/sagernet/tailscale/types/dnstype.Resolver (+79 more)
 
 ### Community 250 - "TailscaleCertificateRequest"
 Cohesion: 0.11
 Nodes (3): TailscaleCertificate, TailscaleCertificateRequest, _StartedService_GetTailscaleCertificate_Handler()
 
 ### Community 251 - "option/rule_action.go"
-Cohesion: 0.07
-Nodes (26): github.com/sagernet/sing/common/json/badoption.Addr, github.com/sagernet/sing/common/json/badoption.Prefixable, AbstractDialerOptions, AbstractDNSRouteActionOptions, DialerOptionsWrapper, DirectActionOptions, DNSEvaluateActionOptions, DNSRouteActionOptions (+18 more)
+Cohesion: 0.15
+Nodes (11): AbstractDNSRouteActionOptions, DirectActionOptions, DNSEvaluateActionOptions, DNSRouteActionOptions, DNSRouteActionPredefined, DNSRouteOptionsActionOptions, _RejectActionOptions, RouteActionOptions (+3 more)
 
 ### Community 252 - "Register"
 Cohesion: 0.06
-Nodes (33): Builder, Provider, init(), init(), init(), init(), init(), init() (+25 more)
+Nodes (34): Builder, Provider, init(), init(), init(), init(), init(), init() (+26 more)
 
 ### Community 253 - "unsafe.Pointer"
-Cohesion: 0.17
-Nodes (16): Methods, unsafe.Pointer, stdDecrypt(), stdExplicitNonceLen(), stdSetErrorLocked(), stdSetTrafficSecret(), stdTLSHandlePostHandshakeMessage(), stdTLSReadRecord() (+8 more)
+Cohesion: 0.15
+Nodes (17): Methods, unsafe.Pointer, stdDecrypt(), stdExplicitNonceLen(), stdSetErrorLocked(), stdSetTrafficSecret(), stdTLSHandlePostHandshakeMessage(), stdTLSReadRecord() (+9 more)
 
 ### Community 254 - "Tracker"
 Cohesion: 0.14
@@ -1812,17 +1803,17 @@ Nodes (4): calcAliveIPsHash(), copyTrafficMap(), Tracker, snapshot
 Cohesion: 0.20
 Nodes (8): golang.org/x/sys/unix.Msghdr, kernelCrypto, Support, kernelCipher(), Conn, Load(), recvmsg(), sendmsg()
 
-### Community 256 - "Sing"
-Cohesion: 0.08
-Nodes (15): serverHandle(), CoreConfig, SingConfig, NewCore(), RegisterCore(), HookServer, DNSConfig, Sing (+7 more)
+### Community 256 - "Node"
+Cohesion: 0.21
+Nodes (13): ApiConfig, NodeConfig, Options, Core, RoutingUpdater, sync.WaitGroup, NewController(), NewMachine() (+5 more)
 
 ### Community 257 - "GroupItem"
 Cohesion: 0.07
 Nodes (3): Group, GroupItem, OutboundList
 
-### Community 258 - "github.com/sagernet/sing/common/tls.Conn"
-Cohesion: 0.10
-Nodes (14): github.com/sagernet/sing/common/tls.Conn, syscall.RawConn, NewRawConn(), NewReadWaitConn(), NewReadWaitConn(), Conn, NewConn(), NewConn() (+6 more)
+### Community 258 - "TrackerMetadata"
+Cohesion: 0.13
+Nodes (5): github.com/sagernet/sing/common/network.ExtendedConn, uuid.UUID, TCPConn, TrackerMetadata, UDPConn
 
 ### Community 259 - "字段"
 Cohesion: 0.11
@@ -1844,9 +1835,9 @@ Nodes (9): g(), h(), a(), c(), n(), o(), n(), W() (+1 more)
 Cohesion: 0.14
 Nodes (14): API endpoints FNode calls (all under `/api/v1/server/UniProxy/`), Auth, Build, Config keys (`conf/node.go → ApiConfig`), Configuration File (`/etc/FNode/config.json`), FNode — AI Agent Context, Key Behaviors to Know, Mandatory Rules for AI Assistants (Gemini / Antigravity / Claude) (+6 more)
 
-### Community 264 - "NewCertConfig"
-Cohesion: 0.25
-Nodes (9): CertConfig, NewCertConfig(), TestGetInboundOptions_Hysteria2_CustomConfig(), TestGetInboundOptions_Hysteria2_DefaultPerformance(), TestGetInboundOptions_Hysteria2_MasqueradeString(), TestGetInboundOptions_Hysteria2_PanelOverride(), TestGetInboundOptions_Trojan_Reality(), TestGetInboundOptions_VLESS_Reality() (+1 more)
+### Community 264 - "Lego"
+Cohesion: 0.33
+Nodes (4): CertConfig, checkPath(), Lego, NewLego()
 
 ### Community 265 - "config/standalone.go"
 Cohesion: 0.38
@@ -1856,29 +1847,33 @@ Nodes (9): StandaloneBrutalConfig, StandaloneConfig, StandaloneCustomRouteRule, 
 Cohesion: 0.11
 Nodes (18): 1.0-beta1, 2022/08/09, 2022/08/10, 2022/08/11, 2022/08/12, 2022/08/13, 2022/08/15, 2022/08/16 (+10 more)
 
-### Community 267 - "inlineCertificateProvider"
-Cohesion: 0.27
-Nodes (4): crypto/tls.Certificate, crypto/tls.ClientHelloInfo, github.com/sagernet/sing-box/adapter.CertificateProviderService, inlineCertificateProvider
+### Community 267 - "std_server.go"
+Cohesion: 0.15
+Nodes (9): crypto/tls.Certificate, crypto/tls.ClientHelloInfo, github.com/sagernet/sing-box/adapter.CertificateProvider, github.com/sagernet/sing-box/adapter.CertificateProviderManager, github.com/sagernet/sing-box/adapter.CertificateProviderService, getACMENextProtos(), inlineCertificateProvider, managedCertificateProvider (+1 more)
 
-### Community 268 - "conf/sing.go"
-Cohesion: 0.06
-Nodes (37): New(), TestConf_LoadFromPath(), TestConf_Watch_AtomicRename(), TestConf_Watch_FileModification(), TestConf_Watch_InvalidSyntaxIgnored(), TestConf_Watch_OriginalPathTracking(), quote(), TestConf_Watch_IgnoresGeneratedFiles() (+29 more)
+### Community 268 - "New"
+Cohesion: 0.08
+Nodes (26): configShow(), TestConfigShow(), writeSummary(), New(), TestConf_LoadFromPath(), TestConf_Watch_AtomicRename(), TestConf_Watch_FileModification(), TestConf_Watch_InvalidSyntaxIgnored() (+18 more)
 
 ### Community 269 - "1.4.0"
 Cohesion: 0.11
 Nodes (18): 1.3.1-beta.1, 1.3.1-beta.2, 1.3.1-beta.3, 1.3.1-rc.1, 1.3.3, 1.3.4, 1.3.5, 1.3.6 (+10 more)
 
 ### Community 270 - "File"
-Cohesion: 0.16
-Nodes (8): File, Transport, NewDefault(), NewFile(), NewTransport(), TestHosts(), defaultPath(), HostsDNSServerOptions
+Cohesion: 0.17
+Nodes (6): File, Transport, NewDefault(), NewFile(), TestHosts(), defaultPath()
 
 ### Community 271 - "Err"
 Cohesion: 0.19
 Nodes (11): restartHandle(), startHandle(), stopHandle(), checkRunning(), Err(), Ok(), Test_printFailed(), Warn() (+3 more)
 
+### Community 272 - "UpdateService"
+Cohesion: 0.13
+Nodes (3): XboardUpdate, UpdateController, UpdateService
+
 ### Community 273 - "encoding/json.RawMessage"
-Cohesion: 0.11
-Nodes (22): TestParseWSMessage_SyncNodesAndMachineURL(), TestUserAgent_HTTPAndWS(), UserAgent(), userAgentHeader(), MachineNode, WSClient, WSEvent, wsMessage (+14 more)
+Cohesion: 0.10
+Nodes (20): TestParseWSMessage_SyncNodesAndMachineURL(), MachineNode, WSClient, WSEvent, wsMessage, isEmptyJSON(), NewMachineWSClient(), NewWSClient() (+12 more)
 
 ### Community 274 - "systemResolver"
 Cohesion: 0.18
@@ -1889,20 +1884,20 @@ Cohesion: 0.15
 Nodes (5): Illuminate\Database\Migrations\Migration, AddColumnExcludesToServerTable, AddColumnIpsToServerTable, AddColumnAlpnToServerHysteriaTable, AddTrafficResetFieldsToUsers
 
 ### Community 276 - "KernelConfig"
-Cohesion: 0.06
-Nodes (28): APIMetrics, Bootstrap, EventType, MachinePanelControlPlane, PanelControlPlane, panelPushClient, ReportPayload, KernelConfig (+20 more)
+Cohesion: 0.04
+Nodes (42): APIMetrics, Bootstrap, EventType, LocalControlPlane, MachinePanelControlPlane, PanelControlPlane, panelPushClient, ReportPayload (+34 more)
 
 ### Community 277 - "Factory"
-Cohesion: 0.13
-Nodes (16): configSchema, github.com/sagernet/sing/common/observable.Observable, Options, configRouter(), getConfigs(), Server, patchConfigs(), getLogs() (+8 more)
+Cohesion: 0.36
+Nodes (7): configSchema, configRouter(), getConfigs(), Server, patchConfigs(), updateConfigs(), Factory
 
 ### Community 278 - "linuxSearcher"
-Cohesion: 0.23
-Nodes (8): linuxSearcher, buildProcessPaths(), uidProcessPaths, tun.PackageManager, uidProcessPaths, isIgnorableProcError(), isPid(), parseSocketInode()
+Cohesion: 0.17
+Nodes (11): linuxSearcher, buildProcessPaths(), Config, uidProcessPaths, tun.PackageManager, uidProcessPaths, isIgnorableProcError(), isPid() (+3 more)
 
 ### Community 279 - "UTLSClientConfig"
-Cohesion: 0.02
-Nodes (49): crypto/tls.Config, crypto/tls.ConnectionState, crypto/tls.EncryptedClientHelloKey, github.com/metacubex/utls.ClientHelloID, github.com/metacubex/utls.Config, github.com/metacubex/utls.RealityConfig, github.com/metacubex/utls.UConn, github.com/sagernet/sing-box/common/tlsspoof.Method (+41 more)
+Cohesion: 0.03
+Nodes (46): crypto/tls.Config, crypto/tls.EncryptedClientHelloKey, github.com/metacubex/utls.ClientHelloID, github.com/metacubex/utls.Config, github.com/sagernet/sing-box/common/tlsspoof.Method, github.com/sagernet/sing/common/tls.Conn, syscall.RawConn, NewReadWaitConn() (+38 more)
 
 ### Community 280 - "1.5.0"
 Cohesion: 0.12
@@ -1928,9 +1923,9 @@ Nodes (17): 1.1 Server Core Engine, 1.2 Client Core Engines & Client Application
 Cohesion: 0.12
 Nodes (16): disable_mtu_discovery, max_conn_client, obfs, QUIC 字段, recv_window_client, recv_window_conn, tls, up, down (+8 more)
 
-### Community 286 - "HookManager"
-Cohesion: 0.04
-Nodes (21): Illuminate\Database\Eloquent\ModelNotFoundException, Illuminate\Http\Client\PendingRequest, Illuminate\Support\Facades\Http, Laravel\Octane\Events\WorkerStarting, Laravel\Octane\Facades\Octane, ReCaptcha\ReCaptcha, CommController, PaymentController (+13 more)
+### Community 286 - ".request"
+Cohesion: 0.14
+Nodes (4): Illuminate\Http\Client\PendingRequest, TelegramController, scopeSetFilterAllowKeys(), TelegramService
 
 ### Community 287 - "sync/atomic.Pointer"
 Cohesion: 0.14
@@ -1949,8 +1944,8 @@ Cohesion: 0.22
 Nodes (9): abstractIterator, FDroidMirror, FDroidMirrorIterator, iterator, iterator[T], GetFDroidMirrors(), T, iteratorToArray() (+1 more)
 
 ### Community 291 - "setup.go"
-Cohesion: 0.10
-Nodes (14): crashReportMetadata, SetupOptions, reportMetadata, ProxyDisplayName(), archiveCrashReport(), configSnapshotPath(), redirectStderr(), saveConfigSnapshot() (+6 more)
+Cohesion: 0.14
+Nodes (8): SetupOptions, ProxyDisplayName(), applySetupOptions(), FormatDuration(), FormatFQDN(), ProxyDisplayType(), ReloadSetupOptions(), Setup()
 
 ### Community 292 - "字段"
 Cohesion: 0.12
@@ -1986,11 +1981,11 @@ Nodes (16): Apple 平台 / Android, Linux (CGO), Linux (purego, 仅 amd64/arm64)
 
 ### Community 300 - "github.com/sagernet/sing-box/schema.Node"
 Cohesion: 0.09
-Nodes (11): github.com/sagernet/sing-box/schema.Builder, github.com/sagernet/sing-box/schema.Node, reflect.Type, actionVariant, actionUnion(), dnsActionUnion(), rejectProperties(), routeActionUnion() (+3 more)
+Nodes (13): github.com/sagernet/sing-box/schema.Builder, github.com/sagernet/sing-box/schema.Node, reflect.Type, actionVariant, ClientAuthType, NetworkStrategy, actionUnion(), dnsActionUnion() (+5 more)
 
-### Community 301 - "NodeInfo"
-Cohesion: 0.09
-Nodes (20): github.com/apernet/hysteria/core/v2/server.BandwidthConfig, github.com/apernet/hysteria/core/v2/server.Config, github.com/apernet/hysteria/core/v2/server.QUICConfig, github.com/apernet/hysteria/core/v2/server.RequestHook, github.com/apernet/hysteria/core/v2/server.TLSConfig, AnyTlsNode, CommonNode, Hysteria2Node (+12 more)
+### Community 301 - "subscribeStatus"
+Cohesion: 0.12
+Nodes (12): OpenConnectStatusHandler, OpenConnectStatusSubscription, OpenVPNStatusHandler, OpenVPNStatusSubscription, T, subscribeStatus(), TaildropInboxHandler, TaildropInboxSubscription (+4 more)
 
 ### Community 302 - "Universal Design & UX Strategy Guide"
 Cohesion: 0.12
@@ -2004,17 +1999,17 @@ Nodes (16): `/bind` - 绑定账号, `/getlatesturl` - 获取订阅链接, `/star
 Cohesion: 0.12
 Nodes (17): 🤝 Contributing, Deployment Guides, Development Guides, ⚠️ Disclaimer, 📖 Documentation, ✨ Features, 🔔 Important Notes, 📖 Introduction (+9 more)
 
-### Community 305 - "systemDevice"
-Cohesion: 0.16
-Nodes (4): tun.Tun, newSystemDevice(), tun.LinuxTUN, systemDevice
+### Community 305 - "realityClientConnWrapper"
+Cohesion: 0.13
+Nodes (6): crypto/tls.ConnectionState, github.com/metacubex/utls.UConn, verifyConnection(), realityClientConnWrapper, realityVerifier, utlsConnWrapper
 
 ### Community 308 - "Fields"
 Cohesion: 0.12
 Nodes (15): access_control_allow_origin, access_control_allow_private_network, cache_file, cache_id, default_mode, external_controller, external_ui, external_ui_download_detour (+7 more)
 
 ### Community 309 - "V2bX/conf/sing.go"
-Cohesion: 0.12
-Nodes (17): BrutalOptions, BrutalOptions, FallBack, FallBackConfigForSing, MultiplexConfig, SingConfig, SingLogConfig, SingNtpConfig (+9 more)
+Cohesion: 0.10
+Nodes (20): Hysteria2LogConfig, Hysteria2Config, NewHysteria2Config(), BrutalOptions, BrutalOptions, FallBack, FallBackConfigForSing, MultiplexConfig (+12 more)
 
 ### Community 310 - "createDialer"
 Cohesion: 0.15
@@ -2036,9 +2031,9 @@ Nodes (15): Dial Fields, extra_headers, Fields, insecure_concurrency, password, 
 Cohesion: 0.24
 Nodes (6): golang.org/x/crypto/cryptobyte.String, handshakeMessage, keyUpdateMsg, newSessionTicketMsgTLS13, readUint16LengthPrefixed(), readUint8LengthPrefixed()
 
-### Community 316 - "adapter/dns.go"
-Cohesion: 0.10
-Nodes (15): DNSTransportWithEnvironment, DNSTransportWithPreferredDomain, ClientOptions, Transport, github.com/sagernet/sing/common/json/badoption.Prefix, DNSCacheStore, DNSClient, RDRCStore (+7 more)
+### Community 316 - "DNSTransport"
+Cohesion: 0.08
+Nodes (16): DNSTransportWithEnvironment, DNSTransportWithPreferredDomain, transportState, Transport, DNSClient, DNSTransport, DNSTransportManager, DNSTransportRegistry (+8 more)
 
 ### Community 317 - "字段"
 Cohesion: 0.12
@@ -2057,24 +2052,24 @@ Cohesion: 0.12
 Nodes (15): alter_id, authenticated_length, global_padding, multiplex, network, packet_encoding, security, server (+7 more)
 
 ### Community 321 - "TransportRegistry"
-Cohesion: 0.12
+Cohesion: 0.13
 Nodes (27): constructorFunc, optionsConstructorFunc, RegisterTransport(), RegisterTransport(), RegisterTransport(), RegisterHTTPS(), RegisterTransport(), RegisterHTTP3Transport() (+19 more)
 
 ### Community 322 - "Authentication (Passport)"
 Cohesion: 0.12
 Nodes (15): Authentication (Passport), Client Downloads, Email Verification, External Integrations, Fetch Plans, Forgot Password, Get App Versions and Download Links, Guest API Documentation (+7 more)
 
-### Community 324 - "Lego"
-Cohesion: 0.05
-Nodes (32): IsExist(), TestIsExist(), crypto/ecdsa.PrivateKey, crypto.PrivateKey, github.com/go-acme/lego/v4/certificate.Resource, github.com/go-acme/lego/v4/lego.Client, github.com/go-acme/lego/v4/registration.Resource, findCaddyCertificate() (+24 more)
+### Community 324 - "User"
+Cohesion: 0.20
+Nodes (7): crypto/ecdsa.PrivateKey, crypto.PrivateKey, github.com/go-acme/lego/v4/registration.Resource, EncodePrivate(), User, NewLegoUser(), registerUser()
 
 ### Community 325 - "AndroidSystemProxy"
 Cohesion: 0.24
 Nodes (3): AndroidSystemProxy, NewSystemProxy(), FindPath()
 
-### Community 326 - "NewNodeMailbox"
-Cohesion: 0.43
-Nodes (7): NewNodeMailbox(), TestNodeMailboxDeltaFailedApplyNotifies(), TestNodeMailboxDevicesLatestWins(), TestNodeMailboxFullUsersOverwriteAndDeltaBeforeBaseline(), TestNodeMailboxLatestStateAndNotifyCollapse(), TestNodeMailboxReconcileNotifies(), TestNodeMailboxSeedBaselineEnablesDelta()
+### Community 326 - "zr"
+Cohesion: 0.19
+Nodes (14): Ar(), bi(), Dr(), hi(), i(), lr(), or(), H() (+6 more)
 
 ### Community 328 - "Fields"
 Cohesion: 0.13
@@ -2106,7 +2101,7 @@ Nodes (5): GrpcNetworkConfig, HttpNetworkConfig, HttpRequest, HttpupgradeNetwork
 
 ### Community 335 - "google.golang.org/protobuf/runtime/protoimpl.MessageState"
 Cohesion: 0.02
-Nodes (25): ClashModeStatus, CloseConnectionRequest, DeleteTaildropFileRequest, DownloadTaildropFileChunk, DownloadTaildropFileRequest, MarkTaildropInboxReadRequest, OpenConnectAuthChallengeCancel, SelectOutboundRequest (+17 more)
+Nodes (17): ClashModeStatus, CloseConnectionRequest, DeleteTaildropFileRequest, DownloadTaildropFileChunk, DownloadTaildropFileRequest, MarkTaildropInboxReadRequest, ProcessInfo, TailscaleLogoutRequest (+9 more)
 
 ### Community 336 - "字段"
 Cohesion: 0.14
@@ -2129,16 +2124,16 @@ Cohesion: 0.22
 Nodes (11): KernelRouteSupport, RouteSupportMatrix(), ensureRouteMatcherSupported(), CustomRouteRule, RouteMatch, hasAnyNonBlank(), hasRouteMatch(), TestValidateCustomRouteRules() (+3 more)
 
 ### Community 341 - "build_info.go"
-Cohesion: 0.18
-Nodes (15): archive/zip.File, debug/buildinfo.BuildInfo, AndroidVPNType, downloadZIPEntry(), Server, removeAllInDirectory(), zipIsInSingleDirectory(), determineCorePath() (+7 more)
+Cohesion: 0.38
+Nodes (10): debug/buildinfo.BuildInfo, AndroidVPNType, determineCorePath(), determineCorePathForPkgs(), determinePkgType(), determinePkgTypeSecondary(), isValidVersion(), ReadAndroidVPNType() (+2 more)
 
 ### Community 342 - "字段"
 Cohesion: 0.14
 Nodes (13): config_path, DERP, home, mesh_psk, mesh_psk_file, mesh_with, stun, tls (+5 more)
 
-### Community 343 - "Transport"
-Cohesion: 0.12
-Nodes (8): github.com/sagernet/sing-box/dns/transport.AsyncExchanger, LinkServers, Transport, avoidDNS(), Transport, ResolvedDNSServerOptions, Service, NewTransport()
+### Community 343 - "sync.RWMutex"
+Cohesion: 0.08
+Nodes (12): UserManager, github.com/sagernet/sing-box/dns/transport.AsyncExchanger, github.com/sagernet/sing-box/dns/transport/local/systemconfig.Config, sync.RWMutex, V2bX, localServerSet, UserManager, LinkServers (+4 more)
 
 ### Community 344 - "ACME Fields"
 Cohesion: 0.14
@@ -2153,8 +2148,8 @@ Cohesion: 0.14
 Nodes (14): ACME 字段, alternative_http_port, alternative_tls_port, data_directory, default_server_name, disable_http_challenge, disable_tls_alpn_challenge, dns01_challenge (+6 more)
 
 ### Community 347 - "Selector"
-Cohesion: 0.21
-Nodes (3): AddUsersParams, Selector, isSupported()
+Cohesion: 0.19
+Nodes (4): AddUsersParams, Selector, isSupported(), NewSelector()
 
 ### Community 348 - "baseContext"
 Cohesion: 0.16
@@ -2168,13 +2163,13 @@ Nodes (13): Stars 增长记录, Thanks, TODO, V2bX, 一键安装, 免责声明, 
 Cohesion: 0.24
 Nodes (5): OnDemandRule, OnDemandOptions, OnDemandRule, OnDemandRuleAction, OnDemandRuleInterfaceType
 
-### Community 351 - "Server"
-Cohesion: 0.18
-Nodes (3): golang.org/x/net/http2.Server, Server, Server
+### Community 351 - "IsExist"
+Cohesion: 0.19
+Nodes (7): IsExist(), TestIsExist(), findCaddyCertificate(), generateSelfSslCertificate(), Controller, Test_findCaddyCertificate(), Test_generateSelfSslCertificate()
 
 ### Community 352 - "DNSTransport"
-Cohesion: 0.16
-Nodes (10): github.com/sagernet/tailscale/net/dns.Config, github.com/sagernet/tailscale/net/dns/resolver.MagicDNSHosts, github.com/sagernet/tailscale/types/dnstype.Resolver, github.com/sagernet/tailscale/wgengine/router.Config, github.com/sagernet/tailscale/wgengine/wgcfg.Config, buildRoutePrefixes(), Endpoint, lookupHosts() (+2 more)
+Cohesion: 0.15
+Nodes (10): github.com/sagernet/tailscale/net/dns.Config, github.com/sagernet/tailscale/net/dns/resolver.MagicDNSHosts, github.com/sagernet/tailscale/wgengine/router.Config, github.com/sagernet/tailscale/wgengine/wgcfg.Config, buildRoutePrefixes(), Endpoint, lookupHosts(), matchDomainSuffix() (+2 more)
 
 ### Community 353 - "composer.json"
 Cohesion: 0.14
@@ -2197,8 +2192,8 @@ Cohesion: 0.15
 Nodes (12): auth_timeout, congestion_control, heartbeat, QUIC 字段, tls, users, users.password, users.uuid (+4 more)
 
 ### Community 358 - "option/rule.go"
-Cohesion: 0.16
-Nodes (11): LogicalRule, RawDefaultRule, RawLogicalRule, RuleAction, DefaultRule, InterfaceType, LogicalRule, _Rule (+3 more)
+Cohesion: 0.20
+Nodes (8): LogicalRule, RawLogicalRule, DefaultRule, LogicalRule, _Rule, rulePayloadWithoutType(), unmarshalDefaultRuleContext(), unmarshalLogicalRuleContext()
 
 ### Community 359 - "Fields"
 Cohesion: 0.15
@@ -2248,57 +2243,57 @@ Nodes (12): 1. Modular Layering (The "S.O.L.I.D." Structure), 2. Versioning & Ev
 Cohesion: 0.17
 Nodes (3): s(), b(), S()
 
-### Community 371 - "HookServer"
-Cohesion: 0.29
-Nodes (3): github.com/apernet/hysteria/core/v2/server.HyStream, github.com/apernet/hysteria/core/v2/server.StreamStats, HookServer
-
-### Community 372 - "github.com/sagernet/sing/common/logger.Logger"
-Cohesion: 0.09
-Nodes (7): stderrManager, github.com/sagernet/sing/common/logger.Logger, github.com/sagernet/sing-tun.DefaultInterfaceMonitor, platformDefaultInterfaceMonitor, CacheFile, Manager, NewStderrManager()
+### Community 372 - "ConnCounter"
+Cohesion: 0.20
+Nodes (4): ConnCounter, TrafficStorage, NewConnCounter(), NewPacketConnCounter()
 
 ### Community 373 - "CustomRouteRule"
 Cohesion: 0.26
 Nodes (10): RouteMatch, NeedsGeoIPRules(), NeedsGeoSiteRules(), cloneCustomRouteRules(), cloneRouteAction(), cloneRouteMatch(), CustomRouteRule, RouteAction (+2 more)
 
 ### Community 374 - "Searcher"
-Cohesion: 0.07
-Nodes (21): androidSearcher, Config, darwinSearcher, windowsSearcher, Config, tun.PackageManager, NewSearcher(), Config (+13 more)
+Cohesion: 0.09
+Nodes (17): androidSearcher, Config, windowsSearcher, Config, tun.PackageManager, NewSearcher(), Config, NewSearcher() (+9 more)
 
 ### Community 375 - "tun_bench/main.go"
 Cohesion: 0.43
 Nodes (6): main(), main0(), runTests(), testOnce(), stderrWriter, TestResult
 
 ### Community 376 - "Registry"
-Cohesion: 0.17
-Nodes (13): ConstructorFunc, optionsConstructorFunc, Registry, Options, Registry, NewRegistry(), Register(), registerTailscaleEndpoint() (+5 more)
+Cohesion: 0.12
+Nodes (17): ConstructorFunc, optionsConstructorFunc, github.com/sagernet/sing-box/adapter/certificate.Registry, Registry, Options, Registry, NewRegistry(), Register() (+9 more)
 
 ### Community 377 - "Registry"
-Cohesion: 0.07
-Nodes (33): inboundHandler, ConstructorFunc, optionsConstructorFunc, inboundHandler, Registry, Options, Registry, NewRegistry() (+25 more)
+Cohesion: 0.13
+Nodes (28): ConstructorFunc, optionsConstructorFunc, Registry, Options, Registry, NewRegistry(), Register(), registerQUICInbounds() (+20 more)
 
 ### Community 378 - "app_store_connect/main.go"
 Cohesion: 0.36
 Nodes (11): github.com/sagernet/asc-go/asc.Client, github.com/sagernet/asc-go/asc.Response, cancelAppStore(), createClient(), fetchNextProjectVersion(), isRetryable(), main(), prepareAppStore() (+3 more)
 
 ### Community 379 - "Registry"
-Cohesion: 0.07
-Nodes (33): ConstructorFunc, optionsConstructorFunc, Options, Registry, Registry, NewRegistry(), Register(), registerNaiveOutbound() (+25 more)
+Cohesion: 0.10
+Nodes (32): ConstructorFunc, optionsConstructorFunc, Options, Registry, Registry, NewRegistry(), Register(), registerNaiveOutbound() (+24 more)
 
 ### Community 380 - "Registry"
-Cohesion: 0.07
-Nodes (28): github.com/sagernet/sing-box/adapter/certificate.Registry, ConstructorFunc, optionsConstructorFunc, Options, Registry, Registry, NewRegistry(), Register() (+20 more)
+Cohesion: 0.09
+Nodes (24): ConstructorFunc, optionsConstructorFunc, Options, Registry, Registry, NewRegistry(), Register(), registerCCMService() (+16 more)
+
+### Community 381 - "google.golang.org/protobuf/runtime/protoimpl.SizeCache"
+Cohesion: 0.04
+Nodes (9): CancelTaildropReceivingRequest, Notification, OpenVPNChallengeCancel, google.golang.org/protobuf/runtime/protoimpl.SizeCache, Status, file_transport_v2raygrpc_stream_proto_init(), file_transport_v2raygrpc_stream_proto_rawDescGZIP(), init() (+1 more)
 
 ### Community 382 - "cachedReader"
-Cohesion: 0.21
-Nodes (6): cachedReader, CounterReader, github.com/xtls/xray-core/common/buf.Buffer, github.com/xtls/xray-core/common/buf.MultiBuffer, github.com/xtls/xray-core/common/buf.TimeoutReader, nopReader
+Cohesion: 0.13
+Nodes (9): cachedReader, CounterReader, LinkManager, ManagedWriter, github.com/xtls/xray-core/common/buf.Buffer, github.com/xtls/xray-core/common/buf.MultiBuffer, github.com/xtls/xray-core/common/buf.Reader, github.com/xtls/xray-core/common/buf.TimeoutReader (+1 more)
 
-### Community 383 - "DeviceOptions"
-Cohesion: 0.27
-Nodes (9): tun.Handler, tun.NATFiltering, tun.NATMapping, tun.NetworkUpdateMonitor, NewDevice(), newStackDevice(), newSystemStackDevice(), Device (+1 more)
+### Community 383 - "User"
+Cohesion: 0.30
+Nodes (6): IsExist(), checkPath(), EncodePrivate(), User, NewLegoUser(), registerUser()
 
 ### Community 384 - "WIFIState"
-Cohesion: 0.08
-Nodes (18): connmanMonitor, iwdMonitor, LinuxWIFIMonitor, networkManagerMonitor, stubWIFIMonitor, WIFIState, WIFIMonitor, dbus.Conn (+10 more)
+Cohesion: 0.07
+Nodes (23): context.CancelFunc, net.UnixConn, streamSession, connmanMonitor, iwdMonitor, LinuxWIFIMonitor, networkManagerMonitor, stubWIFIMonitor (+15 more)
 
 ### Community 385 - "1.9.4"
 Cohesion: 0.17
@@ -2313,8 +2308,8 @@ Cohesion: 0.17
 Nodes (11): Chore, Core, Dashboard, General, Groups, iCloud (on iOS and macOS), Local, Mode (+3 more)
 
 ### Community 388 - "sync.Mutex"
-Cohesion: 0.02
-Nodes (53): URLTestGroup, DefaultOutboundDialer, DetourDialer, DirectDialer, github.com/sagernet/sing/common/batch.Batch, github.com/sagernet/sing/common.TypedValue, github.com/sagernet/sing/common/x/list.List, io.Closer (+45 more)
+Cohesion: 0.03
+Nodes (37): Task, stderrManager, DetourDialer, DirectDialer, github.com/sagernet/sing/common/batch.Batch, github.com/sagernet/sing/common.TypedValue, github.com/sagernet/sing/common/x/list.List, sync.Mutex (+29 more)
 
 ### Community 389 - "dns/fakeip.md"
 Cohesion: 0.17
@@ -2324,21 +2319,21 @@ Nodes (9): enabled, Fields, inet4_range, inet6_range, Structure, DNS, Structure,
 Cohesion: 0.17
 Nodes (11): client_metadata, Dial Fields, Fields, idle_session_check_interval, idle_session_timeout, min_idle_session, password, server (+3 more)
 
-### Community 391 - "Transport"
-Cohesion: 0.16
-Nodes (7): github.com/sagernet/sing-box/dns/transport/local/systemconfig.Config, github.com/sagernet/sing-box/dns/transport/local/systemconfig.Source, localServerSet, PreferredDomainResolver, Transport, Transport, newNameExchanger()
+### Community 391 - "NewLego"
+Cohesion: 0.20
+Nodes (6): CertConfig, NewCertConfig(), generateSelfSslCertificate(), Controller, Test_generateSelfSslCertificate(), NewLego()
 
 ### Community 392 - "字段"
 Cohesion: 0.17
 Nodes (11): client_metadata, idle_session_check_interval, idle_session_timeout, min_idle_session, password, server, server_port, tls (+3 more)
 
 ### Community 393 - "ProxyListener"
-Cohesion: 0.24
-Nodes (3): net.TCPListener, NewProxyListener(), ProxyListener
+Cohesion: 0.08
+Nodes (13): github.com/sagernet/sing/common/byteformats.MemoryBytes, net.TCPListener, time.Timer, adaptiveTimer, timerConfig, Recorder, ConnectionManager, OOMKillerServiceOptions (+5 more)
 
 ### Community 394 - "tunDeviceAdapter"
-Cohesion: 0.11
-Nodes (7): github.com/sagernet/sing-tun.LinuxTUN, github.com/sagernet/wireguard-go/tun.Device, os.File, sync/atomic.Uint32, tunDeviceAdapter, newTunDeviceAdapter(), newTunDeviceAdapter()
+Cohesion: 0.05
+Nodes (17): github.com/sagernet/sing-tun.LinuxTUN, github.com/sagernet/sing-tun.NativeTun, github.com/sagernet/sing-tun.Options, github.com/sagernet/sing-tun.Tun, github.com/sagernet/sing-tun.WinTun, github.com/sagernet/wireguard-go/tun.Device, github.com/sagernet/wireguard-go/tun.Event, os.File (+9 more)
 
 ### Community 395 - "z"
 Cohesion: 0.22
@@ -2365,24 +2360,20 @@ Cohesion: 0.18
 Nodes (9): Fake IP, Fields, inet4_range, inet6_address, Structure, DNS Server, Structure, tag (+1 more)
 
 ### Community 401 - "Reader"
-Cohesion: 0.08
-Nodes (24): Reader, io.ReadSeeker, ItemType, searchGeositeMatcher, geositeExport(), geositePreRun(), geositeLookup(), newSearchGeositeMatcher() (+16 more)
+Cohesion: 0.12
+Nodes (19): readCounter, Reader, io.ReadSeeker, ItemType, geositePreRun(), generateLargeItems(), oldReadItem(), oldReadString() (+11 more)
 
 ### Community 402 - "inbound/shadowsocks.md"
 Cohesion: 0.18
 Nodes (10): Fields, Listen Fields, managed, method, Multi-User Structure, multiplex, network, password (+2 more)
 
-### Community 403 - "FNode Comprehensive Project Guide & Architecture"
-Cohesion: 0.22
-Nodes (6): 1. Executive Summary, 3. Directory Layout, 7. Guidelines for AI Assistants & Contributors, FNode Comprehensive Project Guide & Architecture, FNode Architecture & Context, graphify
-
 ### Community 404 - "字段"
 Cohesion: 0.18
 Nodes (10): managed, method, multiplex, network, password, 中转结构, 多用户结构, 字段 (+2 more)
 
-### Community 405 - "stackDevice"
-Cohesion: 0.15
-Nodes (4): tun.ICMPForwarder, tun.UDPForwarder, newStackDevice(), stackDevice
+### Community 405 - "UserManager"
+Cohesion: 0.27
+Nodes (4): UserManager, ManagedSSMServer, Inbound, NewUserManager()
 
 ### Community 407 - "Fields"
 Cohesion: 0.18
@@ -2420,9 +2411,9 @@ Nodes (10): multiplex, network, password, server, server_port, tls, transport, �
 Cohesion: 0.18
 Nodes (10): AdGuard Filter, Basic rule syntax, Compatibility, Convert, Host syntax, Hosts, Modifier syntax, Performance (+2 more)
 
-### Community 416 - "sync/atomic.Int64"
-Cohesion: 0.05
-Nodes (14): XrayTrafficCounter, sync/atomic.Int64, RateLimitedReadCloser, RateLimitedWriter, trackedConn, userStats, TrafficManager, UserManager (+6 more)
+### Community 416 - "ConnTracker"
+Cohesion: 0.08
+Nodes (7): golang.org/x/time/rate.Limiter, ConnTracker, RateLimitedReadCloser, RateLimitedWriter, trackedConn, userStats, formatInt36()
 
 ### Community 417 - "adguard.zh.md"
 Cohesion: 0.18
@@ -2433,31 +2424,27 @@ Cohesion: 0.18
 Nodes (11): format, path, rules, tag, type, 内联字段, 字段, 本地字段 (+3 more)
 
 ### Community 419 - "StartStage"
-Cohesion: 0.03
-Nodes (57): CertificateStore, Lifecycle, lifecycleServiceWrapper, ServiceManager, TimeService, endpointStatusProvider, github.com/sagernet/sing-box/adapter/certificate.Manager, net/http.Server (+49 more)
+Cohesion: 0.02
+Nodes (84): CertificateStore, Lifecycle, lifecycleServiceWrapper, ServiceManager, TimeService, Service, Manager, github.com/sagernet/sing-box/adapter/certificate.Manager (+76 more)
 
-### Community 420 - "Conf"
-Cohesion: 0.28
-Nodes (7): Conf, CoreConfig, LogConfig, NodeConfig, New(), TestConf_LoadFromPath(), TestConf_Watch()
+### Community 420 - "serverHandle"
+Cohesion: 0.10
+Nodes (13): serverHandle(), showVersion(), Conf, CoreConfig, LogConfig, NodeConfig, New(), TestConf_LoadFromPath() (+5 more)
 
-### Community 421 - "DNSQueryType"
-Cohesion: 0.12
-Nodes (6): NetworkStrategy, QueryTypeItem, DNSQueryTypeToString(), DNSQueryType, InterfaceType, NewQueryTypeItem()
+### Community 421 - "Conn"
+Cohesion: 0.27
+Nodes (5): IndexTLSServerName(), indexTLSServerNameFromExtensions(), indexTLSServerNameFromHandshake(), Conn, MyServerName
 
-### Community 422 - "RouteOptions"
+### Community 423 - "Orchestrator"
 Cohesion: 0.11
-Nodes (13): FwMark, GeoIPOptions, GeositeOptions, InboundOptions, ListenOptionsWrapper, UDPNATBehavior, UDPTimeoutCompat, RuleSet (+5 more)
-
-### Community 423 - "context.CancelFunc"
-Cohesion: 0.12
-Nodes (11): MailboxState, context.CancelFunc, machineNodePush, nodeHandle, Orchestrator, applyUserDelta(), cloneDeviceUsers(), cloneNodeSpec() (+3 more)
+Nodes (12): MailboxState, machineNodePush, nodeHandle, Orchestrator, applyUserDelta(), cloneDeviceUsers(), cloneNodeSpec(), cloneUsers() (+4 more)
 
 ### Community 424 - "_ACMEDNS01ChallengeOptions"
-Cohesion: 0.27
-Nodes (8): github.com/sagernet/sing-box/schema.UnionVariant, ACMEDNS01ACMEDNSOptions, ACMEDNS01AliDNSOptions, _ACMEDNS01ChallengeOptions, ACMEDNS01CloudflareOptions, ACMEExternalAccountOptions, acmeDNS01Variants(), InboundACMEOptions
+Cohesion: 0.25
+Nodes (7): github.com/sagernet/sing-box/schema.UnionVariant, ACMEDNS01ACMEDNSOptions, ACMEDNS01AliDNSOptions, _ACMEDNS01ChallengeOptions, ACMEDNS01CloudflareOptions, ACMEExternalAccountOptions, acmeDNS01Variants()
 
 ### Community 425 - "FNode-script/install.sh"
-Cohesion: 0.18
+Cohesion: 0.17
 Nodes (17): add_node_config(), generate_config_file(), initconfig.sh script, check_status(), has_ipv6(), install_base(), install_FNode(), need_value() (+9 more)
 
 ### Community 426 - "FNode-script Logic and Installation Guide"
@@ -2465,8 +2452,8 @@ Cohesion: 0.20
 Nodes (9): 1. Installation Logic (`install.sh`), 2. Management Logic (`FNode.sh` & `initconfig.sh`), Core Components, Directory Structure (Standard Installation), FNode-script Logic and Installation Guide, Installation on a VPS, One-Click Installation Command, Post-Installation Usage (+1 more)
 
 ### Community 427 - "FNode"
-Cohesion: 0.13
-Nodes (14): FNode, Generated files, See what was applied, Thanks, 一键安装, 免责声明, 功能介绍, 对接模式 (Panel connection modes) (+6 more)
+Cohesion: 0.12
+Nodes (16): FNode, Generated files, Log shipping to the panel (CustomNode plugin), REALITY (vless / trojan) notes, See what was applied, Thanks, 一键安装, 免责声明 (+8 more)
 
 ### Community 428 - "autoload"
 Cohesion: 0.20
@@ -2544,9 +2531,9 @@ Nodes (7): add_node_config(), generate_config_file(), initconfig.sh script, chec
 Cohesion: 0.20
 Nodes (10): 1. Install aaPanel, 2.1 Install LNMP Environment, 2.2 Install PHP Extensions, 2.3 Enable Required PHP Functions, 2. Basic Environment Setup, 3.1 Create Website, 3.2 Deploy Xboard, 3.3 Configure Site (+2 more)
 
-### Community 447 - "SystemController.php"
-Cohesion: 0.17
-Nodes (8): JobRepository, Laravel\Horizon\Contracts\JobRepository, Laravel\Horizon\Contracts\MasterSupervisorRepository, Laravel\Horizon\Contracts\MetricsRepository, Laravel\Horizon\Contracts\SupervisorRepository, Laravel\Horizon\Contracts\WorkloadRepository, Laravel\Horizon\WaitTimeCalculator, SystemController
+### Community 447 - "NewManager"
+Cohesion: 0.36
+Nodes (9): acmeFingerprint(), NewManager(), generateSelfSignedPair(), TestACMEFingerprint(), TestACMEFingerprintEnvOrderStable(), TestLoadPEMFromStorage_MissingFiles(), TestLoadPEMFromStorage_RejectsMismatchedPair(), TestLoadPEMFromStorage_RenewalRefresh() (+1 more)
 
 ### Community 448 - "sysinfo.go"
 Cohesion: 0.28
@@ -2576,9 +2563,9 @@ Nodes (8): enabled, interval, NTP, server, server_port, 字段, 拨号字段, �
 Cohesion: 0.22
 Nodes (8): Dial Fields, Fields, password, server, server_port, Structure, tls, version
 
-### Community 455 - "testShadowsocksMux"
-Cohesion: 0.48
-Nodes (6): TestShadowsockH2Mux(), TestShadowsocksMux(), testShadowsocksMux(), TestShadowsockSMuxPadding(), testVMessMux(), TestVMessSMux()
+### Community 455 - ".downloadExternalUI"
+Cohesion: 0.36
+Nodes (5): archive/zip.File, downloadZIPEntry(), Server, removeAllInDirectory(), zipIsInSingleDirectory()
 
 ### Community 456 - "字段"
 Cohesion: 0.22
@@ -2604,9 +2591,9 @@ Nodes (7): Route, Structure, Logical Fields, mode, rules, Structure, type
 Cohesion: 0.22
 Nodes (8): Basic TUN usage for Chinese users, Client, :material-cellphone-link: Examples, :material-expansion-card: Virtual Interface, :material-ray-start: Introduction, :material-wall-fire: Firewall Redirection, :material-web-refresh: System Proxy, Traffic bypass usage for Chinese users
 
-### Community 462 - ".nodeInfoMonitor"
-Cohesion: 0.25
-Nodes (3): DeleteLimiter(), Controller, compareUserList()
+### Community 462 - "Lego"
+Cohesion: 0.39
+Nodes (3): github.com/go-acme/lego/v4/certificate.Resource, github.com/go-acme/lego/v4/lego.Client, Lego
 
 ### Community 463 - "require-dev"
 Cohesion: 0.22
@@ -2614,7 +2601,7 @@ Nodes (9): require-dev, barryvdh/laravel-debugbar, fakerphp/faker, larastan/lara
 
 ### Community 465 - "export.go"
 Cohesion: 0.09
-Nodes (13): preRun(), convertRuleSet(), DebugContext(), ErrorContext(), FatalContext(), InfoContext(), init(), PanicContext() (+5 more)
+Nodes (11): preRun(), convertRuleSet(), DebugContext(), ErrorContext(), FatalContext(), InfoContext(), PanicContext(), SetStdLogger() (+3 more)
 
 ### Community 466 - "github.com/sagernet/sing-box/common/trafficcontrol.Manager"
 Cohesion: 0.35
@@ -2740,21 +2727,25 @@ Nodes (7): Android, Apple platforms, Linux, Status, TunnelVision, Windows, Worka
 Cohesion: 0.60
 Nodes (4): Lego, getTestLego(), TestLego_CreateCertByDns(), TestLego_RenewCert()
 
+### Community 497 - "libbox/log.go"
+Cohesion: 0.32
+Nodes (6): crashReportMetadata, reportMetadata, archiveCrashReport(), configSnapshotPath(), redirectStderr(), saveConfigSnapshot()
+
 ### Community 499 - "Custom Routes"
 Cohesion: 0.25
 Nodes (7): Action Types, Application Order, Best Practices, Custom Routes, Kernel Compatibility, Match Conditions, Quick Example
 
-### Community 500 - "NewSTDServer"
-Cohesion: 0.21
-Nodes (9): github.com/sagernet/sing-box/adapter.CertificateProvider, github.com/sagernet/sing-box/adapter.CertificateProviderManager, github.com/sagernet/sing-box/option.CertificateProviderOptions, getACMENextProtos(), ServerConfig, newCertificateProvider(), NewSTDServer(), managedCertificateProvider (+1 more)
+### Community 500 - "cmd_merge.go"
+Cohesion: 0.50
+Nodes (6): merge(), mergePathResources(), mergeSSHOutboundOptions(), mergeTLSInboundOptions(), mergeTLSOutboundOptions(), trimStringArray()
 
 ### Community 501 - ".uint16"
-Cohesion: 0.09
-Nodes (14): SetSystemTime(), replyReader, ClientHello, GetOriginalDestination(), GetOriginalDestination(), IndexTLSServerName(), indexTLSServerNameFromExtensions(), indexTLSServerNameFromHandshake() (+6 more)
+Cohesion: 0.11
+Nodes (9): SetSystemTime(), QueryTypeItem, ClientHello, GetOriginalDestination(), GetOriginalDestination(), DNSQueryTypeToString(), DNSQueryType, NewQueryTypeItem() (+1 more)
 
-### Community 503 - "RuleSetItem"
-Cohesion: 0.15
-Nodes (8): mergeableRuleProvider, ruleGroupMatch, ruleMatchSnapshot, RuleSetItem, ruleMatchState, snapshotRuleMatch(), matchAnyHeadlessRule(), NewRuleSetItem()
+### Community 503 - "InboundContext"
+Cohesion: 0.02
+Nodes (65): myUpstreamContextHandlerWrapper, myUpstreamHandlerWrapper, routeContextHandlerWrapper, routeHandlerWrapper, ConnectionHandlerFunc, Outbound, github.com/sagernet/sing/common/auth.Authenticator, github.com/sagernet/sing/common/network.CloseHandlerFunc (+57 more)
 
 ### Community 504 - "Parse"
 Cohesion: 0.18
@@ -2769,12 +2760,8 @@ Cohesion: 0.47
 Nodes (4): SSH(), TestSniffIncompleteSSH(), TestSniffNotSSH(), TestSniffSSH()
 
 ### Community 507 - "xorNonceAEAD"
-Cohesion: 0.18
-Nodes (7): crypto/cipher.AEAD, crypto.Hash, io.ByteReader, xorNonceAEAD, AEADAESGCMTLS13(), HKDFExpandLabel(), ReadUvarint()
-
-### Community 508 - "fakednssniffer.go"
-Cohesion: 0.22
-Nodes (5): DNSThenOthersSniffResult, fakeDNSExtraOpts, fakeDNSSniffResult, ipAddressInRangeOpt, newFakeDNSThenOthers()
+Cohesion: 0.20
+Nodes (6): crypto/cipher.AEAD, crypto.Hash, xorNonceAEAD, AEADAESGCMTLS13(), HKDFExpandLabel(), ReadUvarint()
 
 ### Community 509 - "1.9.5"
 Cohesion: 0.29
@@ -2908,9 +2895,9 @@ Nodes (7): 1. Database Changes Overview, 2. Prerequisites, 3. Migration Steps, 4
 Cohesion: 0.29
 Nodes (6): Docker, Docker Compose, Features, Install, Installer (Linux systemd), xboard-node
 
-### Community 542 - "Hunk"
-Cohesion: 0.11
-Nodes (12): google.golang.org/grpc.ClientConnInterface, GunServiceClient, _GunService_Tun_Handler(), NewGunServiceClient(), RegisterGunServiceServer(), file_transport_v2raygrpc_stream_proto_init(), file_transport_v2raygrpc_stream_proto_rawDescGZIP(), init() (+4 more)
+### Community 542 - "started_service_grpc.pb.go"
+Cohesion: 0.05
+Nodes (60): StartedServiceServer, UnsafeStartedServiceServer, google.golang.org/grpc.BidiStreamingServer, google.golang.org/grpc.ClientConnInterface, google.golang.org/grpc.ServerStream, google.golang.org/grpc.ServiceRegistrar, google.golang.org/grpc.StreamHandler, google.golang.org/grpc.StreamServerInfo (+52 more)
 
 ### Community 543 - "keywords"
 Cohesion: 0.33
@@ -2981,8 +2968,8 @@ Cohesion: 0.33
 Nodes (5): default, interrupt_exist_connections, outbounds, 字段, 结构
 
 ### Community 561 - "newError"
-Cohesion: 0.18
-Nodes (19): HTTPError, UpdateProxyRequest, github.com/sagernet/sing/common/json/badjson.JSONObject, getGroup(), getGroupDelay(), getGroups(), Server, groupRouter() (+11 more)
+Cohesion: 0.20
+Nodes (18): HTTPError, UpdateProxyRequest, github.com/sagernet/sing/common/json/badjson.JSONObject, getGroup(), getGroupDelay(), getGroups(), Server, groupRouter() (+10 more)
 
 ### Community 562 - "字段"
 Cohesion: 0.33
@@ -2997,7 +2984,7 @@ Cohesion: 0.33
 Nodes (5): download_detour, download_url, path, 字段, 结构
 
 ### Community 565 - "_Options"
-Cohesion: 0.12
+Cohesion: 0.11
 Nodes (17): CertificateProvider, github.com/sagernet/sing/common/json.CommentSet, NetworkNamespace, NTPOptions, _CertificateOptions, ServerOptions, checkCertificateProviders(), checkHTTPClients() (+9 more)
 
 ### Community 566 - "逻辑字段"
@@ -3064,9 +3051,9 @@ Nodes (5): Best Practices, Core Fields, Custom Outbounds, Quick Example, Support
 Cohesion: 0.29
 Nodes (8): ae(), de(), ie(), jn(), kn(), me(), ye(), ze()
 
-### Community 584 - "sync.Map"
-Cohesion: 0.14
-Nodes (5): HookServer, sync.Map, limitDispatcherFactory(), closeTrackingWriter, ipCounter
+### Community 583 - "PluginManager.php"
+Cohesion: 0.33
+Nodes (3): Illuminate\Console\Scheduling\Schedule, Illuminate\Foundation\Console\Kernel, Kernel
 
 ### Community 585 - "net.Flags"
 Cohesion: 0.40
@@ -3112,9 +3099,9 @@ Nodes (5): 1.11.6, 1.12.0-alpha.16, 1.12.0-alpha.17, 1.12.0-alpha.18, 1.12.0-alp
 Cohesion: 0.40
 Nodes (4): :material-download: Download, :material-graph: Requirements, :material-source-repository: Source code, sing-box for Android
 
-### Community 596 - "RawHalfConn"
-Cohesion: 0.25
-Nodes (4): hash.Hash, reflect.Value, RawHalfConn, NewRawHalfConn()
+### Community 596 - "RawConn"
+Cohesion: 0.15
+Nodes (7): hash.Hash, reflect.Value, sync/atomic.Int32, RawConn, NewRawConn(), RawHalfConn, NewRawHalfConn()
 
 ### Community 597 - "旧版地址筛选字段"
 Cohesion: 0.40
@@ -3148,6 +3135,10 @@ Nodes (4): :material-cellphone-link: Client Example, :material-server: Server Ex
 Cohesion: 0.40
 Nodes (4): :material-cellphone-link: Client Example, :material-server: Server Example, :material-text-box-check: Password Generator, Trojan
 
+### Community 606 - "NewTransport"
+Cohesion: 0.33
+Nodes (3): ResolvedDNSServerOptions, _ResolvedServiceOptions, NewTransport()
+
 ### Community 607 - "2025_01_05_131425_create_v2_server_table.php"
 Cohesion: 0.60
 Nodes (4): down(), restoreParentIds(), up(), updateParentIds()
@@ -3160,9 +3151,9 @@ Nodes (5): 1. Concise Main Class, 2. Configuration Management, 3. Route Design, 
 Cohesion: 0.40
 Nodes (5): 1. Docker Compose Environment, 2. aaPanel Environment, 3. aaPanel + Docker Environment, Configuration Migration Guide, Important Notes
 
-### Community 610 - "UserSpec"
-Cohesion: 0.08
-Nodes (48): Snapshot, SingBox, ss2022Config, NeedsGeoIP(), NeedsGeoSite(), ComputeHash(), TLSCert, UserDiff() (+40 more)
+### Community 610 - "NodeSpec"
+Cohesion: 0.07
+Nodes (88): ss2022Config, NeedsGeoIP(), NeedsGeoSite(), applyMultiplex(), applyProxyProtocol(), applyTransport(), buildAnyTLS(), buildConfig() (+80 more)
 
 ### Community 611 - "dependencies"
 Cohesion: 0.50
@@ -3172,9 +3163,9 @@ Nodes (3): chokidar, dependencies, chokidar
 Cohesion: 0.50
 Nodes (3): FNode, 一键安装, 详细使用教程
 
-### Community 613 - "cmd/version.go"
-Cohesion: 0.19
-Nodes (13): FormatDevTag(), NextPatchVersion(), NextUnusedPatchVersion(), ResolveReleaseMetadata(), ResolveReleaseTarget(), ShouldCleanupPreRelease(), showVersion(), TestFormatDevTag() (+5 more)
+### Community 613 - "serverHandle"
+Cohesion: 0.12
+Nodes (18): serverHandle(), FormatDevTag(), NextPatchVersion(), NextUnusedPatchVersion(), ResolveReleaseMetadata(), ResolveReleaseTarget(), ShouldCleanupPreRelease(), showVersion() (+10 more)
 
 ### Community 614 - "CompareSemver"
 Cohesion: 0.50
@@ -3216,9 +3207,9 @@ Nodes (3): V2bX, 一键安装, 详细使用教程
 Cohesion: 0.50
 Nodes (4): config, optimize-autoloader, preferred-install, sort-packages
 
-### Community 631 - "Conf"
-Cohesion: 0.14
-Nodes (16): consumeComment(), TrimNodeReader, isNL(), isWS(), NewTrimNodeReader(), prep(), Conf, CoreConfig (+8 more)
+### Community 631 - "io.Reader"
+Cohesion: 0.08
+Nodes (21): consumeComment(), TrimNodeReader, isNL(), isWS(), NewTrimNodeReader(), prep(), Conf, CoreConfig (+13 more)
 
 ### Community 635 - "🎣 Hook System"
 Cohesion: 0.50
@@ -3252,13 +3243,9 @@ Nodes (3): 1.11.13, 1.12.0-beta.15, 1.12.0-beta.17
 Cohesion: 0.67
 Nodes (3): Fields, tag, type
 
-### Community 678 - "LinkManager"
-Cohesion: 0.36
-Nodes (3): LinkManager, ManagedWriter, github.com/xtls/xray-core/common/buf.Reader
-
 ### Community 681 - "net/netip.AddrPort"
-Cohesion: 0.09
-Nodes (22): net/netip.AddrPort, darwinConnectionEntry, darwinConnectionFinder, darwinConnectionMatchKind, darwinSnapshot, processCacheEntry, processCacheKey, ConnectionOwner (+14 more)
+Cohesion: 0.08
+Nodes (25): net/netip.AddrPort, darwinConnectionEntry, darwinConnectionFinder, darwinConnectionMatchKind, darwinSearcher, darwinSnapshot, buildDarwinSnapshot(), darwinSnapshotSettings() (+17 more)
 
 ### Community 688 - "BitTorrent"
 Cohesion: 0.27
@@ -3276,49 +3263,33 @@ Nodes (8): KernelOutboundSupport, OutboundSupportMatrix(), asPort(), OutboundCon
 Cohesion: 0.32
 Nodes (6): Client, HandshakeResponse, WSConfig, WSConfig, ParseHandshake(), TestParseHandshake()
 
-### Community 895 - "New"
-Cohesion: 0.19
-Nodes (16): New(), NormalizeNodeType(), UserTag(), IPRecord, AddLimiter(), DeleteLimiter(), Limiter, UserIpList (+8 more)
+### Community 895 - "Limiter"
+Cohesion: 0.10
+Nodes (24): ExtractTagUUID(), ExtractUUID(), UserEmail(), UserTag(), HookServer, Sing, TestHookServer_WithUserEmail(), TestSing_AddUsers_UidMapAndTrafficAccounting() (+16 more)
 
 ### Community 896 - "Sing"
 Cohesion: 0.18
 Nodes (6): HookServer, DNSConfig, Sing, UserMap, UserMap, init()
 
-### Community 897 - "NewDefaultDNSRule"
-Cohesion: 0.02
-Nodes (51): Manager, AuthUserItem, ClientItem, DefaultRule, InboundItem, IPAcceptAnyItem, IPIsPrivateItem, IPVersionItem (+43 more)
+### Community 897 - "NewDefaultRule"
+Cohesion: 0.06
+Nodes (25): InterfaceUpdateListener, DefaultInterfaceAddressItem, DefaultRule, InterfaceAddressItem, LogicalRule, NetworkInterfaceAddressItem, NetworkIsConstrainedItem, NetworkIsExpensiveItem (+17 more)
 
 ### Community 898 - "net.Addr"
-Cohesion: 0.13
-Nodes (8): net.Addr, serverLogger, quic.Stream, quic.Conn, extractIPFromAddr(), initLogger(), GetLimiter(), StreamWrapper
-
-### Community 899 - "HTTPClient"
-Cohesion: 0.27
-Nodes (3): crypto/tls.CipherSuite, net/http.Transport, HTTPClient
-
-### Community 900 - "ShadowTLSInboundOptions"
-Cohesion: 0.29
-Nodes (6): ShadowTLSHandshakeOptions, ShadowTLSUser, ShadowTLSInboundOptions, ShadowTLSOutboundOptions, WildcardSNI, ServerOptions
+Cohesion: 0.06
+Nodes (21): net.Addr, serverLogger, quic.Stream, quic.Conn, NewTrafficCounter(), UserTag(), LimitConfig, DynamicSpeedLimitConfig (+13 more)
 
 ### Community 901 - "System Communication & Information Flow Logic"
 Cohesion: 0.22
 Nodes (9): 1. FNode to Manager Dashboard (Xboard), 2. FNode to Client, 3. Manager Dashboard (Xboard) to FNode, 4. Manager Dashboard (Xboard) to Client, 5. Client to FNode, 6. Client to Manager Dashboard (Xboard), Full End-to-End Sequence Diagram, High-Level Architecture Overview (+1 more)
 
-### Community 902 - "New"
-Cohesion: 0.39
-Nodes (8): New(), github.com/sagernet/sing-box/adapter.CertificateProviderRegistry, Context(), CertificateProviderRegistry(), Context(), EndpointRegistry(), ServiceRegistry(), New()
+### Community 902 - "Context"
+Cohesion: 0.30
+Nodes (15): freePort(), realityKeys(), socks5Dial(), startBox(), TestReality_VlessLoopback(), TestReality_WrongCredentialsRejected(), unmarshalOptions(), github.com/sagernet/sing-box/adapter.CertificateProviderRegistry (+7 more)
 
-### Community 905 - "wpaSupplicantMonitor"
-Cohesion: 0.44
-Nodes (3): net.UnixConn, wpaSupplicantMonitor, newWpaSupplicantMonitor()
-
-### Community 906 - "realityConnWrapper"
-Cohesion: 0.22
-Nodes (3): ConnectionState, github.com/metacubex/utls.Conn, realityConnWrapper
-
-### Community 907 - "Hysteria2"
-Cohesion: 0.22
-Nodes (3): V2bX, Hysteria2, Hysteria2node
+### Community 906 - "RealityServerConfig"
+Cohesion: 0.09
+Nodes (6): ConnectionState, github.com/metacubex/utls.Conn, github.com/metacubex/utls.RealityConfig, Conn, realityConnWrapper, RealityServerConfig
 
 ### Community 908 - "HTTPHost"
 Cohesion: 0.50
@@ -3329,8 +3300,8 @@ Cohesion: 0.50
 Nodes (3): NTP(), TestSniffNTP(), TestSniffNTPFailed()
 
 ### Community 910 - "outbound/index.zh.md"
-Cohesion: 0.12
-Nodes (13): Fields, Structure, Dial Fields, Fields, override_address, override_port, Structure, tag (+5 more)
+Cohesion: 0.11
+Nodes (15): Fields, Structure, Dial Fields, Fields, override_address, override_port, Structure, Fields (+7 more)
 
 ### Community 912 - "ft"
 Cohesion: 0.40
@@ -3340,13 +3311,9 @@ Nodes (6): ft(), ht(), jt(), pt(), vt(), zt()
 Cohesion: 0.33
 Nodes (6): 7.1 VPS IP & Default Gateway Transition Flow, 7.2.1 Panel Route Change Flow (WebSocket push), 7.2 Configuration & Related Asset Hot-Reload Flow, 7.3 Device Limit & Client IP Migration Flow, 7.4 Dynamic Speed Limit Lifecycle Flow, 7. Dynamic Environment & Configuration Lifecycle Flows
 
-### Community 916 - "NewConn"
-Cohesion: 0.60
-Nodes (4): NewConn(), TestTLS2Fragment(), TestTLSFragment(), TestTLSRecordFragment()
-
 ### Community 917 - "App\Contracts\PaymentInterface"
-Cohesion: 0.09
-Nodes (5): App\Contracts\PaymentInterface, Plugin, Plugin, Plugin, Plugin
+Cohesion: 0.12
+Nodes (4): App\Contracts\PaymentInterface, Plugin, Plugin, Plugin
 
 ### Community 918 - "5. Certificate Management & Caddy Integration"
 Cohesion: 0.33
@@ -3360,21 +3327,9 @@ Nodes (7): 2.1 Xboard (`SupportProject/Xboard`), 2.2 sing-box (`SupportProject/s
 Cohesion: 0.33
 Nodes (3): github.com/sagernet/sing-box/experimental/clashmode.Manager, ClashModeItem, NewClashModeItem()
 
-### Community 921 - "fakeKernel"
-Cohesion: 0.08
-Nodes (15): fakeKernel, Capabilities, cfgKernelType(), Service, newTestService(), TestApplyUserDeltaAddPreparesLimiterBeforeKernelUpdate(), TestApplyUserUpdatePreparesLimiterBeforeKernelUpdate(), TestApplyUserUpdateRestoresStateWhenKernelAndRestartFail() (+7 more)
-
-### Community 923 - "LogicalDNSRule"
-Cohesion: 0.28
-Nodes (3): LogicalDNSRule, NewDNSRuleAction(), NewLogicalDNSRule()
-
-### Community 924 - "credentials.go"
-Cohesion: 0.29
-Nodes (6): clientHandshakeInfoKey, requestInfoKey, ClientHandshakeInfoFromContext(), NewClientHandshakeInfoContext(), NewRequestInfoContext(), RequestInfoFromContext()
-
 ### Community 927 - "4. Configuration Reference (`/etc/FNode/config.json`)"
-Cohesion: 0.29
-Nodes (7): 4.2 Base Configuration (`sing_origin.json`) & Route Rules Persistence, 4.3 Automatic Hot-Reload & Related Files Monitoring, 4.4 Dynamic VPS IP & Network Interface Auto-Detection, 4.5 Hysteria 2 Transport & Multi-Port Architecture, 4.6 Panel Outbounds, Routes & Real-Time WebSocket Sync, 4.7 Machine Mode (Per-Server Token), 4. Configuration Reference (`/etc/FNode/config.json`)
+Cohesion: 0.20
+Nodes (10): 4.2 Base Configuration (`sing_origin.json`) & Route Rules Persistence, 4.3 Automatic Hot-Reload & Related Files Monitoring, 4.4 Dynamic VPS IP & Network Interface Auto-Detection, 4.5 Hysteria 2 Transport & Multi-Port Architecture, 4.6 Panel Outbounds, Routes & Real-Time WebSocket Sync, 4.7.1 Start-up Resilience, 4.7 Machine Mode (Per-Server Token), 4.8 REALITY Mapping, Probe Logging & Dependency Tracking (+2 more)
 
 ### Community 928 - "FNode AI Agent Directives & Rules"
 Cohesion: 0.25
@@ -3385,16 +3340,12 @@ Cohesion: 0.33
 Nodes (4): ClashServerConstructor, RegisterClashServerConstructor(), init(), init()
 
 ### Community 934 - "acmeWrapper"
-Cohesion: 0.29
-Nodes (4): github.com/caddyserver/certmagic.Cache, github.com/caddyserver/certmagic.Config, startACME(), acmeWrapper
-
-### Community 935 - "ResetTransport"
-Cohesion: 0.29
-Nodes (5): net/http.RoundTripper, ResetTransport(), CloseIdleConnections(), ConnectionPool, efaceWords
-
-### Community 936 - "6. Build & Test Instructions"
 Cohesion: 0.33
-Nodes (6): 6.1 Prerequisites, 6.2 Running Tests, 6.3 Building the Release Binary, 6.4 Automated CI/CD & Version Tagging Strategy, 6.5 Dependabot & Dependency Management, 6. Build & Test Instructions
+Nodes (3): github.com/caddyserver/certmagic.Cache, github.com/caddyserver/certmagic.Config, acmeWrapper
+
+### Community 936 - "FNode Comprehensive Project Guide & Architecture"
+Cohesion: 0.20
+Nodes (10): 1. Executive Summary, 3. Directory Layout, 6.1 Prerequisites, 6.2 Running Tests, 6.3 Building the Release Binary, 6.4 Automated CI/CD & Version Tagging Strategy, 6.5 Dependabot & Dependency Management, 6. Build & Test Instructions (+2 more)
 
 ### Community 937 - "customcfg.go"
 Cohesion: 0.48
@@ -3404,53 +3355,53 @@ Nodes (6): LoadCustomConfig(), mapKeys(), MergeAppendList(), MergePrependList(),
 Cohesion: 0.47
 Nodes (4): CleanLogs(), startAutoLogCleaner(), TestCleanLogs(), TestStartAutoLogCleaner()
 
-### Community 940 - "DialTCPWithBind"
-Cohesion: 0.33
-Nodes (5): github.com/sagernet/gvisor/pkg/tcpip/adapters/gonet.TCPConn, github.com/sagernet/gvisor/pkg/tcpip.FullAddress, github.com/sagernet/gvisor/pkg/tcpip.NetworkProtocolNumber, github.com/sagernet/gvisor/pkg/tcpip/stack.Stack, DialTCPWithBind()
-
-### Community 941 - "newTestMachine"
-Cohesion: 0.67
-Nodes (5): newTestMachine(), sortedIDs(), TestMachine_Intervals(), TestMachine_SyncAddsAndRemovesNodes(), TestMachine_WSRouting()
-
-### Community 942 - "NewDefaultInterfaceAddressItem"
-Cohesion: 0.40
-Nodes (3): DefaultInterfaceAddressItem, tun.DefaultInterfaceMonitor, NewDefaultInterfaceAddressItem()
+### Community 941 - "logship/logship_test.go"
+Cohesion: 0.09
+Nodes (32): NewHub(), NewShipper(), Entry, newTestShipper(), TestHub_RoutingAndFloor(), TestLogrusBridge(), TestNewShipper_DefaultModeIsInfo(), TestParseMode() (+24 more)
 
 ### Community 944 - "Dir"
 Cohesion: 0.50
 Nodes (3): Dir, fileWrapper, net/http.File
 
 ### Community 946 - "net/netip.Addr"
-Cohesion: 0.05
-Nodes (26): DNSRuleSetUpdateValidator, dnsTransportTagKey, inboundContextKey, MemoryStorage, Store, net/netip.Addr, net/netip.Prefix, RuleActionResolve (+18 more)
+Cohesion: 0.06
+Nodes (15): MemoryStorage, Store, Reader, net/netip.Addr, maxminddb.Reader, FakeIPMetadata, DNSResponseAddresses(), Open() (+7 more)
+
+### Community 948 - "NewDefaultHeadlessRule"
+Cohesion: 0.07
+Nodes (21): github.com/sagernet/sing/common/domain.AdGuardMatcher, github.com/sagernet/sing/common/domain.Matcher, AdGuardDomainItem, DefaultHeadlessRule, DomainItem, DomainKeywordItem, LogicalHeadlessRule, PackageNameItem (+13 more)
 
 ### Community 951 - "Response Match Fields"
 Cohesion: 0.40
 Nodes (5): response_answer, response_extra, Response Match Fields, response_ns, response_rcode
+
+### Community 952 - "sync/atomic.Int64"
+Cohesion: 0.11
+Nodes (6): XrayTrafficCounter, sync/atomic.Int64, TrafficManager, UserObject, NewTrafficManager(), XrayTrafficCounter
 
 ### Community 954 - "Relationship with sing-box"
 Cohesion: 0.50
 Nodes (4): Core interface (`core/interface.go`), Dependency, How nodes are added to sing-box, Relationship with sing-box
 
 ## Knowledge Gaps
-- **3264 isolated node(s):** `initconfig.sh script`, `initconfig.sh script`, `Route`, `BaseConfig`, `TlsSettings` (+3259 more)
+- **3269 isolated node(s):** `initconfig.sh script`, `initconfig.sh script`, `Route`, `BaseConfig`, `TlsSettings` (+3264 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **127 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **123 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `EarlyWebsocketConn` connect `EarlyWebsocketConn` to `context.Context`, `sync.Mutex`, `ApiException`, `sync/atomic.Pointer`?**
-  _High betweenness centrality (0.108) - this node is a cross-community bridge._
-- **Why does `Client` connect `ApiException` to `EarlyWebsocketConn`?**
-  _High betweenness centrality (0.107) - this node is a cross-community bridge._
-- **Why does `User` connect `User` to `GiftCardCode`, `Illuminate\Http\Request`, `Helper`, `Illuminate\Database\Eloquent\Model`, `Illuminate\Console\Command`, `ServerMachine`, `Plugin`, `Illuminate\Contracts\Routing\Registrar`, `Illuminate\Foundation\Http\FormRequest`, `.count`, `ApiException`, `MailService`, `Server`, `HookManager`?**
-  _High betweenness centrality (0.086) - this node is a cross-community bridge._
+- **Why does `EarlyWebsocketConn` connect `EarlyWebsocketConn` to `context.Context`, `sync.Mutex`, `Closure`, `sync/atomic.Pointer`?**
+  _High betweenness centrality (0.098) - this node is a cross-community bridge._
+- **Why does `Client` connect `Closure` to `EarlyWebsocketConn`?**
+  _High betweenness centrality (0.097) - this node is a cross-community bridge._
+- **Why does `User` connect `User` to `GiftCardCode`, `Illuminate\Http\Request`, `Helper`, `admin_setting`, `Illuminate\Database\Eloquent\Model`, `Illuminate\Console\Command`, `Illuminate\Support\Str`, `ServerMachine`, `MailService`, `Plugin`, `Illuminate\Foundation\Http\FormRequest`, `HookManager`, `ServerService`, `Closure`, `SendEmailJob`, `Server`, `Plan`, `.request`?**
+  _High betweenness centrality (0.075) - this node is a cross-community bridge._
 - **Are the 20 inferred relationships involving `"assets/umi.js"()` (e.g. with `Na()` and `su()`) actually correct?**
   _`"assets/umi.js"()` has 20 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `initconfig.sh script`, `initconfig.sh script`, `Route` to the rest of the system?**
-  _3264 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _3269 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `"assets/umi.js"` be split into smaller, more focused modules?**
-  _Cohesion score 0.012872602999810138 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.01313260730301089 - nodes in this community are weakly interconnected._
 - **Should `xbctl/main.go` be split into smaller, more focused modules?**
-  _Cohesion score 0.0818452380952381 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.059921710328214396 - nodes in this community are weakly interconnected._
