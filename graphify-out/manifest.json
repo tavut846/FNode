@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "api/panel/node.go": {
-    "mtime": 1792337074.105487,
-    "seen": 1792338955.1351533,
-    "ast_hash": "5334f1d1aeed1e830dd241a0d51eac6c",
+    "mtime": 1792367797.3909647,
+    "seen": 1792369081.0115464,
+    "ast_hash": "009e3cc9a127ecf113182af096192b58",
     "semantic_hash": ""
   },
   "api/panel/node_test.go": {
@@ -18,15 +18,15 @@
     "semantic_hash": ""
   },
   "api/panel/panel.go": {
-    "mtime": 1792337080.4528718,
-    "seen": 1792338955.1351576,
-    "ast_hash": "c66e6961044d8cfe962043f5eb92dc73",
+    "mtime": 1792368356.5553787,
+    "seen": 1792369081.01155,
+    "ast_hash": "6d5f28bdf78251463dbb35e8f0906704",
     "semantic_hash": ""
   },
   "api/panel/user.go": {
-    "mtime": 1792204504.1039727,
-    "seen": 1792206171.913839,
-    "ast_hash": "71885c3462d14a4f66fe6027863e9f32",
+    "mtime": 1792367771.9857962,
+    "seen": 1792369081.0115514,
+    "ast_hash": "867c85b95504cada2fc620ba1e4f0ae1",
     "semantic_hash": ""
   },
   "api/panel/utils.go": {
@@ -42,9 +42,9 @@
     "semantic_hash": ""
   },
   "cmd/cmd.go": {
-    "mtime": 1774255859.6306493,
-    "seen": 1790827664.2657838,
-    "ast_hash": "94184de5446baf1c50c3644fad4ae9e1",
+    "mtime": 1792367989.3417575,
+    "seen": 1792369081.011563,
+    "ast_hash": "0b7f1a804e596b53c05bb505b200fe3b",
     "semantic_hash": ""
   },
   "cmd/common.go": {
@@ -234,9 +234,9 @@
     "semantic_hash": ""
   },
   "conf/node.go": {
-    "mtime": 1792207794.349135,
-    "seen": 1792208838.2881,
-    "ast_hash": "1ff11fbd87a5b56821a10a14dee78fc4",
+    "mtime": 1792367749.499175,
+    "seen": 1792369081.0116336,
+    "ast_hash": "bc8c1e1eddc3f8e86b39687968e2fd28",
     "semantic_hash": ""
   },
   "conf/sing.go": {
@@ -336,9 +336,9 @@
     "semantic_hash": ""
   },
   "node/controller.go": {
-    "mtime": 1792337816.3793323,
-    "seen": 1792338955.135309,
-    "ast_hash": "c293718330a66c04a67066edf42348cc",
+    "mtime": 1792367991.3582628,
+    "seen": 1792369081.0116923,
+    "ast_hash": "494e5ac6e02ad34c9734f1e8125e2fb1",
     "semantic_hash": ""
   },
   "node/lego.go": {
@@ -354,9 +354,9 @@
     "semantic_hash": ""
   },
   "node/node.go": {
-    "mtime": 1774255859.8694797,
-    "seen": 1790827664.2659526,
-    "ast_hash": "6e8d891eb7be0bc26d1ab5459388c423",
+    "mtime": 1792368061.1979916,
+    "seen": 1792369081.0117,
+    "ast_hash": "64c5f03e9a73fefcb5b829c8fdebbf43",
     "semantic_hash": ""
   },
   "node/task.go": {
@@ -7776,9 +7776,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1792338592.3925343,
-    "seen": 1792338955.1353538,
-    "ast_hash": "46687539fb648da9b49b0a261e23a574",
+    "mtime": 1792368668.7003038,
+    "seen": 1792369081.0117352,
+    "ast_hash": "2c2052c1f50f295269870f2c467d0533",
     "semantic_hash": ""
   },
   "FNode-script/LOGIC.md": {
@@ -9522,9 +9522,9 @@
     "semantic_hash": ""
   },
   "FNode-script/FNode.sh": {
-    "mtime": 1792242537.259747,
-    "seen": 1792242952.5424645,
-    "ast_hash": "d66911eb6ca29771848bbc742ff6ad90",
+    "mtime": 1792368545.243107,
+    "seen": 1792369081.0094159,
+    "ast_hash": "6208f7c9fbd46d01e449c722d71be411",
     "semantic_hash": ""
   },
   "FNode-script/initconfig.sh": {
@@ -9534,9 +9534,9 @@
     "semantic_hash": ""
   },
   "FNode-script/install.sh": {
-    "mtime": 1792242579.5081472,
-    "seen": 1792242952.5424762,
-    "ast_hash": "5d34850e26d33825909f15978c7ae536",
+    "mtime": 1792368586.8023772,
+    "seen": 1792369081.0094275,
+    "ast_hash": "fe5207fb8a9e06ea0a3c26d6a098f8c0",
     "semantic_hash": ""
   },
   "SupportProject/V2bX-script/V2bX.sh": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1792338563.9965734,
-    "seen": 1792338955.1358738,
-    "ast_hash": "33b9007354503d72f1c432bd78940489",
+    "mtime": 1792368777.6934888,
+    "seen": 1792369081.01219,
+    "ast_hash": "c50b7d7d70cb5676239995d129399f70",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10392,9 +10392,9 @@
     "semantic_hash": ""
   },
   "api/panel/ws.go": {
-    "mtime": 1792337702.6001747,
-    "seen": 1792338955.1351633,
-    "ast_hash": "aed92442a8b6e5636fc52049202f3ee2",
+    "mtime": 1792368356.651397,
+    "seen": 1792369081.0115578,
+    "ast_hash": "0d1815ae36af56357c2de3d32397e771",
     "semantic_hash": ""
   },
   "api/panel/ws_test.go": {
@@ -10416,9 +10416,9 @@
     "semantic_hash": ""
   },
   "conf/generated_test.go": {
-    "mtime": 1792338326.8326278,
-    "seen": 1792338955.1352377,
-    "ast_hash": "061e7f589820ee19adb69bb4b4fcca11",
+    "mtime": 1792368187.6315114,
+    "seen": 1792369081.0116274,
+    "ast_hash": "e40e8d144ae27a5accac0462c2f93f88",
     "semantic_hash": ""
   },
   "core/sing/apply.go": {
@@ -10452,15 +10452,81 @@
     "semantic_hash": ""
   },
   "node/ws.go": {
-    "mtime": 1792337788.6248758,
-    "seen": 1792338955.1353214,
-    "ast_hash": "89dd72aeb8b99eb7b1cdbfe2cfbbe220",
+    "mtime": 1792367991.2068315,
+    "seen": 1792369081.0117066,
+    "ast_hash": "9524ed0c20339fd1f7d5e55f50c82a42",
     "semantic_hash": ""
   },
   "node/ws_test.go": {
     "mtime": 1792337963.677288,
     "seen": 1792338955.135323,
     "ast_hash": "b7c09aad7534801027fd875488ceccb7",
+    "semantic_hash": ""
+  },
+  "api/panel/machine.go": {
+    "mtime": 1792367816.019057,
+    "seen": 1792369081.0115428,
+    "ast_hash": "08c00e1ed63bd0f253f763ac376fb4e8",
+    "semantic_hash": ""
+  },
+  "api/panel/machine_test.go": {
+    "mtime": 1792368169.4458869,
+    "seen": 1792369081.0115442,
+    "ast_hash": "bf34c63ce84057953e1ec422f5e68407",
+    "semantic_hash": ""
+  },
+  "api/panel/useragent_test.go": {
+    "mtime": 1792368370.3058608,
+    "seen": 1792369081.011553,
+    "ast_hash": "30946987ef1c36640214b79b5a7ca713",
+    "semantic_hash": ""
+  },
+  "api/panel/version.go": {
+    "mtime": 1792368356.4675012,
+    "seen": 1792369081.0115564,
+    "ast_hash": "aef99cec86c1528928e56debcdc601c8",
+    "semantic_hash": ""
+  },
+  "common/sysinfo/disk_other.go": {
+    "mtime": 1792367875.274155,
+    "seen": 1792369081.0116081,
+    "ast_hash": "5de8c3355af379e187be34f0d68ab075",
+    "semantic_hash": ""
+  },
+  "common/sysinfo/disk_unix.go": {
+    "mtime": 1792367875.1444378,
+    "seen": 1792369081.0116093,
+    "ast_hash": "df7ae35873574c6b26ed2bffe28d700c",
+    "semantic_hash": ""
+  },
+  "common/sysinfo/sysinfo.go": {
+    "mtime": 1792367874.9819682,
+    "seen": 1792369081.0116105,
+    "ast_hash": "8bc2033afb047173a3aba6fefb623c19",
+    "semantic_hash": ""
+  },
+  "common/sysinfo/sysinfo_test.go": {
+    "mtime": 1792368169.7159,
+    "seen": 1792369081.0116117,
+    "ast_hash": "02f73df32404a35fc01a81ef725704cc",
+    "semantic_hash": ""
+  },
+  "conf/install_script_test.go": {
+    "mtime": 1792368630.8539107,
+    "seen": 1792369081.0116289,
+    "ast_hash": "6f7598ed6f84adeabc7f3e126b6e1673",
+    "semantic_hash": ""
+  },
+  "node/machine.go": {
+    "mtime": 1792368060.9604218,
+    "seen": 1792369081.0116968,
+    "ast_hash": "6da978da289a31ee8edd8025ace108ec",
+    "semantic_hash": ""
+  },
+  "node/machine_test.go": {
+    "mtime": 1792368232.0746157,
+    "seen": 1792369081.0116985,
+    "ast_hash": "31672bda38eded8cb8a6b5a70b30560b",
     "semantic_hash": ""
   }
 }
