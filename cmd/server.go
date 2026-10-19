@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
@@ -46,24 +47,25 @@ func serverHandle(_ *cobra.Command, _ []string) {
 		log.WithField("err", err).Error("Load config file failed")
 		return
 	}
-	switch c.LogConfig.Level {
-	case "debug":
+	// info is the default: start-up, panel connection and reload messages
+	// are visible without the per-request noise of debug
+	switch strings.ToLower(strings.TrimSpace(c.LogConfig.Level)) {
+	case "debug", "trace":
 		log.SetLevel(log.DebugLevel)
-	case "info":
-		log.SetLevel(log.InfoLevel)
-	case "warn":
+	case "warn", "warning":
 		log.SetLevel(log.WarnLevel)
 	case "error":
 		log.SetLevel(log.ErrorLevel)
 	default:
-		log.SetLevel(log.DebugLevel)
+		log.SetLevel(log.InfoLevel)
 	}
 	if c.LogConfig.Output != "" {
 		f, err := os.OpenFile(c.LogConfig.Output, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 		if err != nil {
 			log.WithField("err", err).Error("Open log file failed, using stdout instead")
+		} else {
+			log.SetOutput(f)
 		}
-		log.SetOutput(f)
 	}
 	// Ship FNode and sing-box logs to the panel when its CustomNode plugin asks
 	// for them (the console keeps the configured level)

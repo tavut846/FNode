@@ -131,3 +131,28 @@ func (c *Client) apiPath(name string) string {
 	}
 	return "/api/v1/server/UniProxy/" + name
 }
+
+// ResetConfigCache forgets the last config ETag and body hash so the next
+// GetNodeInfo returns the full config even when the panel has not changed it
+// (used to rebuild a node after a failed reload).
+func (c *Client) ResetConfigCache() {
+	c.hashLock.Lock()
+	c.responseBodyHash = ""
+	c.hashLock.Unlock()
+	c.nodeEtag = ""
+}
+
+// UseAutoType switches a v1 client (server token + NodeType) to the v2 API,
+// which reads the node type from the panel's config. It resolves a NodeType
+// in config.json that does not match the panel node. It reports whether the
+// client changed.
+func (c *Client) UseAutoType() bool {
+	if c.v2 || c.MachineID > 0 {
+		return false
+	}
+	c.v2 = true
+	c.NodeType = ""
+	c.client.QueryParam.Del("node_type")
+	c.ResetConfigCache()
+	return true
+}

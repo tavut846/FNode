@@ -32,11 +32,16 @@ type Machine struct {
 	controllers map[int]*Controller
 	warned      map[int]bool
 
-	ws       *panel.WSClient
-	shipper  *logship.Shipper
-	sampler  *sysinfo.Sampler
-	cancel   context.CancelFunc
-	done     chan struct{}
+	ws      *panel.WSClient
+	shipper *logship.Shipper
+	sampler *sysinfo.Sampler
+	cancel  context.CancelFunc
+	done    chan struct{}
+	// shipCancel stops the log shipper, which runs from the first start
+	// attempt so a machine that cannot start still reports why.
+	shipCancel context.CancelFunc
+	// skip reports node ids a standalone config entry already runs.
+	skip     func(id int) bool
 	pull     time.Duration
 	push     time.Duration
 	interval chan struct{}
@@ -76,12 +81,17 @@ func (m *Machine) logger() *log.Entry {
 // Start lists the machine's nodes, starts them, then connects the machine
 // WebSocket and the background loop.
 func (m *Machine) Start() error {
+	if m.shipCancel == nil {
+		logship.Default.Register(m.shipper)
+		ctx, cancel := context.WithCancel(context.Background())
+		m.shipCancel = cancel
+		go m.shipper.Run(ctx)
+	}
 	resp, err := m.client.GetMachineNodes()
 	if err != nil {
 		return fmt.Errorf("get machine %d nodes error: %s", m.cfg.ApiConfig.MachineID, err)
 	}
 	m.applyIntervals(resp.BaseConfig)
-	logship.Default.Register(m.shipper)
 	m.prepareWS()
 	m.Sync(resp.Nodes)
 	m.logger().Infof("Machine started with %d nodes", len(m.RunningIDs()))
@@ -89,7 +99,6 @@ func (m *Machine) Start() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	m.cancel = cancel
 	m.done = make(chan struct{})
-	go m.shipper.Run(ctx)
 	if m.ws != nil {
 		go m.ws.Run(ctx)
 	}
@@ -115,6 +124,9 @@ func (m *Machine) Close() {
 		if err := c.Close(); err != nil {
 			m.logger().WithFields(log.Fields{"node_id": id, "err": err}).Error("Close machine node failed")
 		}
+	}
+	if m.shipCancel != nil {
+		m.shipCancel()
 	}
 	logship.Default.Unregister(m.shipper)
 }
@@ -234,6 +246,16 @@ func (m *Machine) Sync(wanted []panel.MachineNode) {
 			m.mu.Unlock()
 			if first {
 				m.logger().WithFields(log.Fields{"node_id": n.ID, "type": n.Type}).Warn("FNode does not support this node type, skipping it")
+			}
+			continue
+		}
+		if m.skip != nil && m.skip(n.ID) {
+			m.mu.Lock()
+			first := !m.warned[n.ID]
+			m.warned[n.ID] = true
+			m.mu.Unlock()
+			if first {
+				m.logger().WithField("node_id", n.ID).Warn("Node is also a standalone entry in config.json; the standalone entry runs it and the machine skips it")
 			}
 			continue
 		}

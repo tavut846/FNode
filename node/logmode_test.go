@@ -92,7 +92,7 @@ func TestController_LogsMapping(t *testing.T) {
 		t.Fatal("a standalone node creates its own shipper")
 	}
 	logship.Default.Emit(logship.Error, "map-test-node", "map-test-node", "for this node", timeNow())
-	if q, _ := c.shipper.Buffered(); q != 1 || c.shipper.MaxLevel() != logship.Warn {
+	if q, _ := c.shipper.Buffered(); q != 1 || c.shipper.MaxLevel() != logship.DefaultMode {
 		t.Errorf("entry routed to the node's shipper: queued %d", q)
 	}
 	c.stopLogs()

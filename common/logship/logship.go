@@ -10,10 +10,13 @@ package logship
 import (
 	"context"
 	"errors"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 	"unicode/utf8"
+
+	"github.com/sirupsen/logrus"
 )
 
 // Level is a log verbosity: lower is more severe. Off ships nothing.
@@ -81,11 +84,31 @@ type Entry struct {
 	Message string  `json:"message"`
 }
 
-// Response is the panel's answer: {"data":{"log_mode","accepted","flush_interval"}}.
+// Response is the panel's answer: {"data":{"log_mode","accepted","flush_interval","node_modes"}}.
 type Response struct {
 	LogMode       string
 	Accepted      int
 	FlushInterval int
+	// NodeModes are per-node log modes inside a machine (node id -> mode).
+	// When the panel sends the field it replaces every per-node override.
+	NodeModes map[int]string
+	// HasNodeModes tells an empty NodeModes ("no overrides") from an old
+	// panel that does not send the field.
+	HasNodeModes bool
+}
+
+// Meta is sent with every log push besides the entries.
+type Meta struct {
+	// Missing lists, per node id, outbound tags the node's routes use but
+	// FNode does not have; the CustomNode plugin adds them to the node.
+	Missing map[int][]string
+	// Dropped counts entries lost to a full buffer since the last push.
+	Dropped int
+}
+
+// MetaSender is a Sender that can also carry Meta (the panel client).
+type MetaSender interface {
+	SendLogsMeta(ctx context.Context, entries []Entry, meta Meta) (Response, error)
 }
 
 // ErrNotFound means the panel has no log endpoint (HTTP 404: plugin missing).
@@ -114,19 +137,31 @@ type Shipper struct {
 	failures   int
 	lastServer Level
 	haveServer bool
+	// missing is the outbound request per node id; missingDirty forces a
+	// push so the panel learns about it without waiting for the next poll.
+	missing      map[int][]string
+	missingDirty bool
+	// sentDropped is the dropped count already reported to the panel.
+	sentDropped int
+	// errLogged avoids repeating the same push failure in the local log.
+	errLogged bool
 
 	wake     chan struct{}
 	onChange func()
 }
 
-// NewShipper creates a shipper in the default mode (warn) with a flush
+// DefaultMode is the log mode a shipper uses until the panel sends its own.
+const DefaultMode = Info
+
+// NewShipper creates a shipper in the default mode (info) with a flush
 // interval of 10 seconds until the panel says otherwise.
 func NewShipper(sender Sender) *Shipper {
 	return &Shipper{
 		sender:    sender,
 		now:       time.Now,
 		capacity:  DefaultBuffer,
-		mode:      Warn,
+		mode:      DefaultMode,
+		missing:   make(map[int][]string),
 		overrides: make(map[int]Level),
 		interval:  10 * time.Second,
 		wake:      make(chan struct{}, 1),
@@ -243,6 +278,76 @@ func (s *Shipper) Add(level Level, e Entry) {
 	}
 }
 
+// SetMissing records the outbound tags node nodeID needs; an empty list
+// clears it. A change triggers a push.
+func (s *Shipper) SetMissing(nodeID int, tags []string) {
+	tags = append([]string(nil), tags...)
+	sort.Strings(tags)
+	s.mu.Lock()
+	old := s.missing[nodeID]
+	same := len(old) == len(tags)
+	if same {
+		for i := range old {
+			if old[i] != tags[i] {
+				same = false
+				break
+			}
+		}
+	}
+	if same {
+		s.mu.Unlock()
+		return
+	}
+	if len(tags) == 0 {
+		delete(s.missing, nodeID)
+	} else {
+		s.missing[nodeID] = tags
+	}
+	s.missingDirty = true
+	s.mu.Unlock()
+	s.signal()
+}
+
+// Missing returns a copy of the outbound requests per node id.
+func (s *Shipper) Missing() map[int][]string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.missingCopyLocked()
+}
+
+func (s *Shipper) missingCopyLocked() map[int][]string {
+	out := make(map[int][]string, len(s.missing))
+	for id, tags := range s.missing {
+		out[id] = append([]string(nil), tags...)
+	}
+	return out
+}
+
+// send posts a batch, with Meta when the sender supports it.
+func (s *Shipper) send(ctx context.Context, batch []Entry, meta Meta) (Response, error) {
+	if ms, ok := s.sender.(MetaSender); ok {
+		return ms.SendLogsMeta(ctx, batch, meta)
+	}
+	return s.sender.SendLogs(ctx, batch)
+}
+
+// logPushError reports a failed push once in the local log (never shipped).
+func (s *Shipper) logPushError(err error) {
+	s.mu.Lock()
+	logged := s.errLogged
+	s.errLogged = true
+	s.mu.Unlock()
+	if logged {
+		return
+	}
+	entry := logrus.WithField(SkipField, true).WithField("err", err)
+	if errors.Is(err, ErrNotFound) {
+		entry.Warn("Panel log endpoint not found (HTTP 404): install or update the CustomNode plugin to see FNode logs in the dashboard")
+		return
+	}
+	entry.Warn("Sending logs to the panel failed, retrying with backoff")
+}
+
 // Buffered returns the number of queued entries and the number dropped so far.
 func (s *Shipper) Buffered() (queued, dropped int) {
 	s.mu.Lock()
@@ -298,7 +403,7 @@ func (s *Shipper) Flush(ctx context.Context) time.Duration {
 			// Nothing to ship: still poll once at start and then every minute so
 			// a mode change made in the panel reaches an idle node too.
 			s.mu.Lock()
-			due := s.lastPoll.IsZero() || now.Sub(s.lastPoll) >= OffPollInterval
+			due := s.lastPoll.IsZero() || now.Sub(s.lastPoll) >= OffPollInterval || s.missingDirty
 			wait := s.intervalLocked()
 			if !due {
 				if untilPoll := OffPollInterval - now.Sub(s.lastPoll); untilPoll < wait {
@@ -313,17 +418,36 @@ func (s *Shipper) Flush(ctx context.Context) time.Duration {
 		if batch == nil {
 			batch = []Entry{}
 		}
-		resp, err := s.sender.SendLogs(ctx, batch)
+		s.mu.Lock()
+		meta := Meta{Missing: s.missingCopyLocked(), Dropped: s.dropped - s.sentDropped}
+		dropped := s.dropped
+		s.missingDirty = false
+		s.mu.Unlock()
+		resp, err := s.send(ctx, batch, meta)
+		if err != nil {
+			s.logPushError(err)
+		} else {
+			s.mu.Lock()
+			recovered := s.errLogged
+			s.errLogged = false
+			s.mu.Unlock()
+			if recovered {
+				logrus.WithField(SkipField, true).Info("Sending logs to the panel works again")
+			}
+		}
 		s.mu.Lock()
 		s.lastPoll = now
 		if err != nil {
+			if len(meta.Missing) > 0 {
+				s.missingDirty = true
+			}
 			if errors.Is(err, ErrNotFound) {
 				s.notBefore = now.Add(NotFoundBackoff)
 			} else {
 				s.failures++
 				backoff := time.Duration(1<<min(s.failures, 6)) * 5 * time.Second
-				if backoff > 5*time.Minute {
-					backoff = 5 * time.Minute
+				if backoff > 2*time.Minute {
+					backoff = 2 * time.Minute
 				}
 				s.notBefore = now.Add(backoff)
 			}
@@ -333,6 +457,7 @@ func (s *Shipper) Flush(ctx context.Context) time.Duration {
 		}
 		s.failures = 0
 		s.notBefore = time.Time{}
+		s.sentDropped = dropped
 		// The batch was the head of the buffer; entries the ring dropped while
 		// the request was in flight were part of it already.
 		if n := len(batch) - (s.dropped - droppedAtPeek); n > 0 {
@@ -380,8 +505,17 @@ func (s *Shipper) applyResponseLocked(r Response) {
 			s.overrides = make(map[int]Level)
 		}
 		s.lastServer, s.haveServer = m, true
-		s.afterModeChangeLocked()
 	}
+	if r.HasNodeModes {
+		// The panel's per-node modes are authoritative
+		s.overrides = make(map[int]Level, len(r.NodeModes))
+		for id, mode := range r.NodeModes {
+			if l, ok := ParseMode(mode); ok && id > 0 {
+				s.overrides[id] = l
+			}
+		}
+	}
+	s.afterModeChangeLocked()
 	if r.FlushInterval > 0 {
 		s.interval = time.Duration(r.FlushInterval) * time.Second
 	}
