@@ -9,6 +9,8 @@ type CertConfig struct {
 	Provider         string            `json:"Provider"` // alidns, cloudflare, gandi, godaddy....
 	Email            string            `json:"Email"`
 	DNSEnv           map[string]string `json:"DNSEnv"`
+	// HTTPPort is the local port of the ACME HTTP-01 challenge (default 80).
+	HTTPPort int `json:"HTTPPort"`
 }
 
 func NewCertConfig() *CertConfig {

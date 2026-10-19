@@ -301,6 +301,17 @@ An Xboard *machine* groups nodes under one token (`MachineController`, `ServerV2
 | `self` | Generates a local self-signed RSA-2048 certificate. | Valid for 30 years |
 | `none` | Disables TLS configuration (e.g. for plain Shadowsocks or VLESS-Reality). | N/A |
 
+### 5.1.1 Dashboard cert_config (per node)
+
+Xboard sends a per-node `cert_config` in the node config (HTTP `/config` and WebSocket `sync.config`), xboard-node shape: `{cert_mode, domain, cert_file, key_file, email, dns_provider, dns_env, http_port, cert_content, key_content}`; older data uses `mode` for `cert_mode`. `api/panel/cert.go` parses it leniently (PHP `[]`, numbers as strings, a non-object is ignored) into `CommonNode.CertConfig`; `NodeInfo.PanelCert()` returns it when the mode is not `none`.
+
+When present it replaces the local `Options.CertConfig` for that TLS node (`node/panel_cert.go`), so TLS nodes need no local `CertConfig`:
+- Mapping: `cert_mode`→`CertMode`, `domain`→`CertDomain` (falls back to the node's `server_name`), `cert_file`/`key_file`, `email` (falls back to the local `Email`), `dns_provider`→`Provider`, `dns_env`→`DNSEnv`, `http_port`→`HTTPPort` (HTTP-01 port, default 80). `RejectUnknownSni` stays local.
+- `content` mode writes `cert_content`/`key_content` to `/etc/FNode/panel_cert/node-<id>.crt|.key` (rewritten only when changed) and runs as `file`. `self`/`http`/`dns` without paths use the same `node-<id>` files. `file` keeps the Caddy auto-detect fallback.
+- The local `CertConfig` is kept in `Controller.localCert`; the effective one is set on `Options.CertConfig` only after the cert is ready (the core reads TLS paths from there). Without a panel `cert_config` the local behaviour is unchanged.
+- A missing cert/key is logged at error level (so it ships to the dashboard log card) as `node <id>: dashboard cert_config (<mode> mode): cert file not found: <path>`. The running inbound is kept; on a config update the client forgets the config ETag/hash (`Client.ForgetNodeConfig`) and the next check re-fetches it, even while the WebSocket is connected (`certPending`), so the node rebuilds once the file appears. A machine node whose first start fails is retried on every machine sync.
+- `cert_config` is not a routing key, so a change changes `InboundHash` and rebuilds the inbound.
+
 ### 5.2 Caddy Reverse Proxy & Multi-Domain Setup
 Caddy can be configured using `FNode caddy` or option `18` in `FNode.sh`. The wizard supports configuring multiple domains (comma- or space-separated, e.g. `domain1.com, domain2.com`) and generates independent site blocks directing incoming traffic through a camouflage reverse proxy target while obtaining SSL certificates using Cloudflare DNS-01 validation:
 

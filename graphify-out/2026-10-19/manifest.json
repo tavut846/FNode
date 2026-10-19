@@ -9522,9 +9522,9 @@
     "semantic_hash": ""
   },
   "FNode-script/FNode.sh": {
-    "mtime": 1792390130.9858596,
-    "seen": 1792390243.8178144,
-    "ast_hash": "6d78a053882b94c8296ad18054e07a28",
+    "mtime": 1792392471.990715,
+    "seen": 1792392915.2605393,
+    "ast_hash": "33f7628b7bc626afca8cb68d15cc11e0",
     "semantic_hash": ""
   },
   "FNode-script/initconfig.sh": {
@@ -9534,9 +9534,9 @@
     "semantic_hash": ""
   },
   "FNode-script/install.sh": {
-    "mtime": 1792390130.9990528,
-    "seen": 1792390243.817828,
-    "ast_hash": "87825341e9db465d99c67d770b741aba",
+    "mtime": 1792392483.3893757,
+    "seen": 1792392915.2605603,
+    "ast_hash": "4ae0ba12b62a9054e2f4e6ac52a1d9d0",
     "semantic_hash": ""
   },
   "SupportProject/V2bX-script/V2bX.sh": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1792390131.068479,
-    "seen": 1792390243.8230326,
-    "ast_hash": "cad193ce6030e586e63134d8db502dc0",
+    "mtime": 1792392498.6046352,
+    "seen": 1792392915.2706087,
+    "ast_hash": "0e7eca55cae77eac7376a6833405e34e",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10512,9 +10512,9 @@
     "semantic_hash": ""
   },
   "conf/install_script_test.go": {
-    "mtime": 1792368630.8539107,
-    "seen": 1792369081.0116289,
-    "ast_hash": "6f7598ed6f84adeabc7f3e126b6e1673",
+    "mtime": 1792392210.0215533,
+    "seen": 1792392915.2685027,
+    "ast_hash": "1e1c826c8a7bbb98ed488e5ffe08d24b",
     "semantic_hash": ""
   },
   "node/machine.go": {
@@ -10599,6 +10599,24 @@
     "mtime": 1792390131.0929365,
     "seen": 1792390243.8220665,
     "ast_hash": "68da1a4364aa5ad3d3ace1491c315d9f",
+    "semantic_hash": ""
+  },
+  "cmd/config_status.go": {
+    "mtime": 1792392312.398459,
+    "seen": 1792392915.268285,
+    "ast_hash": "51af6093d2d3829e1558a4729f35e0d2",
+    "semantic_hash": ""
+  },
+  "cmd/config_status_test.go": {
+    "mtime": 1792392404.564936,
+    "seen": 1792392915.2682905,
+    "ast_hash": "7e065a551756d0340430befb1d31a940",
+    "semantic_hash": ""
+  },
+  "core/sing/anytls_users_test.go": {
+    "mtime": 1792392018.5176852,
+    "seen": 1792392915.268555,
+    "ast_hash": "113b553117b228767446e4a95263d1e6",
     "semantic_hash": ""
   }
 }

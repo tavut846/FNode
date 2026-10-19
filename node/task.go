@@ -53,7 +53,7 @@ func (c *Controller) startTasks(node *panel.NodeInfo) {
 func (c *Controller) nodeInfoMonitor() (err error) {
 	// While the panel WebSocket is connected it pushes config, users and
 	// devices, so the HTTP poll is skipped. It resumes when the WS drops.
-	if c.wsConnected() {
+	if c.wsConnected() && !c.certPending {
 		return nil
 	}
 	c.mu.Lock()
@@ -97,24 +97,28 @@ func (c *Controller) applyUpdate(newN *panel.NodeInfo, newU []panel.UserInfo, ne
 	if newN != nil && c.applyRoutingOnly(newN) {
 		newN = nil
 	}
+	// Check cert first before deleting the old node so a cert error doesn't
+	// kill the running node. The config is fetched again on the next check
+	// (even with the WebSocket up) until the certificate is there.
+	if newN != nil && newN.Security == panel.Tls {
+		if err = c.requestCert(newN); err != nil {
+			log.WithFields(log.Fields{
+				"tag": c.tag,
+				"err": err,
+			}).Error("Request cert failed, keeping running node")
+			c.certPending = true
+			c.apiClient.ForgetNodeConfig()
+			newN = nil
+		}
+	}
 	if newN != nil {
+		c.certPending = false
 		c.info = newN
 		// nodeInfo changed
 		if newU != nil {
 			c.userList = newU
 		}
 		c.traffic = make(map[string]int64)
-		// Check cert first before deleting the old node so a cert error doesn't kill the running node
-		if newN.Security == panel.Tls {
-			err = c.requestCert()
-			if err != nil {
-				log.WithFields(log.Fields{
-					"tag": c.tag,
-					"err": err,
-				}).Error("Request cert failed, keeping running node")
-				return nil
-			}
-		}
 
 		// Remove old node
 		log.WithField("tag", c.tag).Info("Node changed, reload")

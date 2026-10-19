@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -70,7 +71,11 @@ func checkPath(p string) error {
 func (l *Lego) SetProvider() error {
 	switch l.config.CertMode {
 	case "http":
-		err := l.client.Challenge.SetHTTP01Provider(http01.NewProviderServer("", "80"))
+		port := "80"
+		if l.config.HTTPPort > 0 {
+			port = strconv.Itoa(l.config.HTTPPort)
+		}
+		err := l.client.Challenge.SetHTTP01Provider(http01.NewProviderServer("", port))
 		if err != nil {
 			return err
 		}

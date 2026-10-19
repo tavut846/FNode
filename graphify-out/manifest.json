@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "api/panel/node.go": {
-    "mtime": 1792367797.3909647,
-    "seen": 1792369081.0115464,
-    "ast_hash": "009e3cc9a127ecf113182af096192b58",
+    "mtime": 1792393085.400149,
+    "seen": 1792393809.6549659,
+    "ast_hash": "8da08522cfddb836e2b76e2f7abb713d",
     "semantic_hash": ""
   },
   "api/panel/node_test.go": {
@@ -198,9 +198,9 @@
     "semantic_hash": ""
   },
   "conf/cert.go": {
-    "mtime": 1774255859.7395096,
-    "seen": 1790827664.2658613,
-    "ast_hash": "bb9bc7c14f9e40f60ab69dfe167d67e0",
+    "mtime": 1792393051.389244,
+    "seen": 1792393809.6551535,
+    "ast_hash": "4c7fa487f70be0446b9ac4a2524ff8a6",
     "semantic_hash": ""
   },
   "conf/conf.go": {
@@ -324,9 +324,9 @@
     "semantic_hash": ""
   },
   "node/cert.go": {
-    "mtime": 1792204514.6940117,
-    "seen": 1792206171.913944,
-    "ast_hash": "83957be491dea6ffd0263afc85349f56",
+    "mtime": 1792393385.1026094,
+    "seen": 1792393809.6553345,
+    "ast_hash": "0712674d6703a644c165d05cb6e6314c",
     "semantic_hash": ""
   },
   "node/cert_test.go": {
@@ -336,15 +336,15 @@
     "semantic_hash": ""
   },
   "node/controller.go": {
-    "mtime": 1792390131.084727,
-    "seen": 1792390243.8220582,
-    "ast_hash": "65d6f4b09fc90d45228e826dbf07d825",
+    "mtime": 1792393132.66784,
+    "seen": 1792393809.655344,
+    "ast_hash": "559b9b34374bf1d57d8c79306a762c39",
     "semantic_hash": ""
   },
   "node/lego.go": {
-    "mtime": 1774255859.862358,
-    "seen": 1790827664.2659469,
-    "ast_hash": "a75e668ad01af195643ccac83daeb314",
+    "mtime": 1792393059.2165728,
+    "seen": 1792393809.655347,
+    "ast_hash": "17b13057c12cefab803e2c4def518313",
     "semantic_hash": ""
   },
   "node/lego_test.go": {
@@ -360,9 +360,9 @@
     "semantic_hash": ""
   },
   "node/task.go": {
-    "mtime": 1792390131.1107128,
-    "seen": 1792390243.8220756,
-    "ast_hash": "674c4d93533346c75c2e5d8c9fc7dc24",
+    "mtime": 1792393132.671211,
+    "seen": 1792393809.6553867,
+    "ast_hash": "6f91ce1feb8c8d173b7dc36fd98aecb6",
     "semantic_hash": ""
   },
   "node/user.go": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1792392498.6046352,
-    "seen": 1792392915.2706087,
-    "ast_hash": "0e7eca55cae77eac7376a6833405e34e",
+    "mtime": 1792393311.319314,
+    "seen": 1792393809.6564856,
+    "ast_hash": "2085d7f392bdf2acb9e5ef5eae9810b7",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10617,6 +10617,30 @@
     "mtime": 1792392018.5176852,
     "seen": 1792392915.268555,
     "ast_hash": "113b553117b228767446e4a95263d1e6",
+    "semantic_hash": ""
+  },
+  "api/panel/cert.go": {
+    "mtime": 1792393030.2480273,
+    "seen": 1792393809.654928,
+    "ast_hash": "98470d87e263700a21142c436f27433d",
+    "semantic_hash": ""
+  },
+  "api/panel/cert_test.go": {
+    "mtime": 1792393218.050321,
+    "seen": 1792393809.654937,
+    "ast_hash": "d9ca1e13479dfec7279ab94194cbb60d",
+    "semantic_hash": ""
+  },
+  "node/panel_cert.go": {
+    "mtime": 1792393116.0297654,
+    "seen": 1792393809.6553762,
+    "ast_hash": "eefa28c50c3c84373d4800a5596df5b6",
+    "semantic_hash": ""
+  },
+  "node/panel_cert_test.go": {
+    "mtime": 1792393256.4877977,
+    "seen": 1792393809.6553817,
+    "ast_hash": "9ef9110d4faf3eb41421f929fd98dbd1",
     "semantic_hash": ""
   }
 }

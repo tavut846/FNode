@@ -61,6 +61,10 @@ type CommonNode struct {
 	CustomOutbounds  []CustomOutbound       `json:"custom_outbounds"`
 	CustomRoutes     []map[string]any       `json:"custom_routes"`
 	CustomRouteRules []conf.CustomRouteRule `json:"custom_route_rules"`
+
+	// CertConfig is the dashboard's per-node certificate setting. When set
+	// (mode not none) it replaces the local Options.CertConfig for TLS.
+	CertConfig *CertConfig `json:"cert_config"`
 }
 
 // CustomOutbound is one panel-defined outbound in xboard-node shape:
@@ -448,6 +452,16 @@ func (c *Client) ParseNodeConfig(body []byte) (*NodeInfo, error) {
 	c.responseBodyHash = full
 	c.hashLock.Unlock()
 	return node, nil
+}
+
+// ForgetNodeConfig drops the cached config ETag and hash, so the next
+// GetNodeInfo or ParseNodeConfig returns the config again even if unchanged.
+// Used when applying a config failed (e.g. its certificate is not there yet).
+func (c *Client) ForgetNodeConfig() {
+	c.hashLock.Lock()
+	c.responseBodyHash = ""
+	c.nodeEtag = ""
+	c.hashLock.Unlock()
 }
 
 // DetectNodeType reads the node type from a config document: its "protocol"

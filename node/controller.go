@@ -43,6 +43,12 @@ type Controller struct {
 	shipper    *logship.Shipper
 	ownShipper bool
 	logCancel  context.CancelFunc
+	// localCert is the CertConfig of the local config. Options.CertConfig is
+	// the one in use: the dashboard cert_config when the panel sends one.
+	localCert *conf.CertConfig
+	// certPending is set while a node config waits for its certificate; the
+	// config is then polled again even with the WebSocket connected.
+	certPending bool
 	*conf.Options
 }
 
@@ -53,6 +59,7 @@ func NewController(server vCore.Core, api *panel.Client, config *conf.Options) *
 		Options:          config,
 		apiClient:        api,
 		lastReportedUIDs: make(map[int]struct{}),
+		localCert:        config.CertConfig,
 	}
 	return controller
 }
@@ -91,7 +98,7 @@ func (c *Controller) Start() error {
 	}
 	c.limiter = l
 	if node.Security == panel.Tls {
-		err = c.requestCert()
+		err = c.requestCert(node)
 		if err != nil {
 			return fmt.Errorf("request cert error: %s", err)
 		}
