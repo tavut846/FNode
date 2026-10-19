@@ -73,6 +73,9 @@ func (b *Sing) collectPanelState() panelState {
 			}
 			nr.routes = append(nr.routes, r)
 		}
+		// The route id is the dashboard order (the panel sends routes in
+		// database row order), so the first route by id is matched first.
+		sort.SliceStable(nr.routes, func(i, j int) bool { return nr.routes[i].Id < nr.routes[j].Id })
 		nr.customRules = info.Common.CustomRouteRules
 		nr.rawRoutes = info.Common.CustomRoutes
 		st.nodes = append(st.nodes, nr)

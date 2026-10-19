@@ -224,3 +224,46 @@ func TestNew_OriginFallback(t *testing.T) {
 		}
 	}
 }
+
+// Panel routes are matched in route id order (the dashboard order), whatever
+// order the panel sent them in; custom_routes keep their array order.
+func TestCollectPanelState_RoutesSortedById(t *testing.T) {
+	b := newTestSing(t, nil)
+	tag := "[https://panel.example]-vless:1"
+	b.users.mapLock.Lock()
+	b.inboundInfo[tag] = &panel.NodeInfo{Type: "vless", Common: &panel.CommonNode{
+		Routes: []panel.Route{
+			{Id: 5, Match: "five.example", Action: "proxy", ActionValue: "out5"},
+			{Id: 2, Match: "two.example", Action: "proxy", ActionValue: "out2"},
+			{Id: 7, Match: "main", Action: "dns", ActionValue: "1.1.1.1"},
+			{Id: 9, Match: "nine.example", Action: "proxy", ActionValue: "out9"},
+		},
+		CustomRoutes: []map[string]any{
+			{"domain_suffix": []any{"z.example"}, "outbound": "rawZ"},
+			{"domain_suffix": []any{"a.example"}, "outbound": "rawA"},
+		},
+	}}
+	b.users.mapLock.Unlock()
+
+	st := b.collectPanelState()
+	var order []string
+	for _, r := range compileScopedRules(false, nil, st.nodes) {
+		out, _ := r["outbound"].(string)
+		switch out {
+		case "out2", "out5", "out9", "rawZ", "rawA":
+			if ins := inboundsOf(r); len(ins) != 1 || ins[0] != tag {
+				t.Errorf("rule not scoped to its node: %v", r)
+			}
+			order = append(order, out)
+		}
+	}
+	want := []string{"rawZ", "rawA", "out2", "out5", "out9"}
+	if len(order) != len(want) {
+		t.Fatalf("compiled order %v, want %v", order, want)
+	}
+	for i := range want {
+		if order[i] != want[i] {
+			t.Fatalf("compiled order %v, want %v", order, want)
+		}
+	}
+}

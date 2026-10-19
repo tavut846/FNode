@@ -228,7 +228,7 @@ When `OriginalPath` points to a base sing-box config (e.g. `/etc/FNode/sing_orig
   3. Panel `custom_routes` (raw sing-box rules; `geosite`/`geoip`/`source_geoip` fields are dropped, `geoip: private` becomes `ip_is_private`)
   4. Anti-SSRF Protection (private IPv4 & IPv6 CIDRs blocked)
   5. IPv6 Blocking (when `DisableIPv6: true`)
-  6. Panel `routes` from the node's route groups (`block`, `direct`, `proxy`/`route` → `action_value` outbound tag; `dns` routes are not router rules)
+  6. Panel `routes` from the node's route groups (`block`, `direct`, `proxy`/`route` → `action_value` outbound tag; `dns` routes are not router rules), sorted by route id (the dashboard order: CustomNode's move up/down swaps route ids), since the panel sends them in database row order. `custom_route_rules` and `custom_routes` keep their array order.
   7. Base `sing_origin.json` route rules (custom outbound detours, domain suffixes, rule-sets, regex, protocol blocks)
   8. Fallback final outbound (`direct`)
 

@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1792397354.4744759,
-    "seen": 1792397801.6620793,
-    "ast_hash": "c6c9ecc73ae0ca5cddabe467e80c1e70",
+    "mtime": 1792410825.0777724,
+    "seen": 1792411163.0380054,
+    "ast_hash": "e7f05c7aa841c66cffdcb24f593d03e6",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10422,9 +10422,9 @@
     "semantic_hash": ""
   },
   "core/sing/apply.go": {
-    "mtime": 1792393891.7036161,
-    "seen": 1792397801.6609128,
-    "ast_hash": "97009eba861d479b0ff1aa96bbba7114",
+    "mtime": 1792410806.594662,
+    "seen": 1792411163.0371623,
+    "ast_hash": "77cba95d4736b37fb2db631bde65ad0d",
     "semantic_hash": ""
   },
   "core/sing/effective.go": {
@@ -10674,9 +10674,9 @@
     "semantic_hash": ""
   },
   "core/sing/scoped_route_test.go": {
-    "mtime": 1792393891.7829652,
-    "seen": 1792397801.6609733,
-    "ast_hash": "72205badb3557f45acf823d7fa1c0ca0",
+    "mtime": 1792410660.374676,
+    "seen": 1792411163.0372405,
+    "ast_hash": "0276db127d552dcf3d8fd2f2dd97b84f",
     "semantic_hash": ""
   },
   "node/heartbeat_test.go": {
