@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/common/logship"
 	"github.com/tavut846/FNode/common/task"
 	"github.com/tavut846/FNode/conf"
 	vCore "github.com/tavut846/FNode/core"
@@ -37,6 +38,11 @@ type Controller struct {
 	// sharedWS is the machine connection in machine mode (events are routed
 	// to this controller by the Machine); nil for a standalone node.
 	sharedWS *panel.WSClient
+	// shipper sends this node's logs to the panel; the machine's shipper in
+	// machine mode, otherwise created in startLogs.
+	shipper    *logship.Shipper
+	ownShipper bool
+	logCancel  context.CancelFunc
 	*conf.Options
 }
 
@@ -107,6 +113,7 @@ func (c *Controller) Start() error {
 	c.info = node
 	// Hold mu so a WebSocket event cannot run before the tasks exist
 	c.mu.Lock()
+	c.startLogs()
 	c.startWS()
 	c.startTasks(node)
 	c.mu.Unlock()
@@ -116,6 +123,7 @@ func (c *Controller) Start() error {
 // Close implement the Close() function of the service interface
 func (c *Controller) Close() error {
 	c.stopWS()
+	c.stopLogs()
 	// Wait for an in-flight poll or WS event, then refuse new ones
 	c.mu.Lock()
 	c.closed = true
@@ -145,4 +153,28 @@ func (c *Controller) Close() error {
 
 func (c *Controller) buildNodeTag(node *panel.NodeInfo) string {
 	return fmt.Sprintf("[%s]-%s:%d", c.apiClient.APIHost, node.Type, node.Id)
+}
+
+// startLogs maps this node's tag to its panel log shipper, creating (and
+// running) a shipper of its own unless the machine provided one.
+func (c *Controller) startLogs() {
+	if c.shipper == nil {
+		c.shipper = logship.NewShipper(c.apiClient)
+		c.ownShipper = true
+		logship.Default.Register(c.shipper)
+		ctx, cancel := context.WithCancel(context.Background())
+		c.logCancel = cancel
+		go c.shipper.Run(ctx)
+	}
+	logship.Default.MapNode(c.tag, c.apiClient.NodeId, c.shipper)
+}
+
+func (c *Controller) stopLogs() {
+	logship.Default.UnmapNode(c.tag)
+	if c.ownShipper {
+		if c.logCancel != nil {
+			c.logCancel()
+		}
+		logship.Default.Unregister(c.shipper)
+	}
 }

@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/tavut846/FNode/common/logship"
 	"github.com/tavut846/FNode/conf"
 	vCore "github.com/tavut846/FNode/core"
 	"github.com/tavut846/FNode/limiter"
@@ -64,6 +65,9 @@ func serverHandle(_ *cobra.Command, _ []string) {
 		}
 		log.SetOutput(f)
 	}
+	// Ship FNode and sing-box logs to the panel when its CustomNode plugin asks
+	// for them (the console keeps the configured level)
+	logship.InstallLogrus(logship.Default)
 	// Start automatic log cleaner every 7 days
 	stopCleaner := startAutoLogCleaner(7*24*time.Hour, c.LogConfig.Output)
 	defer stopCleaner()

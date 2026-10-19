@@ -13,6 +13,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/tavut846/FNode/common/logship"
 	"github.com/tavut846/FNode/conf"
 )
 
@@ -322,7 +323,7 @@ func (c *logCapture) handle(raw string) {
 		c.probes.add(l.Tag, ip)
 		// Probe rejections are expected noise: debug only
 		if log.IsLevelEnabled(log.DebugLevel) {
-			log.WithField("source", "sing-box").Debug(l.Tag + ": " + l.Message)
+			log.WithField(logship.SkipField, true).Debug(l.Tag + ": " + l.Message)
 		}
 	} else {
 		c.print(l)
@@ -365,4 +366,14 @@ func (c *logCapture) Close() {
 			_ = c.consoleFile.Close()
 		}
 	})
+}
+
+// shipToPanel feeds a parsed sing-box line to the panel log shippers. Probe
+// rejections ship as debug entries; the 5 minute counter ships at info.
+func shipToPanel(l logLine, probe bool) {
+	level := logship.Level(min(l.Verbosity, int(logship.Debug)))
+	if probe {
+		level = logship.Debug
+	}
+	logship.Default.Emit(level, nodeTagOfLogTag(l.Tag), l.Tag, l.Message, time.Now())
 }

@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/common/logship"
 	"github.com/tavut846/FNode/common/sysinfo"
 	"github.com/tavut846/FNode/conf"
 	vCore "github.com/tavut846/FNode/core"
@@ -32,6 +33,7 @@ type Machine struct {
 	warned      map[int]bool
 
 	ws       *panel.WSClient
+	shipper  *logship.Shipper
 	sampler  *sysinfo.Sampler
 	cancel   context.CancelFunc
 	done     chan struct{}
@@ -58,6 +60,7 @@ func NewMachine(cfg conf.NodeConfig, core vCore.Core) (*Machine, error) {
 		controllers: make(map[int]*Controller),
 		warned:      make(map[int]bool),
 		sampler:     sysinfo.NewSampler(),
+		shipper:     logship.NewShipper(client),
 		pull:        60 * time.Second,
 		push:        60 * time.Second,
 		interval:    make(chan struct{}, 1),
@@ -78,6 +81,7 @@ func (m *Machine) Start() error {
 		return fmt.Errorf("get machine %d nodes error: %s", m.cfg.ApiConfig.MachineID, err)
 	}
 	m.applyIntervals(resp.BaseConfig)
+	logship.Default.Register(m.shipper)
 	m.prepareWS()
 	m.Sync(resp.Nodes)
 	m.logger().Infof("Machine started with %d nodes", len(m.RunningIDs()))
@@ -85,6 +89,7 @@ func (m *Machine) Start() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	m.cancel = cancel
 	m.done = make(chan struct{})
+	go m.shipper.Run(ctx)
 	if m.ws != nil {
 		go m.ws.Run(ctx)
 	}
@@ -111,6 +116,7 @@ func (m *Machine) Close() {
 			m.logger().WithFields(log.Fields{"node_id": id, "err": err}).Error("Close machine node failed")
 		}
 	}
+	logship.Default.Unregister(m.shipper)
 }
 
 // prepareWS creates (without connecting) the machine WebSocket when the
@@ -283,6 +289,7 @@ func (m *Machine) startController(n panel.MachineNode) (*Controller, error) {
 	}
 	c := NewController(m.core, client, m.nodeOptions(n.ID))
 	c.sharedWS = m.ws
+	c.shipper = m.shipper
 	if err = c.Start(); err != nil {
 		_ = c.Close()
 		return nil, err
@@ -299,6 +306,13 @@ func (m *Machine) handleWSStatus(connected bool) {
 // handleWSEvent routes machine WebSocket events: sync.nodes updates the node
 // set, everything else goes to the node named by node_id.
 func (m *Machine) handleWSEvent(ev *panel.WSEvent) {
+	if ev.Type == panel.WSEventLogMode {
+		// node_id null: the whole machine; otherwise that node only
+		if mode, ok := logship.ParseMode(ev.LogMode); ok {
+			m.shipper.SetMode(ev.NodeID, mode)
+		}
+		return
+	}
 	if ev.Type == panel.WSEventSyncNodes {
 		m.logger().Infof("Panel pushed the machine node list (%d nodes)", len(ev.Nodes))
 		// Starting nodes can take a while (certificates); keep reading the socket

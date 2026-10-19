@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/common/logship"
 )
 
 // startWS asks the panel for its WebSocket endpoint and, when push is
@@ -65,6 +66,10 @@ func (c *Controller) handleWSStatus(connected bool) {
 // from the node's WS goroutine and serialised with the HTTP poll by c.mu.
 func (c *Controller) handleWSEvent(ev *panel.WSEvent) {
 	if ev.NodeID != 0 && ev.NodeID != c.apiClient.NodeId {
+		return
+	}
+	if ev.Type == panel.WSEventLogMode {
+		c.applyLogMode(ev)
 		return
 	}
 	c.mu.Lock()
@@ -136,4 +141,13 @@ func devicesToAlive(devices map[int][]string) map[int]int {
 		alive[uid] = len(ips)
 	}
 	return alive
+}
+
+// applyLogMode applies a custom_node.log_mode push to this node's shipper.
+func (c *Controller) applyLogMode(ev *panel.WSEvent) {
+	mode, ok := logship.ParseMode(ev.LogMode)
+	if !ok || c.shipper == nil {
+		return
+	}
+	c.shipper.SetMode(ev.NodeID, mode)
 }

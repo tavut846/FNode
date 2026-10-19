@@ -15,6 +15,8 @@ import (
 
 	"github.com/coder/websocket"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/tavut846/FNode/common/logship"
 )
 
 // WebSocket events pushed by the Xboard panel (app/WebSocket, NodeSyncService).
@@ -25,6 +27,8 @@ const (
 	WSEventSyncDevices   = "sync.devices"
 	// WSEventSyncNodes is a machine-level event: the machine's node set changed.
 	WSEventSyncNodes = "sync.nodes"
+	// WSEventLogMode is pushed by the CustomNode plugin: {"mode","node_id"|null}.
+	WSEventLogMode = "custom_node.log_mode"
 )
 
 // WSEvent is a parsed data event.
@@ -44,6 +48,9 @@ type WSEvent struct {
 	Devices map[int][]string
 	// Nodes is the new node list of sync.nodes (machine connections only).
 	Nodes []MachineNode
+	// LogMode is the mode of custom_node.log_mode; NodeID 0 means the whole
+	// connection (the payload's node_id is null).
+	LogMode string
 }
 
 type wsMessage struct {
@@ -74,6 +81,25 @@ func ParseWSMessage(data []byte) (string, *WSEvent, error) {
 		Action string          `json:"action"`
 	}
 	switch msg.Event {
+	case WSEventLogMode:
+		var p struct {
+			Mode   string `json:"mode"`
+			NodeID *int   `json:"node_id"`
+		}
+		if isEmptyJSON(msg.Data) {
+			return msg.Event, nil, fmt.Errorf("custom_node.log_mode: empty payload")
+		}
+		if err := json.Unmarshal(msg.Data, &p); err != nil {
+			return msg.Event, nil, fmt.Errorf("custom_node.log_mode: decode payload: %w", err)
+		}
+		if _, ok := logship.ParseMode(p.Mode); !ok {
+			return msg.Event, nil, fmt.Errorf("custom_node.log_mode: unknown mode %q", p.Mode)
+		}
+		ev.LogMode = p.Mode
+		if p.NodeID != nil {
+			ev.NodeID = *p.NodeID
+		}
+		return msg.Event, ev, nil
 	case WSEventSyncNodes:
 		var p struct {
 			Nodes []MachineNode `json:"nodes"`

@@ -11,6 +11,7 @@ import (
 	"github.com/sagernet/sing-box/log"
 
 	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/common/logship"
 	"github.com/tavut846/FNode/conf"
 	vCore "github.com/tavut846/FNode/core"
 	box "github.com/sagernet/sing-box"
@@ -45,6 +46,8 @@ type Sing struct {
 	routeFinal                string
 	endpointTags              []string
 	capture                   *logCapture
+	baseLogVerbosity          int
+	removeFloor               func()
 
 	// baseOutbounds is the static outbound set (sing_origin.json, local
 	// CustomOutbounds and builtin direct/block) the box was created with.
@@ -214,12 +217,17 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 		capture.Close()
 		return nil, err
 	}
+	capture.onLine = shipToPanel
 	capture.start()
 	hs := &HookServer{
 		counter: sync.Map{},
 	}
 	b.Router().AppendTracker(hs)
-	return &Sing{
+	baseVerbosity := levelToVerbosity(c.SingConfig.LogConfig.Level)
+	if c.SingConfig.LogConfig.Disabled {
+		baseVerbosity = verbError
+	}
+	s := &Sing{
 		ctx:        ctx,
 		box:        b,
 		hookServer: hs,
@@ -242,7 +250,32 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 		baseOutbounds:             baseOutbounds,
 		appliedOutbounds:          appliedOutbounds,
 		lastRaw:                   lastRaw,
-	}, nil
+		baseLogVerbosity:          baseVerbosity,
+	}
+	// Raise sing-box's log level while a panel wants more verbose entries than
+	// the configured level (the capture keeps the console at the configured one).
+	s.removeFloor = logship.Default.OnFloorChange(s.setLogFloor)
+	return s, nil
+}
+
+var sbLevels = []log.Level{log.LevelError, log.LevelWarn, log.LevelInfo, log.LevelDebug, log.LevelTrace}
+
+// setLogFloor sets the sing-box logger level to the more verbose of the
+// configured level and what the panel's log mode needs.
+func (b *Sing) setLogFloor(floor logship.Level) {
+	target := b.baseLogVerbosity
+	if floor != logship.Off && int(floor) > target {
+		target = int(floor)
+	}
+	if target < 0 {
+		target = 0
+	}
+	if target >= len(sbLevels) {
+		target = len(sbLevels) - 1
+	}
+	if b.logFactory != nil {
+		b.logFactory.SetLevel(sbLevels[target])
+	}
 }
 
 // UpdateRouterRules recompiles the route rules from every node's panel routes
@@ -256,6 +289,9 @@ func (b *Sing) Start() error {
 }
 
 func (b *Sing) Close() error {
+	if b.removeFloor != nil {
+		b.removeFloor()
+	}
 	err := b.box.Close()
 	if b.capture != nil {
 		b.capture.Close()

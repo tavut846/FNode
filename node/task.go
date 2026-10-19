@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/common/logship"
 	"github.com/tavut846/FNode/common/task"
 	vCore "github.com/tavut846/FNode/core"
 	"github.com/tavut846/FNode/limiter"
@@ -129,6 +130,10 @@ func (c *Controller) applyUpdate(newN *panel.NodeInfo, newU []panel.UserInfo, ne
 		oldTag := c.tag
 		if len(c.Options.Name) == 0 {
 			c.tag = c.buildNodeTag(newN)
+		}
+		if c.tag != oldTag && c.shipper != nil {
+			logship.Default.UnmapNode(oldTag)
+			logship.Default.MapNode(c.tag, c.apiClient.NodeId, c.shipper)
 		}
 		// Update limiter (keep the current alive list when none was fetched)
 		if newA == nil && c.limiter != nil {

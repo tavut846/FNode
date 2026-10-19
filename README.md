@@ -68,6 +68,14 @@ In machine mode FNode calls `POST /api/v2/server/machine/nodes` on start and run
 - **"REALITY: processed invalid connection" is not a client error by itself.** sing-box logs it whenever a ClientHello fails REALITY authentication and is forwarded to the camouflage site. Internet scanners cause it constantly; a real client with a wrong public key, short id, SNI or a clock off by minutes causes the same line, and the two cannot be told apart from the server. FNode logs these at debug level only and writes `REALITY: rejected N probes in the last 5m (inbound ..., top sources: ...)` at info. If a specific client cannot connect, check its `public_key`, `short_id`, `serverName` and system time first.
 - The REALITY implementation is `github.com/xtls/reality`, pulled in by the sing-box fork. `dependabot.yml` tracks it so new upstream versions arrive as pull requests.
 
+### Log shipping to the panel (CustomNode plugin)
+
+FNode can send its logs and sing-box's logs to the panel so they can be read in the dashboard (Xboard CustomNode plugin, `POST /api/v2/custom-node/logs`). Nothing to configure on the node: it uses the same credentials as the node API (machine mode: `machine_id` + machine token; node mode: server token + `node_id`) and `User-Agent: FNode/<version>`.
+
+- **Log mode**: the panel decides which levels are shipped (`off`, `error`, `warn` (default), `info`, `debug`); every response carries the current `log_mode` and `flush_interval`. The panel can also push `custom_node.log_mode` over the WebSocket (`node_id: null` for the whole machine, or one node) and it applies immediately.
+- **Delivery**: entries are buffered in a ring of 2000 (the oldest are dropped when the panel is down), flushed every `flush_interval` seconds or at 200 entries, at most 500 per request, messages cut at 4096 bytes. A failed push never affects a node and is retried with backoff. In mode `off` nothing is shipped and an empty request is sent every 60 seconds to learn the current mode (an idle node polls once a minute as well). On HTTP 404 (plugin missing) FNode retries every 10 minutes, silently.
+- **Sources**: FNode's own log and sing-box's (inbound, outbound, router). Entries carry the node: sing-box lines by their `inbound/<type>[<node tag>]` tag, FNode lines by their `tag` field; global messages go to every connected panel. While the panel wants more detail than your `Log.Level`, the logger level is raised and the console still prints only the level you configured.
+
 ### Generated files
 
 After every apply FNode writes, per node, into `GeneratedDir` (default: `generated/` next to `config.json`; set `"GeneratedDir"` in the sing core config to change it):
