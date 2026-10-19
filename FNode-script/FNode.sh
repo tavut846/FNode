@@ -111,7 +111,9 @@ before_show_menu() {
 FNODE_BRANCH="${FNODE_BRANCH:-master}"
 
 install() {
-    bash <(curl -Ls "https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}/FNode-script/install.sh")
+    # Extra arguments are passed to install.sh (e.g. --mode machine --panel ... --token ... --machine-id 3)
+    [[ "$1" == "0" ]] && shift
+    bash <(curl -Ls "https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}/FNode-script/install.sh") "$@"
 }
 
 update() {
@@ -220,12 +222,18 @@ config() {
 }
 
 uninstall() {
-    confirm "确定要卸载 FNode 吗?" "n"
-    if [[ $? != 0 ]]; then
-        if [[ $# == 0 ]]; then
-            show_menu
+    local assume_yes=false
+    for a in "$@"; do
+        [[ "$a" == "--yes" || "$a" == "-y" ]] && assume_yes=true
+    done
+    if [[ $assume_yes != true ]]; then
+        confirm "确定要卸载 FNode 吗?" "n"
+        if [[ $? != 0 ]]; then
+            if [[ $# == 0 ]]; then
+                show_menu
+            fi
+            return 0
         fi
-        return 0
     fi
     if [[ x"${release}" == x"alpine" ]]; then
         service FNode stop
@@ -1290,8 +1298,9 @@ show_usage() {
     echo "FNode update       - 更新 FNode (交互式选择: 最新版/预发布版/指定版本)"
     echo "FNode update pre   - 更新 FNode 至最新预发布预览版"
     echo "FNode update x.x.x - 安装 FNode 指定版本"
-    echo "FNode install      - 安装 FNode"
-    echo "FNode uninstall    - 卸载 FNode"
+    echo "FNode install      - 安装 FNode (可选: --mode machine|node --panel --token --machine-id|--node-id)"
+    echo "FNode uninstall    - 卸载 FNode (--yes 跳过确认)"
+    echo "FNode config show  - 查看生效配置与出站来源 (--node 标签 --summary)"
     echo "FNode caddy        - 安装/配置 Caddy (支持 Cloudflare DNS 反代与证书)"
     echo "FNode version      - 查看 FNode 版本"
     echo "------------------------------------------"
@@ -1373,10 +1382,17 @@ if [[ $# > 0 ]]; then
         "log") check_install 0 && show_log 0 ;;
         "clearlog"|"cleanlog"|"clean_log") check_install 0 && clean_log 0 ;;
         "update") check_install 0 && update 0 $2 ;;
-        "config") config $* ;;
+        "config")
+            if [[ "$2" == "show" ]]; then
+                # FNode config show [--node tag] [--summary]: effective config per node
+                /usr/local/FNode/FNode config show -c /etc/FNode/config.json "${@:3}"
+            else
+                config $*
+            fi
+            ;;
         "generate") generate_config_file ;;
-        "install") check_uninstall 0 && install 0 ;;
-        "uninstall") check_install 0 && uninstall 0 ;;
+        "install") check_uninstall 0 && install 0 "${@:2}" ;;
+        "uninstall") check_install 0 && uninstall 0 "${@:2}" ;;
         "x25519") check_install 0 && generate_x25519_key 0 ;;
         "version") check_install 0 && show_FNode_version 0 ;;
         "caddy") setup_caddy_reverse_proxy 0 ;;

@@ -93,6 +93,45 @@ FNode config show --node vless:1 --summary
 wget -N https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh && bash install.sh
 ```
 
+### 脚本化安装 (Non-interactive install)
+
+Machine mode (one Xboard machine token runs every node assigned to the machine):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh | sudo bash -s -- --mode machine --panel 'https://panel' --token 'MACHINE_TOKEN' --machine-id 3
+```
+
+Node mode (server token + node id; the node type is read from the panel unless `--type` is given):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh | sudo bash -s -- --mode node --panel 'https://panel' --token 'SERVER_TOKEN' --node-id 12
+```
+
+| Flag | Meaning |
+|------|---------|
+| `--mode machine\|node` | Connection mode (required for a scripted install) |
+| `--panel URL` | Panel address, `http://` or `https://` |
+| `--token TOKEN` | Machine token (machine mode) or server token (node mode) |
+| `--machine-id ID` / `--node-id ID` | Machine id or node id |
+| `--type TYPE` | Node mode only, optional: `vless`, `vmess`, `trojan`, `shadowsocks`, `hysteria`, `hysteria2`, `tuic`, `anytls`. With it FNode uses the v1 UniProxy API |
+| `--version x.y.z\|latest\|pre` | Release to install (default `latest`) |
+| `--branch NAME` | Branch for the `FNode` management script (default `master`) |
+| `--cert-mode none\|http\|dns\|self\|file`, `--cert-domain DOMAIN` | Certificate settings written to `CertConfig` (default `none`) |
+| `--force` | Replace an existing `/etc/FNode/config.json` (backed up to `config.json.bak.<time>`; with `jq` only the `Nodes` block is replaced) |
+| `--print-config` | Print the `config.json` the flags produce and exit (dry run, no root needed) |
+
+With any of these flags the script asks nothing, writes `/etc/FNode/config.json` (and a default `sing_origin.json` if there is none), enables and starts the service. Without flags it stays interactive, and `bash install.sh 0.0.21` still installs that version. An existing `config.json` is never overwritten without `--force`.
+
+Uninstall without prompts:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh | sudo bash -s -- uninstall --yes
+```
+
+```bash
+FNode uninstall --yes
+```
+
 ## 构建
 
 # 编译 sing 内核

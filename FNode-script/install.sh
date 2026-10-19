@@ -8,6 +8,217 @@ plain='\033[0m'
 cur_dir=$(pwd)
 FNODE_BRANCH="${FNODE_BRANCH:-master}"
 
+usage() {
+    cat <<'USAGE'
+Usage:
+  install.sh [version]                                   interactive install (old behaviour)
+  install.sh --mode machine --panel URL --token MACHINE_TOKEN --machine-id ID [options]
+  install.sh --mode node    --panel URL --token SERVER_TOKEN  --node-id ID [--type TYPE] [options]
+  install.sh uninstall [--yes]
+
+Piped:  curl -fsSL https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh | sudo bash -s -- --mode machine --panel 'https://panel' --token 'MACHINE_TOKEN' --machine-id 3
+
+Options:
+  --version x.y.z|latest|pre   FNode release to install (default: latest)
+  --branch NAME                branch used for the FNode.sh management script (default: master)
+  --type TYPE                  node mode only: vless, vmess, trojan, shadowsocks, hysteria, hysteria2,
+                               tuic, anytls. Omit it to let FNode read the type from the panel (v2 API)
+  --cert-mode MODE             none (default), http, dns, self or file
+  --cert-domain DOMAIN         certificate domain for http/dns/self/file
+  --force                      replace an existing /etc/FNode/config.json (a backup is kept)
+  -y, --yes                    do not ask for confirmation (uninstall)
+  --print-config               print the config.json the flags produce and exit (dry run)
+  -h, --help                   show this help
+USAGE
+}
+
+# Arguments. Any of --mode/--panel/--token/--machine-id/--node-id switches the
+# script to non-interactive mode: no read prompts at all.
+action="install"
+arg_version=""
+arg_mode=""
+arg_panel=""
+arg_token=""
+arg_machine_id=""
+arg_node_id=""
+arg_type=""
+arg_cert_mode="none"
+arg_cert_domain=""
+arg_force=false
+arg_yes=false
+arg_print=false
+noninteractive=false
+
+need_value() {
+    if [[ -z "$2" || "$2" == --* ]]; then
+        echo -e "${red}错误：${plain} $1 需要一个值 (missing value for $1)"
+        exit 1
+    fi
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --mode) need_value "$1" "$2"; arg_mode="$2"; noninteractive=true; shift 2 ;;
+        --mode=*) arg_mode="${1#*=}"; noninteractive=true; shift ;;
+        --panel|--api-host) need_value "$1" "$2"; arg_panel="$2"; noninteractive=true; shift 2 ;;
+        --panel=*|--api-host=*) arg_panel="${1#*=}"; noninteractive=true; shift ;;
+        --token) need_value "$1" "$2"; arg_token="$2"; noninteractive=true; shift 2 ;;
+        --token=*) arg_token="${1#*=}"; noninteractive=true; shift ;;
+        --machine-id) need_value "$1" "$2"; arg_machine_id="$2"; noninteractive=true; shift 2 ;;
+        --machine-id=*) arg_machine_id="${1#*=}"; noninteractive=true; shift ;;
+        --node-id) need_value "$1" "$2"; arg_node_id="$2"; noninteractive=true; shift 2 ;;
+        --node-id=*) arg_node_id="${1#*=}"; noninteractive=true; shift ;;
+        --type) need_value "$1" "$2"; arg_type="$2"; shift 2 ;;
+        --type=*) arg_type="${1#*=}"; shift ;;
+        --version) need_value "$1" "$2"; arg_version="$2"; shift 2 ;;
+        --version=*) arg_version="${1#*=}"; shift ;;
+        --branch) need_value "$1" "$2"; FNODE_BRANCH="$2"; shift 2 ;;
+        --branch=*) FNODE_BRANCH="${1#*=}"; shift ;;
+        --cert-mode) need_value "$1" "$2"; arg_cert_mode="$2"; shift 2 ;;
+        --cert-mode=*) arg_cert_mode="${1#*=}"; shift ;;
+        --cert-domain) need_value "$1" "$2"; arg_cert_domain="$2"; shift 2 ;;
+        --cert-domain=*) arg_cert_domain="${1#*=}"; shift ;;
+        --force) arg_force=true; shift ;;
+        -y|--yes) arg_yes=true; shift ;;
+        --print-config) arg_print=true; shift ;;
+        -h|--help) usage; exit 0 ;;
+        uninstall) action="uninstall"; shift ;;
+        install) shift ;;
+        -*) echo -e "${red}错误：${plain} 未知参数 (unknown option) $1"; usage; exit 1 ;;
+        *)
+            # Old positional version argument: install.sh 0.0.21 / pre / latest
+            if [[ -z "$arg_version" ]]; then
+                arg_version="$1"
+            fi
+            shift
+            ;;
+    esac
+done
+
+if [[ "$noninteractive" == true && "$action" == "install" ]]; then
+    case "$arg_mode" in
+        machine)
+            [[ "$arg_machine_id" =~ ^[0-9]+$ && "$arg_machine_id" -gt 0 ]] || { echo -e "${red}错误：${plain} --mode machine 需要 --machine-id <正整数>"; exit 1; }
+            ;;
+        node)
+            [[ "$arg_node_id" =~ ^[0-9]+$ && "$arg_node_id" -gt 0 ]] || { echo -e "${red}错误：${plain} --mode node 需要 --node-id <正整数>"; exit 1; }
+            if [[ -n "$arg_type" ]]; then
+                case "$arg_type" in
+                    vless|vmess|v2ray|trojan|shadowsocks|hysteria|hysteria2|tuic|anytls) ;;
+                    *) echo -e "${red}错误：${plain} 不支持的 --type $arg_type"; exit 1 ;;
+                esac
+            fi
+            ;;
+        *)
+            echo -e "${red}错误：${plain} 需要 --mode machine 或 --mode node"; usage; exit 1
+            ;;
+    esac
+    [[ "$arg_panel" =~ ^https?:// ]] || { echo -e "${red}错误：${plain} --panel 必须是 http:// 或 https:// 开头的面板地址"; exit 1; }
+    [[ -n "$arg_token" ]] || { echo -e "${red}错误：${plain} 需要 --token"; exit 1; }
+    case "$arg_cert_mode" in
+        none|http|dns|self|file) ;;
+        *) echo -e "${red}错误：${plain} --cert-mode 只能是 none/http/dns/self/file"; exit 1 ;;
+    esac
+    arg_panel="${arg_panel%/}"
+    [[ -z "$arg_version" ]] && arg_version="latest"
+fi
+
+json_escape() {
+    printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
+}
+
+has_ipv6() {
+    ip -6 addr show scope global 2>/dev/null | grep -q "inet6" && ip -6 route show default 2>/dev/null | grep -q "default"
+}
+
+# Prints the Nodes entry for the selected mode (flat ApiConfig + Options).
+panel_node_entry() {
+    local listen_ip="0.0.0.0"
+    has_ipv6 && listen_ip="::"
+    local api
+    if [[ "$arg_mode" == "machine" ]]; then
+        api="\"ApiHost\": \"$(json_escape "$arg_panel")\",
+            \"MachineID\": ${arg_machine_id},
+            \"MachineToken\": \"$(json_escape "$arg_token")\","
+    else
+        api="\"ApiHost\": \"$(json_escape "$arg_panel")\",
+            \"ApiKey\": \"$(json_escape "$arg_token")\",
+            \"NodeID\": ${arg_node_id},"
+        if [[ -n "$arg_type" ]]; then
+            api="${api}
+            \"NodeType\": \"$(json_escape "$arg_type")\","
+        fi
+    fi
+    cat <<EOF
+        {
+            "Core": "sing",
+            ${api}
+            "Timeout": 30,
+            "ListenIP": "${listen_ip}",
+            "SendIP": "0.0.0.0",
+            "DisableIPv6": true,
+            "DeviceOnlineMinTraffic": 200,
+            "EnableSniff": true,
+            "CertConfig": {
+                "CertMode": "$(json_escape "$arg_cert_mode")",
+                "RejectUnknownSni": false,
+                "CertDomain": "$(json_escape "${arg_cert_domain:-example.com}")",
+                "CertFile": "/etc/FNode/fullchain.cer",
+                "KeyFile": "/etc/FNode/cert.key",
+                "Email": "fnode@github.com",
+                "Provider": "cloudflare",
+                "DNSEnv": {
+                    "EnvName": "env1"
+                }
+            }
+        }
+EOF
+}
+
+# Prints a full config.json with the given Nodes entry.
+render_config() {
+    local entry="$1"
+    cat <<EOF
+{
+    "Log": {
+        "Level": "error",
+        "Output": ""
+    },
+    "Cores": [
+        {
+            "Type": "sing",
+            "Log": {
+                "Level": "error",
+                "Timestamp": true
+            },
+            "DisableIPv6": true,
+            "DomainStrategy": "prefer_ipv4",
+            "NTP": {
+                "Enable": true,
+                "Server": "time.apple.com",
+                "ServerPort": 0
+            },
+            "OriginalPath": "/etc/FNode/sing_origin.json"
+        }
+    ],
+    "Nodes": [
+${entry}
+    ]
+}
+EOF
+}
+
+# --print-config: show the config the flags would produce and exit (no root,
+# nothing installed). Used by the tests and for a dry run.
+if [[ "$arg_print" == true ]]; then
+    if [[ "$noninteractive" != true ]]; then
+        echo "--print-config needs --mode, --panel, --token and --machine-id/--node-id" >&2
+        exit 1
+    fi
+    render_config "$(panel_node_entry)"
+    exit 0
+fi
+
 # check root
 [[ $EUID -ne 0 ]] && echo -e "${red}错误：${plain} 必须使用root用户运行此脚本！\n" && exit 1
 
@@ -140,6 +351,108 @@ EOF
     fi
 }
 
+write_default_sing_origin() {
+    [[ -f /etc/FNode/sing_origin.json ]] && return 0
+    local strategy="ipv4_only"
+    has_ipv6 && strategy="prefer_ipv4"
+    cat <<EOF > /etc/FNode/sing_origin.json
+{
+  "dns": {
+    "servers": [{ "tag": "cf", "address": "1.1.1.1" }],
+    "strategy": "${strategy}"
+  },
+  "outbounds": [
+    { "tag": "direct", "type": "direct", "domain_resolver": { "server": "cf", "strategy": "${strategy}" } },
+    { "type": "block", "tag": "block" }
+  ],
+  "route": {
+    "auto_detect_interface": true,
+    "rules": [
+      { "ip_is_private": true, "outbound": "block" },
+      { "protocol": ["bittorrent"], "outbound": "block" },
+      { "port": [25, 465, 587], "network": ["tcp"], "outbound": "block" },
+      { "outbound": "direct", "network": ["udp", "tcp"] }
+    ]
+  },
+  "experimental": { "cache_file": { "enabled": true } }
+}
+EOF
+}
+
+# Writes /etc/FNode/config.json for --mode machine|node. An existing config is
+# kept unless --force; with --force it is backed up and its Nodes block is
+# replaced (whole file when jq is missing or cannot parse it).
+write_panel_config() {
+    mkdir -p /etc/FNode
+    write_default_sing_origin
+    local entry
+    entry=$(panel_node_entry)
+    if [[ "$had_config" == true && "$arg_force" != true ]]; then
+        echo -e "${yellow}已存在 /etc/FNode/config.json，未修改 (existing config kept; add --force to replace its panel block)${plain}"
+        return 0
+    fi
+    if [[ -f /etc/FNode/config.json ]]; then
+        cp /etc/FNode/config.json "/etc/FNode/config.json.bak.$(date +%Y%m%d%H%M%S)"
+    fi
+    if [[ "$had_config" == true ]] && command -v jq >/dev/null 2>&1 && jq -e . /etc/FNode/config.json >/dev/null 2>&1; then
+        local tmp
+        tmp=$(mktemp /etc/FNode/.config.json.XXXXXX.tmp)
+        if printf '%s' "$entry" | jq -s --slurpfile cfg /etc/FNode/config.json '$cfg[0] + {Nodes: .}' > "$tmp" 2>/dev/null; then
+            mv -f "$tmp" /etc/FNode/config.json
+            echo -e "${green}已替换 /etc/FNode/config.json 的 Nodes 配置 (panel block replaced, Log/Cores kept)${plain}"
+            return 0
+        fi
+        rm -f "$tmp"
+    fi
+    render_config "$entry" > /etc/FNode/config.json
+    chmod 600 /etc/FNode/config.json
+    echo -e "${green}已生成 /etc/FNode/config.json (${arg_mode} mode)${plain}"
+}
+
+start_service() {
+    if [[ x"${release}" == x"alpine" ]]; then
+        service FNode restart
+    else
+        systemctl restart FNode
+    fi
+    sleep 2
+    check_status
+    if [[ $? == 0 ]]; then
+        echo -e "${green}FNode 已启动 (running)${plain}"
+    else
+        echo -e "${red}FNode 可能启动失败，请使用 FNode log 查看日志 (FNode may have failed to start, see: FNode log)${plain}"
+    fi
+}
+
+uninstall_FNode() {
+    if [[ "$arg_yes" != true ]]; then
+        if [ -t 0 ]; then
+            read -rp "确定要卸载 FNode 吗? (uninstall FNode) [y/N]: " confirm_uninstall
+            [[ "$confirm_uninstall" == [Yy] ]] || { echo "已取消 (cancelled)"; exit 0; }
+        else
+            echo -e "${red}错误：${plain} 非交互模式卸载需要 --yes (pass --yes to uninstall without a terminal)"
+            exit 1
+        fi
+    fi
+    if [[ x"${release}" == x"alpine" ]]; then
+        service FNode stop 2>/dev/null
+        rc-update del FNode 2>/dev/null
+        rm /etc/init.d/FNode -f
+    else
+        systemctl stop FNode 2>/dev/null
+        systemctl disable FNode 2>/dev/null
+        rm /etc/systemd/system/FNode.service -f
+        systemctl daemon-reload
+        systemctl reset-failed 2>/dev/null
+    fi
+    rm /etc/FNode/ -rf
+    rm /usr/local/FNode/ -rf
+    rm -f /etc/cron.d/FNode-cleanlog /etc/periodic/weekly/fnode-cleanlog
+    (crontab -l 2>/dev/null | grep -v "FNode clearlog") | crontab - 2>/dev/null || true
+    rm -f /usr/bin/FNode /usr/bin/fnode
+    echo -e "${green}FNode 已卸载 (uninstalled)${plain}"
+}
+
 install_FNode() {
 
     if [[ -e /usr/local/FNode/ ]]; then
@@ -267,7 +580,10 @@ EOF
         echo -e "${green}FNode ${last_version}${plain} 安装完成，已设置开机自启"
     fi
 
-    if [[ ! -f /etc/FNode/config.json ]]; then
+    if [[ "$noninteractive" == true ]]; then
+        write_panel_config
+        first_install=false
+    elif [[ ! -f /etc/FNode/config.json ]]; then
         cp config.json /etc/FNode/
         echo -e ""
         first_install=true
@@ -326,11 +642,16 @@ EOF
     echo "FNode update pre   - 更新 FNode 至最新预发布预览版"
     echo "FNode update x.x.x - 更新 FNode 指定版本"
     echo "FNode install      - 安装 FNode (可选参数: latest/pre/指定版本)"
-    echo "FNode uninstall    - 卸载 FNode"
+    echo "FNode uninstall    - 卸载 FNode (--yes 跳过确认)"
+    echo "FNode config show  - 查看生效配置与出站来源 (--node 标签 --summary)"
     echo "FNode version      - 查看 FNode 版本"
     echo "------------------------------------------"
-    # 首次安装询问是否生成配置文件
-    if [[ $first_install == true ]]; then
+    if [[ "$noninteractive" == true ]]; then
+        start_service
+        return 0
+    fi
+    # 首次安装询问是否生成配置文件 (only with a terminal: piped stdin is the script itself)
+    if [[ $first_install == true && -t 0 ]]; then
         read -rp "检测到你为第一次安装FNode,是否自动直接生成配置文件？(y/n): " if_generate
         if [[ $if_generate == [Yy] ]]; then
             curl -o ./initconfig.sh -Ls "https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}/FNode-script/initconfig.sh"
@@ -341,6 +662,14 @@ EOF
     fi
 }
 
+if [[ "$action" == "uninstall" ]]; then
+    uninstall_FNode
+    exit 0
+fi
+
+had_config=false
+[[ -f /etc/FNode/config.json ]] && had_config=true
+
 echo -e "${green}开始安装${plain}"
 install_base
-install_FNode $1
+install_FNode "$arg_version"
