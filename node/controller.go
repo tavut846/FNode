@@ -34,6 +34,9 @@ type Controller struct {
 	closed   bool
 	ws       *panel.WSClient
 	wsCancel context.CancelFunc
+	// sharedWS is the machine connection in machine mode (events are routed
+	// to this controller by the Machine); nil for a standalone node.
+	sharedWS *panel.WSClient
 	*conf.Options
 }
 

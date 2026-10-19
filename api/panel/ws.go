@@ -23,6 +23,8 @@ const (
 	WSEventSyncUsers     = "sync.users"
 	WSEventSyncUserDelta = "sync.user.delta"
 	WSEventSyncDevices   = "sync.devices"
+	// WSEventSyncNodes is a machine-level event: the machine's node set changed.
+	WSEventSyncNodes = "sync.nodes"
 )
 
 // WSEvent is a parsed data event.
@@ -40,6 +42,8 @@ type WSEvent struct {
 	DeltaUsers  []UserInfo
 	// Devices maps a user id to its online IPs (sync.devices).
 	Devices map[int][]string
+	// Nodes is the new node list of sync.nodes (machine connections only).
+	Nodes []MachineNode
 }
 
 type wsMessage struct {
@@ -70,6 +74,20 @@ func ParseWSMessage(data []byte) (string, *WSEvent, error) {
 		Action string          `json:"action"`
 	}
 	switch msg.Event {
+	case WSEventSyncNodes:
+		var p struct {
+			Nodes []MachineNode `json:"nodes"`
+		}
+		if !isEmptyJSON(msg.Data) {
+			if err := json.Unmarshal(msg.Data, &p); err != nil {
+				return msg.Event, nil, fmt.Errorf("sync.nodes: decode payload: %w", err)
+			}
+		}
+		ev.Nodes = p.Nodes
+		if ev.Nodes == nil {
+			ev.Nodes = []MachineNode{}
+		}
+		return msg.Event, ev, nil
 	case WSEventSyncConfig, WSEventSyncUsers, WSEventSyncUserDelta, WSEventSyncDevices:
 		if isEmptyJSON(msg.Data) {
 			return msg.Event, nil, fmt.Errorf("%s: empty payload", msg.Event)
@@ -175,13 +193,24 @@ type WSClient struct {
 // NewWSClient builds a client for wsURL?token=..&node_id=.. . onEvent is called
 // from the client's goroutine for every data event, in order.
 func NewWSClient(wsURL, token string, nodeID int, onEvent func(*WSEvent), onStatus func(bool)) (*WSClient, error) {
+	return newWSClient(wsURL, token, "node_id", nodeID, onEvent, onStatus)
+}
+
+// NewMachineWSClient builds a machine connection (wsURL?token=..&machine_id=..).
+// The panel multiplexes every node of the machine over it; node events carry
+// node_id, and sync.nodes announces node set changes.
+func NewMachineWSClient(wsURL, token string, machineID int, onEvent func(*WSEvent), onStatus func(bool)) (*WSClient, error) {
+	return newWSClient(wsURL, token, "machine_id", machineID, onEvent, onStatus)
+}
+
+func newWSClient(wsURL, token, idKey string, id int, onEvent func(*WSEvent), onStatus func(bool)) (*WSClient, error) {
 	u, err := ValidateWSURL(wsURL)
 	if err != nil {
 		return nil, err
 	}
 	q := u.Query()
 	q.Set("token", token)
-	q.Set("node_id", strconv.Itoa(nodeID))
+	q.Set(idKey, strconv.Itoa(id))
 	u.RawQuery = q.Encode()
 	logU := *u
 	lq := logU.Query()

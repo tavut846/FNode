@@ -41,6 +41,25 @@ FNode applies the routing you manage in the Xboard dashboard, so a route change 
 - **Live apply**: outbounds are added, updated and removed in the running sing-box (no restart). When only routing changed, the inbound and its connections are left alone. Each apply logs one line: `applied N outbounds (origin a, local b, panel c, builtin d), M rules`.
 - **WebSocket push**: on start each node calls `POST /api/v2/server/handshake`. If the panel enables WebSocket and `ws_url` starts with `ws://` or `wss://`, the node connects to it and applies `sync.config`, `sync.users`, `sync.user.delta` and `sync.devices` as they arrive. While connected, that node's HTTP polling is paused; if the connection drops, polling resumes and FNode reconnects with backoff. A malformed `ws_url` is logged and the node keeps polling.
 
+### 对接模式 (Panel connection modes)
+
+A `Nodes` entry connects in one of three ways:
+
+| Mode | `ApiConfig` fields | Panel API |
+|------|--------------------|-----------|
+| Node (existing) | `ApiHost`, `ApiKey` (server token), `NodeID`, `NodeType` | v1 `/api/v1/server/UniProxy/*` |
+| Node, type auto-detected | `ApiHost`, `ApiKey` (server token), `NodeID`, no `NodeType` | v2 `/api/v2/server/*`, type read from the config's `protocol` |
+| Machine (per-server token) | `ApiHost`, `MachineID`, `MachineToken` (or the token in `ApiKey`) | v2 `/api/v2/server/*` and `/api/v2/server/machine/*` |
+
+```json
+{
+  "ApiConfig": { "ApiHost": "https://panel.example.com", "MachineID": 3, "MachineToken": "MACHINE_TOKEN" },
+  "Options": { "Core": "sing", "ListenIP": "0.0.0.0", "SendIP": "0.0.0.0", "CertConfig": { "CertMode": "none" } }
+}
+```
+
+In machine mode FNode calls `POST /api/v2/server/machine/nodes` on start and runs one node for every node the panel assigns to the machine (types FNode cannot serve, such as `mieru` or `naive`, are skipped with a warning). `Options` is the template for all of them; a `Name` gets `-<node id>` appended. Nodes added to or removed from the machine are started or stopped when the panel pushes `sync.nodes` over the machine WebSocket (`ws_url?token=..&machine_id=..`) and on every pull interval. Every push interval FNode posts `POST /api/v2/server/machine/status` with `cpu`, `mem`, `swap`, `disk`, `net` and `"client": "fnode", "version": "<version>"`.
+
 ### Generated files
 
 After every apply FNode writes, per node, into `GeneratedDir` (default: `generated/` next to `config.json`; set `"GeneratedDir"` in the sing core config to change it):

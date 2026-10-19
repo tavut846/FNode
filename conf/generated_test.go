@@ -72,3 +72,35 @@ func TestConf_Watch_IgnoresGeneratedFiles(t *testing.T) {
 func quote(s string) string {
 	return `"` + filepath.ToSlash(s) + `"`
 }
+
+func TestNodeConfig_MachineAndNodeModes(t *testing.T) {
+	c := New()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	data := `{"Nodes":[
+	  {"ApiConfig":{"ApiHost":"https://panel","ApiKey":"server-token","NodeID":12,"NodeType":"vless"},"Options":{"Core":"sing"}},
+	  {"ApiConfig":{"ApiHost":"https://panel","MachineID":3,"MachineToken":"machine-token"},"Options":{"Core":"sing","ListenIP":"::"}},
+	  {"ApiHost":"https://panel","ApiKey":"machine-token-2","MachineID":4}
+	]}`
+	if err := os.WriteFile(path, []byte(data), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.LoadFromPath(path); err != nil {
+		t.Fatal(err)
+	}
+	if len(c.NodeConfig) != 3 {
+		t.Fatalf("nodes: %d", len(c.NodeConfig))
+	}
+	n := c.NodeConfig[0].ApiConfig
+	if n.IsMachine() || n.Token() != "server-token" || n.NodeID != 12 {
+		t.Errorf("node mode: %+v", n)
+	}
+	m := c.NodeConfig[1].ApiConfig
+	if !m.IsMachine() || m.MachineID != 3 || m.Token() != "machine-token" || c.NodeConfig[1].Options.ListenIP != "::" {
+		t.Errorf("machine mode: %+v", m)
+	}
+	flat := c.NodeConfig[2].ApiConfig
+	if !flat.IsMachine() || flat.Token() != "machine-token-2" {
+		t.Errorf("flat machine entry with ApiKey: %+v", flat)
+	}
+}

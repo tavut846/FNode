@@ -270,6 +270,14 @@ Route changes made in the Xboard dashboard reach every FNode server without per-
 - **Generated files** (`core/sing/effective.go`): after every successful apply FNode atomically writes, per node, `<GeneratedDir>/<node>.effective.json` (the merged sing-box config: inbound without users, outbounds, route rules and rule sets, plus an `_fnode` block listing each outbound's source) and `<node>.panel.json` (the raw panel `routes`, `custom_outbounds`, `custom_routes`, `custom_route_rules`). `GeneratedDir` (in the sing core config) defaults to `generated/` next to `config.json` and is not watched. `<node>` is the node tag with unsafe characters replaced by `_`. Files of removed nodes are deleted. The files are mode 0600 and may contain outbound passwords and keys.
 - **CLI**: `FNode config show [-c config.json] [--node <tag|file|part of tag>] [--summary] [--dir <dir>]` prints a per-node summary (outbound tag, type, source, contributing node) followed by the effective JSON.
 
+### 4.7 Machine Mode (Per-Server Token)
+An Xboard *machine* groups nodes under one token (`MachineController`, `ServerV2` middleware). A `Nodes` entry whose `ApiConfig` has `MachineID > 0` runs in machine mode (`node/machine.go`):
+- **Config**: `ApiHost`, `MachineID`, and the machine token in `MachineToken` (falls back to `ApiKey`). `NodeID`/`NodeType` are ignored; `Options` is the template for every node of the machine (`Name` gets `-<node id>` appended).
+- **Discovery**: `POST /api/v2/server/machine/nodes` (`machine_id` + `token`) returns `[{id, type, name}]` and `base_config` intervals (pull < 30s and push < 10s fall back to 60s). One `Controller` per supported node uses `/api/v2/server/{config,user,push,alive,alivelist}` with `machine_id`, `token` and `node_id`; the node type is read from the config's `protocol` (`hysteria` + `version: 2` → `hysteria2`). Unsupported types are skipped with one warning. A node that fails to start is retried on the next discovery.
+- **Node set changes**: the machine WebSocket (`ws_url?token=..&machine_id=..`) multiplexes all nodes; node events carry `node_id` and are routed to that controller, `sync.nodes` starts/stops controllers. The node list is also re-polled every pull interval.
+- **Status**: every push interval `POST /api/v2/server/machine/status` with `cpu`, `mem{total,used}`, `swap`, `disk`, `net{in_speed,out_speed}` (sampled from `/proc` and `statfs` by `common/sysinfo`) plus `"client":"fnode","version":"<ver>"`.
+- **Server token without `NodeType`**: a plain node entry (`ApiKey` + `NodeID`) without `NodeType` also uses the v2 endpoints and detects the type. With `NodeType` set, the v1 UniProxy behaviour is unchanged.
+
 ---
 
 ## 5. Certificate Management & Caddy Integration

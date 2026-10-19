@@ -353,7 +353,7 @@ type Rules struct {
 }
 
 func (c *Client) GetNodeInfo() (node *NodeInfo, err error) {
-	const path = "/api/v1/server/UniProxy/config"
+	path := c.apiPath("config")
 	r, err := c.client.
 		R().
 		SetHeader("If-None-Match", c.nodeEtag).
@@ -431,7 +431,14 @@ func (c *Client) ParseNodeConfig(body []byte) (*NodeInfo, error) {
 	if same {
 		return nil, nil
 	}
-	node, err := ParseNodeInfo(c.NodeType, c.NodeId, body)
+	nodeType := c.NodeType
+	if nodeType == "" {
+		// v2 API: the type comes from the config itself
+		if nodeType, err = DetectNodeType(body); err != nil {
+			return nil, err
+		}
+	}
+	node, err := ParseNodeInfo(nodeType, c.NodeId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -441,6 +448,35 @@ func (c *Client) ParseNodeConfig(body []byte) (*NodeInfo, error) {
 	c.responseBodyHash = full
 	c.hashLock.Unlock()
 	return node, nil
+}
+
+// DetectNodeType reads the node type from a config document: its "protocol"
+// field, with Xboard's "hysteria" + "version": 2 meaning hysteria2.
+func DetectNodeType(body []byte) (string, error) {
+	var head struct {
+		Protocol string `json:"protocol"`
+		Version  any    `json:"version"`
+	}
+	if err := json.Unmarshal(body, &head); err != nil {
+		return "", fmt.Errorf("decode node config error: %s", err)
+	}
+	t := NormalizeNodeType(head.Protocol)
+	if t == "" {
+		return "", fmt.Errorf("unsupported node protocol %q", head.Protocol)
+	}
+	if t == "hysteria" {
+		switch v := head.Version.(type) {
+		case float64:
+			if v == 2 {
+				t = "hysteria2"
+			}
+		case string:
+			if strings.TrimSpace(v) == "2" {
+				t = "hysteria2"
+			}
+		}
+	}
+	return t, nil
 }
 
 // routeMatches normalises a route "match" value (comma string or list).

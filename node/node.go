@@ -10,6 +10,7 @@ import (
 
 type Node struct {
 	controllers []*Controller
+	machines    []*Machine
 }
 
 func New() *Node {
@@ -17,15 +18,31 @@ func New() *Node {
 }
 
 func (n *Node) Start(nodes []conf.NodeConfig, core vCore.Core) error {
-	n.controllers = make([]*Controller, len(nodes))
+	n.controllers = nil
+	n.machines = nil
 	for i := range nodes {
+		if nodes[i].ApiConfig.IsMachine() {
+			// Machine mode: one entry runs every node the panel assigns to the machine
+			m, err := NewMachine(nodes[i], core)
+			if err != nil {
+				return fmt.Errorf("start machine [%s-%d] error: %s",
+					nodes[i].ApiConfig.APIHost, nodes[i].ApiConfig.MachineID, err)
+			}
+			if err = m.Start(); err != nil {
+				return fmt.Errorf("start machine [%s-%d] error: %s",
+					nodes[i].ApiConfig.APIHost, nodes[i].ApiConfig.MachineID, err)
+			}
+			n.machines = append(n.machines, m)
+			continue
+		}
 		p, err := panel.New(&nodes[i].ApiConfig)
 		if err != nil {
 			return err
 		}
 		// Register controller service
-		n.controllers[i] = NewController(core, p, &nodes[i].Options)
-		err = n.controllers[i].Start()
+		c := NewController(core, p, &nodes[i].Options)
+		n.controllers = append(n.controllers, c)
+		err = c.Start()
 		if err != nil {
 			return fmt.Errorf("start node controller [%s-%s-%d] error: %s",
 				nodes[i].ApiConfig.APIHost,
@@ -38,6 +55,10 @@ func (n *Node) Start(nodes []conf.NodeConfig, core vCore.Core) error {
 }
 
 func (n *Node) Close() {
+	for _, m := range n.machines {
+		m.Close()
+	}
+	n.machines = nil
 	for _, c := range n.controllers {
 		err := c.Close()
 		if err != nil {

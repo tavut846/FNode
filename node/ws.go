@@ -13,6 +13,11 @@ import (
 // enabled, keeps a connection for this node. Every failure falls back to the
 // HTTP polling that is already running.
 func (c *Controller) startWS() {
+	if c.sharedWS != nil {
+		// Machine mode: the machine's connection carries this node's events
+		c.ws = c.sharedWS
+		return
+	}
 	hs, err := c.apiClient.Handshake()
 	if err != nil {
 		log.WithFields(log.Fields{"tag": c.tag, "err": err}).Info("Panel handshake unavailable, using HTTP polling")
