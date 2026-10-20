@@ -7,6 +7,10 @@ plain='\033[0m'
 
 cur_dir=$(pwd)
 FNODE_BRANCH="${FNODE_BRANCH:-master}"
+# GitHub endpoints; overridable for tests and mirrors
+FNODE_GH_API="${FNODE_GH_API:-https://api.github.com/repos/tavut846/FNode}"
+FNODE_GH_WEB="${FNODE_GH_WEB:-https://github.com/tavut846/FNode}"
+FNODE_RAW="${FNODE_RAW:-https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}}"
 
 usage() {
     cat <<'USAGE'
@@ -299,15 +303,15 @@ if [[ -z "$os_version" && -f /etc/lsb-release ]]; then
 fi
 
 if [[ x"${release}" == x"centos" ]]; then
-    if [[ ${os_version} -le 6 ]]; then
+    if [[ -n "$os_version" && ${os_version} -le 6 ]]; then
         echo -e "${red}请使用 CentOS 7 或更高版本的系统！${plain}\n" && exit 1
     fi
 elif [[ x"${release}" == x"ubuntu" ]]; then
-    if [[ ${os_version} -lt 16 ]]; then
+    if [[ -n "$os_version" && ${os_version} -lt 16 ]]; then
         echo -e "${red}请使用 Ubuntu 16 或更高版本的系统！${plain}\n" && exit 1
     fi
 elif [[ x"${release}" == x"debian" ]]; then
-    if [[ ${os_version} -lt 8 ]]; then
+    if [[ -n "$os_version" && ${os_version} -lt 8 ]]; then
         echo -e "${red}请使用 Debian 8 或更高版本的系统！${plain}\n" && exit 1
     fi
 fi
@@ -362,6 +366,189 @@ download_file() {
     return 1
 }
 # --- end extract helpers ---
+
+# --- release lookup ---
+GH_STATUS=""
+
+# gh_get URL FILE: GET with the GitHub headers; GH_STATUS gets the HTTP status.
+# GITHUB_TOKEN (optional) lifts the 60 requests/hour limit per IP.
+gh_get() {
+    local url="$1" out="$2" auth=()
+    GH_STATUS=""
+    [[ -n "$GITHUB_TOKEN" ]] && auth=(-H "Authorization: Bearer $GITHUB_TOKEN")
+    if command -v curl >/dev/null 2>&1; then
+        GH_STATUS=$(curl -sSL "${auth[@]}" -H "Accept: application/vnd.github+json" -o "$out" -w '%{http_code}' "$url" 2>/dev/null)
+        [[ "$GH_STATUS" == "200" ]]
+        return
+    fi
+    if command -v wget >/dev/null 2>&1; then
+        if wget -q ${GITHUB_TOKEN:+--header="Authorization: Bearer $GITHUB_TOKEN"} -O "$out" "$url"; then
+            GH_STATUS=200
+            return 0
+        fi
+        GH_STATUS="error"
+    fi
+    return 1
+}
+
+# gh_reason FILE: why the last gh_get failed, for the user
+gh_reason() {
+    local msg
+    msg=$(grep -o '"message"[^,}]*' "$1" 2>/dev/null | head -1 | sed 's/.*: *"\(.*\)"/\1/')
+    case "$GH_STATUS" in
+        403|429) echo "HTTP ${GH_STATUS}: GitHub API rate limit reached (60 requests/hour per IP${msg:+; $msg}); set GITHUB_TOKEN to raise it" ;;
+        "") echo "no response (is github.com reachable from this server?)" ;;
+        *) echo "HTTP ${GH_STATUS}${msg:+: $msg}" ;;
+    esac
+}
+
+# release_rows FILE ASSET: one line per release in the API list:
+# tag<TAB>prerelease<TAB>draft<TAB>has_asset. Uses jq when present, else a
+# small awk JSON walker that does not depend on key order or line breaks
+# (it follows the nesting: release keys at depth 2, asset names at depth 4).
+release_rows() {
+    local file="$1" asset="$2"
+    if [[ -z "$FNODE_NO_JQ" ]] && command -v jq >/dev/null 2>&1; then
+        jq -r --arg a "$asset" '.[] | [.tag_name, (.prerelease|tostring), (.draft|tostring), ((.assets // []) | any(.name == $a) | tostring)] | @tsv' "$file" 2>/dev/null && return 0
+    fi
+    awk -v asset="$asset" '
+        { buf = buf $0 "\n" }
+        END {
+            n = length(buf); i = 1; depth = 0
+            while (i <= n) {
+                c = substr(buf, i, 1)
+                if (c == "\"") {
+                    j = i + 1; str = ""
+                    while (j <= n) {
+                        d = substr(buf, j, 1)
+                        if (d == "\\") { str = str substr(buf, j, 2); j += 2; continue }
+                        if (d == "\"") break
+                        str = str d; j++
+                    }
+                    i = j + 1
+                    k = i
+                    while (k <= n && substr(buf, k, 1) ~ /[ \t\r\n]/) k++
+                    if (substr(buf, k, 1) == ":") {
+                        key[depth] = str; i = k + 1
+                    } else if (depth == 2 && key[2] == "tag_name") {
+                        tag = str
+                    } else if (depth == 4 && key[2] == "assets" && key[4] == "name" && str == asset) {
+                        has = "true"
+                    }
+                } else if (c == "{" || c == "[") {
+                    depth++
+                    if (depth == 2 && c == "{") { tag = ""; pre = "false"; draft = "false"; has = "false" }
+                    i++
+                } else if (c == "}" || c == "]") {
+                    if (depth == 2 && c == "}" && tag != "") print tag "\t" pre "\t" draft "\t" has
+                    depth--; i++
+                } else if (c ~ /[a-z]/) {
+                    j = i; word = ""
+                    while (j <= n && substr(buf, j, 1) ~ /[a-z]/) { word = word substr(buf, j, 1); j++ }
+                    i = j
+                    if (depth == 2 && key[2] == "prerelease") pre = word
+                    if (depth == 2 && key[2] == "draft") draft = word
+                } else {
+                    i++
+                }
+            }
+        }' "$file"
+}
+
+# pick_release KIND < rows: the first usable release. latest = newest stable;
+# pre = newest of all (a pre-release channel never goes back behind a stable
+# release). Drafts, "draft-*" tags and releases without the zip are skipped.
+pick_release() {
+    awk -F'\t' -v kind="$1" '$3 != "true" && $4 == "true" && $1 !~ /^draft-/ && $1 != "latest" && (kind == "pre" || $2 != "true") { print $1; exit }'
+}
+
+# asset_exists TAG ASSET: the release has the download for this arch
+asset_exists() {
+    local url="$FNODE_GH_WEB/releases/download/$1/$2" code
+    if command -v curl >/dev/null 2>&1; then
+        code=$(curl -sIL -o /dev/null -w '%{http_code}' "$url" 2>/dev/null)
+        [[ "$code" == "200" ]]
+        return
+    fi
+    if command -v wget >/dev/null 2>&1; then
+        wget -q --spider "$url" 2>/dev/null
+        return
+    fi
+    return 0
+}
+
+# first_existing KIND ASSET < tags: the first tag (in order) whose zip exists
+first_existing() {
+    local kind="$1" asset="$2" t n=0
+    while read -r t; do
+        [[ -z "$t" || "$t" == draft-* || "$t" == "latest" ]] && continue
+        [[ "$kind" == "latest" && ! "$t" =~ ^v?[0-9]+(\.[0-9]+)*$ ]] && continue
+        n=$((n + 1))
+        [[ $n -gt 8 ]] && break
+        if asset_exists "$t" "$asset"; then
+            echo "$t"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# resolve_version KIND ARCH: prints the tag of the newest release of KIND
+# (latest|pre) that has FNode-linux-ARCH.zip. Order: the GitHub API, then the
+# releases page redirect / Atom feed, then git ls-remote. Diagnostics go to
+# stderr.
+resolve_version() {
+    local kind="$1" asset="FNode-linux-$2.zip" tmp tag
+    tmp=$(mktemp)
+    if gh_get "$FNODE_GH_API/releases?per_page=30" "$tmp"; then
+        tag=$(release_rows "$tmp" "$asset" | pick_release "$kind")
+        if [[ -n "$tag" ]]; then
+            rm -f "$tmp"
+            echo "$tag"
+            return 0
+        fi
+        echo "GitHub API: no ${kind} release with ${asset} found, trying other sources" >&2
+    else
+        echo "GitHub API failed: $(gh_reason "$tmp"); trying other sources" >&2
+    fi
+    rm -f "$tmp"
+    if [[ "$kind" == "latest" ]] && command -v curl >/dev/null 2>&1; then
+        tag=$(curl -sIL -o /dev/null -w '%{url_effective}' "$FNODE_GH_WEB/releases/latest" 2>/dev/null | sed -n 's#.*/releases/tag/\([^/?]*\)$#\1#p')
+        if [[ -n "$tag" && "$tag" != draft-* ]] && asset_exists "$tag" "$asset"; then
+            echo "$tag"
+            return 0
+        fi
+    fi
+    if command -v curl >/dev/null 2>&1; then
+        tag=$(curl -sL "$FNODE_GH_WEB/releases.atom" 2>/dev/null | grep -o '/releases/tag/[^"<]*' | sed 's#.*/tag/##' | awk '!seen[$0]++' | first_existing "$kind" "$asset")
+        if [[ -n "$tag" ]]; then
+            echo "$tag"
+            return 0
+        fi
+    fi
+    if command -v git >/dev/null 2>&1; then
+        tag=$(git ls-remote --tags --refs "$FNODE_GH_WEB.git" 2>/dev/null | sed 's#.*refs/tags/##' | sort -rV | first_existing "$kind" "$asset")
+        if [[ -n "$tag" ]]; then
+            echo "$tag"
+            return 0
+        fi
+    fi
+    return 1
+}
+
+# resolve_explicit VERSION ARCH: the release tag for a version the user typed
+# (0.0.22-pre, v0.0.22); tries the tag with and without a leading "v".
+resolve_explicit() {
+    local v="$1" asset="FNode-linux-$2.zip" cand
+    for cand in "$v" "${v#v}" "v${v#v}"; do
+        if asset_exists "$cand" "$asset"; then
+            echo "$cand"
+            return 0
+        fi
+    done
+    return 1
+}
+# --- end release lookup ---
 
 # pkg_install PACKAGE...: installs with the system package manager, showing
 # errors (only stdout is silenced)
@@ -710,29 +897,30 @@ install_FNode() {
         fi
     fi
 
-    if [[ "$target_type" == "pre" || "$target_type" == "prerelease" || "$target_type" == "pre-release" ]]; then
-        echo -e "正在获取最新预发布版本信息..."
-        last_version=$(curl -Ls "https://api.github.com/repos/tavut846/FNode/releases" | awk -F'"' '/"tag_name":/{t=$4} /"prerelease": *true/{print t; exit}')
-        if [[ ! -n "$last_version" ]]; then
-            echo -e "${red}检测 FNode 预发布版本失败，可能是超出 Github API 限制或暂无预发布版本，请稍后再试或手动指定版本安装${plain}"
+    local kind=""
+    case "$target_type" in
+        pre|prerelease|pre-release) kind="pre" ;;
+        latest) kind="latest" ;;
+    esac
+    if [[ -n "$kind" ]]; then
+        echo -e "正在获取最新$([[ $kind == pre ]] && echo 预发布版 || echo 正式版)信息 (looking up the newest ${kind} release)..."
+        last_version=$(resolve_version "$kind" "$arch")
+        if [[ -z "$last_version" ]]; then
+            echo -e "${red}检测 FNode 版本失败 (could not find a ${kind} release with FNode-linux-${arch}.zip). Nothing was changed.${plain}"
+            echo -e "可以直接指定版本重试 (retry with an explicit version): ${green}FNode update 0.0.22-pre${plain}; 版本列表 / versions: ${FNODE_GH_WEB}/releases"
             exit 1
         fi
-        echo -e "检测到 FNode 最新预发布版本：${green}${last_version}${plain}，开始安装"
-        url="https://github.com/tavut846/FNode/releases/download/${last_version}/FNode-linux-${arch}.zip"
-    elif [[ "$target_type" == "latest" ]]; then
-        echo -e "正在获取最新正式版信息..."
-        last_version=$(curl -Ls "https://api.github.com/repos/tavut846/FNode/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-        if [[ ! -n "$last_version" ]]; then
-            echo -e "${red}检测 FNode 版本失败，可能是超出 Github API 限制，请稍后再试，或手动指定 FNode 版本安装${plain}"
-            exit 1
-        fi
-        echo -e "检测到 FNode 最新正式版本：${green}${last_version}${plain}，开始安装"
-        url="https://github.com/tavut846/FNode/releases/download/${last_version}/FNode-linux-${arch}.zip"
+        echo -e "检测到 FNode 最新版本：${green}${last_version}${plain}，开始安装"
     else
-        last_version="$target_type"
-        url="https://github.com/tavut846/FNode/releases/download/${last_version}/FNode-linux-${arch}.zip"
+        last_version=$(resolve_explicit "$target_type" "$arch")
+        if [[ -z "$last_version" ]]; then
+            echo -e "${red}找不到版本 ${target_type} 的 FNode-linux-${arch}.zip (no release ${target_type} with FNode-linux-${arch}.zip). Nothing was changed.${plain}"
+            echo -e "版本列表 / versions: ${FNODE_GH_WEB}/releases"
+            exit 1
+        fi
         echo -e "开始安装指定版本 FNode: ${green}${last_version}${plain}"
     fi
+    url="$FNODE_GH_WEB/releases/download/${last_version}/FNode-linux-${arch}.zip"
 
     # the zip and the extracted binary are on disk together: about 100 MB
     local free_mb
@@ -766,6 +954,13 @@ install_FNode() {
     for f in dns.json route.json custom_outbound.json custom_inbound.json; do
         [[ -f "$stage/$f" ]] || echo -e "${yellow}压缩包缺少 $f (zip lacks $f)${plain}"
     done
+    # An update never changes the user's config: remember it, and put it back
+    # if anything below changed it (a dashboard install passes flags and is
+    # meant to rewrite it).
+    cfg_sum=""
+    if [[ "$noninteractive" != true && -f /etc/FNode/config.json ]]; then
+        cfg_snap=$(mktemp) && cp -p /etc/FNode/config.json "$cfg_snap" && cfg_sum=$(cksum < "$cfg_snap")
+    fi
     # swap in the verified install, keep the old one until it is in place
     rm -rf /usr/local/FNode.old
     [[ -e /usr/local/FNode ]] && mv /usr/local/FNode /usr/local/FNode.old
@@ -880,7 +1075,12 @@ EOF
     if [[ ! -f /etc/FNode/custom_inbound.json ]]; then
         cp custom_inbound.json /etc/FNode/
     fi
-    curl -o /usr/bin/FNode -Ls "https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}/FNode-script/FNode.sh"
+    if [[ -n "$cfg_sum" && "$(cksum < /etc/FNode/config.json 2>/dev/null)" != "$cfg_sum" ]]; then
+        cp -p "$cfg_snap" /etc/FNode/config.json
+        echo -e "${yellow}config.json 被改动，已恢复原内容 (config.json was changed during the update and has been restored)${plain}"
+    fi
+    [[ -n "$cfg_snap" ]] && rm -f "$cfg_snap"
+    curl -o /usr/bin/FNode -Ls "${FNODE_RAW}/FNode-script/FNode.sh"
     chmod +x /usr/bin/FNode
     if [ ! -L /usr/bin/fnode ]; then
         ln -s /usr/bin/FNode /usr/bin/fnode
@@ -920,7 +1120,7 @@ EOF
     if [[ $first_install == true && -t 0 ]]; then
         read -rp "检测到你为第一次安装FNode,是否自动直接生成配置文件？(y/n): " if_generate
         if [[ $if_generate == [Yy] ]]; then
-            curl -o ./initconfig.sh -Ls "https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}/FNode-script/initconfig.sh"
+            curl -o ./initconfig.sh -Ls "${FNODE_RAW}/FNode-script/initconfig.sh"
             source initconfig.sh
             rm initconfig.sh -f
             generate_config_file

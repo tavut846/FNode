@@ -9534,9 +9534,9 @@
     "semantic_hash": ""
   },
   "FNode-script/install.sh": {
-    "mtime": 1792456734.8166037,
-    "seen": 1792457605.2576287,
-    "ast_hash": "be57936a4747a2ed0f3656a4de061b16",
+    "mtime": 1792457741.022955,
+    "seen": 1792458284.8424504,
+    "ast_hash": "f6c847c95f9b8256c3462d17dca1c139",
     "semantic_hash": ""
   },
   "SupportProject/V2bX-script/V2bX.sh": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1792456893.6895428,
-    "seen": 1792457605.2634544,
-    "ast_hash": "e14c236573f8be1bc78332626d5d49a8",
+    "mtime": 1792457831.1649659,
+    "seen": 1792458284.8500218,
+    "ast_hash": "0300e72ff17c5319ad9e31f6980f58ee",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10512,9 +10512,9 @@
     "semantic_hash": ""
   },
   "conf/install_script_test.go": {
-    "mtime": 1792456835.236028,
-    "seen": 1792457605.2623005,
-    "ast_hash": "91ed1a534523674bf738c8954dc003f1",
+    "mtime": 1792457767.5224137,
+    "seen": 1792458284.8492746,
+    "ast_hash": "40347ad77953d9249e62119a7db52149",
     "semantic_hash": ""
   },
   "node/machine.go": {

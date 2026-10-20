@@ -109,11 +109,29 @@ before_show_menu() {
 }
 
 FNODE_BRANCH="${FNODE_BRANCH:-master}"
+FNODE_RAW="${FNODE_RAW:-https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}}"
+
+# run_remote_installer ARGS...: downloads install.sh and runs it. An empty or
+# non-script download is an error (running an empty script would report
+# success while nothing was installed).
+run_remote_installer() {
+    local tmp rc
+    tmp=$(mktemp) || return 1
+    if ! curl -fsSL -o "$tmp" "${FNODE_RAW}/FNode-script/install.sh" || [[ "$(head -c 2 "$tmp")" != "#!" ]]; then
+        rm -f "$tmp"
+        echo -e "${red}下载 install.sh 失败，未做任何更改 (could not download install.sh from ${FNODE_RAW}; nothing was changed)${plain}"
+        return 1
+    fi
+    bash "$tmp" "$@"
+    rc=$?
+    rm -f "$tmp"
+    return $rc
+}
 
 install() {
     # Extra arguments are passed to install.sh (e.g. --mode machine --panel ... --token ... --machine-id 3)
     [[ "$1" == "0" ]] && shift
-    bash <(curl -Ls "https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}/FNode-script/install.sh") "$@"
+    run_remote_installer "$@"
 }
 
 update() {
@@ -187,7 +205,7 @@ update() {
     fi
 
     echo -e "准备更新 FNode: ${green}${target_ver}${plain}"
-    bash <(curl -Ls "https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}/FNode-script/install.sh") "${target_ver}"
+    run_remote_installer "${target_ver}"
     if [[ $? == 0 ]]; then
         echo -e "${green}更新完成，已自动重启 FNode，请使用 FNode log 查看运行日志${plain}"
         exit 0
