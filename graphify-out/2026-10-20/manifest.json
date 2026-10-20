@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "node/lego.go": {
-    "mtime": 1792393059.2165728,
-    "seen": 1792393809.655347,
-    "ast_hash": "17b13057c12cefab803e2c4def518313",
+    "mtime": 1792456570.6339276,
+    "seen": 1792457605.2624695,
+    "ast_hash": "c795f7d5740329a5e773a670257a640a",
     "semantic_hash": ""
   },
   "node/lego_test.go": {
@@ -7764,9 +7764,9 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1792397354.4985447,
-    "seen": 1792397801.6611178,
-    "ast_hash": "bfb19d96b197eed5fedb2e7f0ca9bfad",
+    "mtime": 1792456893.6907701,
+    "seen": 1792457605.2625563,
+    "ast_hash": "14fb599f4282e0a01aa1b2829df3e54c",
     "semantic_hash": ""
   },
   "GEMINI.md": {
@@ -7782,9 +7782,9 @@
     "semantic_hash": ""
   },
   "FNode-script/LOGIC.md": {
-    "mtime": 1792204496.5740075,
-    "seen": 1792206171.9139733,
-    "ast_hash": "f491dcacb9b621db3c93223461b5b160",
+    "mtime": 1792456893.715575,
+    "seen": 1792457605.2625606,
+    "ast_hash": "37bd932a24c3260fe9bfb9775557cb65",
     "semantic_hash": ""
   },
   "FNode-script/README.md": {
@@ -9534,9 +9534,9 @@
     "semantic_hash": ""
   },
   "FNode-script/install.sh": {
-    "mtime": 1792393891.5212362,
-    "seen": 1792397801.6573539,
-    "ast_hash": "4406edc53a8b7735919fcfa2c8aeb57b",
+    "mtime": 1792456734.8166037,
+    "seen": 1792457605.2576287,
+    "ast_hash": "be57936a4747a2ed0f3656a4de061b16",
     "semantic_hash": ""
   },
   "SupportProject/V2bX-script/V2bX.sh": {
@@ -10140,9 +10140,9 @@
     "semantic_hash": ""
   },
   ".github/workflows/release.yml": {
-    "mtime": 1792215163.769953,
-    "seen": 1792215597.987194,
-    "ast_hash": "86f3f6a705441f178e1ba4b683021d8f",
+    "mtime": 1792456751.7210526,
+    "seen": 1792457605.2625494,
+    "ast_hash": "1804768f837070534ed99c3d407f7d66",
     "semantic_hash": ""
   },
   "SupportProject/V2bX/.github/ISSUE_TEMPLATE/bug-report.md": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1792410825.0777724,
-    "seen": 1792411163.0380054,
-    "ast_hash": "e7f05c7aa841c66cffdcb24f593d03e6",
+    "mtime": 1792456893.6895428,
+    "seen": 1792457605.2634544,
+    "ast_hash": "e14c236573f8be1bc78332626d5d49a8",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10512,9 +10512,9 @@
     "semantic_hash": ""
   },
   "conf/install_script_test.go": {
-    "mtime": 1792392210.0215533,
-    "seen": 1792392915.2685027,
-    "ast_hash": "1e1c826c8a7bbb98ed488e5ffe08d24b",
+    "mtime": 1792456835.236028,
+    "seen": 1792457605.2623005,
+    "ast_hash": "91ed1a534523674bf738c8954dc003f1",
     "semantic_hash": ""
   },
   "node/machine.go": {
@@ -10689,6 +10689,24 @@
     "mtime": 1792393892.3609388,
     "seen": 1792397801.6610713,
     "ast_hash": "8b4b123f64dc6a0c2b54f65a0d435ff8",
+    "semantic_hash": ""
+  },
+  "node/lego_dns_all.go": {
+    "mtime": 1792456570.7423797,
+    "seen": 1792457605.262473,
+    "ast_hash": "dfbcce1fc1778ab1bb8b11da36cedcea",
+    "semantic_hash": ""
+  },
+  "node/lego_dns_lite.go": {
+    "mtime": 1792456570.8190336,
+    "seen": 1792457605.2624762,
+    "ast_hash": "262579b3382c60b0b78b9611c3fdacf9",
+    "semantic_hash": ""
+  },
+  "node/lego_dns_lite_test.go": {
+    "mtime": 1792456767.006369,
+    "seen": 1792457605.2624793,
+    "ast_hash": "48054b32e43c4fa304e97ab7b896c9a4",
     "semantic_hash": ""
   }
 }

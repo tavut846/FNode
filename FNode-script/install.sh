@@ -312,9 +312,83 @@ elif [[ x"${release}" == x"debian" ]]; then
     fi
 fi
 
+# --- extract helpers ---
+have_downloader() {
+    command -v wget >/dev/null 2>&1 || command -v curl >/dev/null 2>&1
+}
+
+# unzip, or a fallback that can read a zip: bsdtar, python3, busybox
+have_extractor() {
+    command -v unzip >/dev/null 2>&1 && return 0
+    command -v bsdtar >/dev/null 2>&1 && return 0
+    command -v python3 >/dev/null 2>&1 && return 0
+    command -v busybox >/dev/null 2>&1 && busybox unzip 2>&1 | grep -qi usage && return 0
+    return 1
+}
+
+# extract_zip ZIP DIR: unzips ZIP into DIR with the first tool that works.
+# geoip.dat/geosite.dat (older releases) are not used by sing-box 1.12+.
+extract_zip() {
+    local zip="$1" dest="$2"
+    mkdir -p "$dest"
+    if command -v unzip >/dev/null 2>&1; then
+        unzip -o -q "$zip" -x geoip.dat geosite.dat -d "$dest" && return 0
+    fi
+    if command -v bsdtar >/dev/null 2>&1; then
+        bsdtar -xf "$zip" -C "$dest" --exclude geoip.dat --exclude geosite.dat && return 0
+    fi
+    if command -v python3 >/dev/null 2>&1; then
+        python3 -c 'import sys, zipfile
+z = zipfile.ZipFile(sys.argv[1])
+for n in z.namelist():
+    if n not in ("geoip.dat", "geosite.dat"):
+        z.extract(n, sys.argv[2])' "$zip" "$dest" && return 0
+    fi
+    if command -v busybox >/dev/null 2>&1 && busybox unzip 2>&1 | grep -qi usage; then
+        busybox unzip -o "$zip" -d "$dest" >/dev/null && rm -f "$dest/geoip.dat" "$dest/geosite.dat" && return 0
+    fi
+    return 1
+}
+
+# download_file URL FILE: wget, then curl; fails on an HTTP error
+download_file() {
+    local url="$1" out="$2"
+    if command -v wget >/dev/null 2>&1; then
+        wget --no-check-certificate --tries=3 --progress=bar -O "$out" "$url" && return 0
+    fi
+    if command -v curl >/dev/null 2>&1; then
+        curl -fL --retry 3 -o "$out" "$url" && return 0
+    fi
+    return 1
+}
+# --- end extract helpers ---
+
+# pkg_install PACKAGE...: installs with the system package manager, showing
+# errors (only stdout is silenced)
+pkg_install() {
+    if [[ x"${release}" == x"centos" ]]; then
+        local pkgs=("${@/cron/crontabs}")
+        [[ " $* " == *" jq "* ]] && yum install epel-release -y >/dev/null
+        yum install "${pkgs[@]}" -y >/dev/null
+        update-ca-trust force-enable >/dev/null 2>&1
+    elif [[ x"${release}" == x"alpine" ]]; then
+        apk add --no-cache "$@" >/dev/null
+        update-ca-certificates >/dev/null 2>&1
+    elif [[ x"${release}" == x"debian" || x"${release}" == x"ubuntu" ]]; then
+        apt-get update -y >/dev/null
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$@" >/dev/null
+        update-ca-certificates >/dev/null 2>&1
+    elif [[ x"${release}" == x"arch" ]]; then
+        local pkgs=("${@/cron/cronie}")
+        pacman -Sy --noconfirm --needed "${pkgs[@]}" >/dev/null
+    fi
+}
+
 # Installs only the packages that are missing and skips the package manager
 # when nothing is (a small VPS saves time, memory and disk). socat is no
-# longer installed: FNode requests certificates itself (lego).
+# longer installed: FNode requests certificates itself (lego). The install
+# stops here, with the package manager's message, when it still cannot
+# download or unpack a zip afterwards.
 install_base() {
     local missing=() c
     for c in wget curl unzip tar jq; do
@@ -332,29 +406,19 @@ install_base() {
         return 0
     fi
     echo -e "安装依赖 (installing): ${missing[*]}"
-    if [[ x"${release}" == x"centos" ]]; then
-        local pkgs=("${missing[@]/cron/crontabs}")
-        [[ " ${missing[*]} " == *" jq "* ]] && yum install epel-release -y >/dev/null
-        yum install "${pkgs[@]}" -y >/dev/null
-        update-ca-trust force-enable >/dev/null 2>&1
-    elif [[ x"${release}" == x"alpine" ]]; then
-        apk add --no-cache "${missing[@]}" >/dev/null
-        update-ca-certificates >/dev/null 2>&1
-    elif [[ x"${release}" == x"debian" || x"${release}" == x"ubuntu" ]]; then
-        apt-get update -y >/dev/null
-        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "${missing[@]}" >/dev/null
-        update-ca-certificates >/dev/null 2>&1
-    elif [[ x"${release}" == x"arch" ]]; then
-        local pkgs=("${missing[@]/cron/cronie}")
-        pacman -Sy --noconfirm --needed "${pkgs[@]}" >/dev/null
+    pkg_install "${missing[@]}"
+    if ! have_downloader || ! have_extractor; then
+        echo -e "${yellow}依赖安装未完成，重试一次 (dependencies still missing, retrying once; package manager output follows)${plain}"
+        pkg_install "${missing[@]}" 2>&1
     fi
-    # wget, curl and unzip are required; the rest only limits optional features
-    for c in wget curl unzip; do
-        if ! command -v "$c" >/dev/null 2>&1; then
-            echo -e "${red}错误：${plain} 无法安装 $c，请手动安装后重试 (could not install $c; check free disk space and the package manager output above)"
-            exit 1
-        fi
-    done
+    if ! have_downloader; then
+        echo -e "${red}错误：${plain} 没有 wget 或 curl，无法下载 FNode (neither wget nor curl could be installed; check the network, free disk space and the package manager output above)"
+        exit 1
+    fi
+    if ! have_extractor; then
+        echo -e "${red}错误：${plain} 没有 unzip，也没有 bsdtar/python3/busybox，无法解压 (no unzip, bsdtar, python3 or busybox: install one by hand, e.g. apt-get install unzip, then run this again)"
+        exit 1
+    fi
     command -v jq >/dev/null 2>&1 || echo -e "${yellow}未安装 jq：已有 config.json 无法合并，将被整体重写 (jq missing: an existing config.json is rewritten, not merged)${plain}"
 }
 
@@ -564,13 +628,18 @@ start_service() {
     else
         systemctl restart FNode
     fi
-    sleep 2
+    sleep 3
     check_status
     if [[ $? == 0 ]]; then
         echo -e "${green}FNode 已启动 (running)${plain}"
-    else
-        echo -e "${red}FNode 可能启动失败，请使用 FNode log 查看日志 (FNode may have failed to start, see: FNode log)${plain}"
+        return 0
     fi
+    echo -e "${red}FNode 启动失败 (FNode is not running). Last log lines:${plain}"
+    if [[ x"${release}" != x"alpine" ]]; then
+        journalctl -u FNode -n 15 --no-pager 2>/dev/null
+    fi
+    echo -e "${red}请检查 /etc/FNode/config.json 和面板地址/令牌，然后运行: FNode restart; FNode log${plain}"
+    return 1
 }
 
 uninstall_FNode() {
@@ -604,12 +673,13 @@ uninstall_FNode() {
 
 install_FNode() {
 
-    if [[ -e /usr/local/FNode/ ]]; then
-        rm -rf /usr/local/FNode/
-    fi
-
-    mkdir /usr/local/FNode/ -p
-    cd /usr/local/FNode/
+    # Download and verify in a staging directory; the installed FNode is only
+    # replaced once the new binary runs, so a failed update leaves it working.
+    stage=/usr/local/FNode.new
+    rm -rf "$stage"
+    mkdir -p "$stage"
+    trap 'rm -rf /usr/local/FNode.new' EXIT
+    cd "$stage"
 
     target_type="$1"
     if [[ -z "$target_type" ]]; then
@@ -666,25 +736,48 @@ install_FNode() {
 
     # the zip and the extracted binary are on disk together: about 100 MB
     local free_mb
-    free_mb=$(df -Pm /usr/local/FNode 2>/dev/null | awk 'NR==2 {print $4}')
+    free_mb=$(df -Pm /usr/local 2>/dev/null | awk 'NR==2 {print $4}')
     if [[ -n "$free_mb" && "$free_mb" -lt 120 ]]; then
         echo -e "${red}磁盘空间不足：/usr/local 只剩 ${free_mb} MB，至少需要 120 MB (not enough free disk: ${free_mb} MB left, need 120 MB). Free some space (apt-get clean, journalctl --vacuum-size=20M) and retry${plain}"
         exit 1
     fi
-    wget --no-check-certificate -N --progress=bar -O /usr/local/FNode/FNode-linux.zip ${url}
-    if [[ $? -ne 0 ]]; then
-        echo -e "${red}下载 FNode ${last_version} 失败，请确保你的服务器能够下载 Github 的文件且此版本存在${plain}"
+    if ! download_file "${url}" "$stage/FNode-linux.zip"; then
+        echo -e "${red}下载 FNode ${last_version} 失败，请确保你的服务器能够下载 Github 的文件且此版本存在 (download failed: ${url}). Nothing was changed.${plain}"
         exit 1
     fi
-
-    # geoip.dat/geosite.dat (older releases) are not used by sing-box 1.12+
-    if ! unzip -o FNode-linux.zip -x geoip.dat geosite.dat >/dev/null; then
-        rm -f FNode-linux.zip
-        echo -e "${red}解压失败，磁盘可能已满 (unzip failed, the disk may be full)${plain}"
+    if [[ $(wc -c < "$stage/FNode-linux.zip") -lt 1000000 ]]; then
+        echo -e "${red}下载的文件太小，不是 FNode 安装包 (the download is not a FNode release zip; wrong version or arch?): ${url}. Nothing was changed.${plain}"
         exit 1
     fi
-    rm FNode-linux.zip -f
-    chmod +x FNode
+    if ! extract_zip "$stage/FNode-linux.zip" "$stage"; then
+        echo -e "${red}解压失败：压缩包损坏或磁盘已满 (could not extract the zip: it is damaged or the disk is full). Nothing was changed. Free space and run again.${plain}"
+        exit 1
+    fi
+    rm -f "$stage/FNode-linux.zip"
+    if [[ ! -s "$stage/FNode" ]]; then
+        echo -e "${red}压缩包里没有 FNode 程序 (the zip has no FNode binary). Nothing was changed.${plain}"
+        exit 1
+    fi
+    chmod +x "$stage/FNode"
+    if ! ver_out=$("$stage/FNode" version --short 2>&1); then
+        echo -e "${red}FNode 无法运行 (the downloaded binary does not run on this machine, ${arch} / $(uname -m)): ${ver_out}. Nothing was changed.${plain}"
+        exit 1
+    fi
+    for f in dns.json route.json custom_outbound.json custom_inbound.json; do
+        [[ -f "$stage/$f" ]] || echo -e "${yellow}压缩包缺少 $f (zip lacks $f)${plain}"
+    done
+    # swap in the verified install, keep the old one until it is in place
+    rm -rf /usr/local/FNode.old
+    [[ -e /usr/local/FNode ]] && mv /usr/local/FNode /usr/local/FNode.old
+    if ! mv "$stage" /usr/local/FNode; then
+        [[ -e /usr/local/FNode.old ]] && mv /usr/local/FNode.old /usr/local/FNode
+        echo -e "${red}无法移动到 /usr/local/FNode (could not move the new install into place); the old one was restored${plain}"
+        exit 1
+    fi
+    rm -rf /usr/local/FNode.old
+    trap - EXIT
+    cd /usr/local/FNode
+    echo -e "FNode 程序已验证 (binary verified): ${green}${ver_out}${plain}"
     mkdir /etc/FNode/ -p
     if [[ x"${release}" == x"alpine" ]]; then
         rm /etc/init.d/FNode -f
@@ -705,6 +798,13 @@ command_background="yes"
 depend() {
         need net
 }
+
+start_pre() {
+        if [ ! -x /usr/local/FNode/FNode ]; then
+                eerror "/usr/local/FNode/FNode is missing: reinstall FNode"
+                return 1
+        fi
+}
 EOF
         chmod +x /etc/init.d/FNode
         rc-update add FNode default
@@ -716,6 +816,8 @@ EOF
 Description=FNode Service
 After=network.target nss-lookup.target
 Wants=network.target
+# do not restart forever when the binary is missing (a broken install)
+ConditionPathIsExecutable=/usr/local/FNode/FNode
 
 [Service]
 User=root
@@ -756,8 +858,9 @@ EOF
         fi
         sleep 2
         check_status
+        local started=$?
         echo -e ""
-        if [[ $? == 0 ]]; then
+        if [[ $started == 0 ]]; then
             echo -e "${green}FNode 重启成功${plain}"
         else
             echo -e "${red}FNode 可能启动失败，请稍后使用 FNode log 查看日志信息，若无法启动，则可能更改了配置格式，请前往 wiki 查看：https://github.com/FNode-project/FNode/wiki${plain}"
@@ -811,7 +914,7 @@ EOF
     echo "------------------------------------------"
     if [[ "$noninteractive" == true ]]; then
         start_service
-        return 0
+        return $?
     fi
     # 首次安装询问是否生成配置文件 (only with a terminal: piped stdin is the script itself)
     if [[ $first_install == true && -t 0 ]]; then

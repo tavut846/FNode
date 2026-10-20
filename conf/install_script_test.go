@@ -1,7 +1,10 @@
 package conf
 
 import (
+	"archive/zip"
 	"bytes"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -191,5 +194,158 @@ func TestInstallScript_MemoryLimits(t *testing.T) {
 		if want := "limit=" + c.limit + "\n" + c.unit; string(out) != want {
 			t.Errorf("%s MB: got %q, want %q", c.mem, out, want)
 		}
+	}
+}
+
+// installHelpers returns the extract/download helper block of install.sh.
+func installHelpers(t *testing.T) string {
+	t.Helper()
+	src, err := os.ReadFile("../FNode-script/install.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := strings.ReplaceAll(string(src), "\r\n", "\n")
+	from := strings.Index(text, "# --- extract helpers ---")
+	to := strings.Index(text, "# --- end extract helpers ---")
+	if from < 0 || to < from {
+		t.Fatal("extract helpers not found in install.sh")
+	}
+	return text[from:to]
+}
+
+func runBash(t *testing.T, env []string, script string) (string, error) {
+	t.Helper()
+	bash, err := exec.LookPath("bash")
+	if err != nil {
+		t.Skip("bash not available")
+	}
+	cmd := exec.Command(bash, "-c", script)
+	if env != nil {
+		cmd.Env = env
+	}
+	out, err := cmd.CombinedOutput()
+	return string(out), err
+}
+
+func writeReleaseZip(t *testing.T, big bool) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "FNode-linux.zip")
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	zw := zip.NewWriter(f)
+	for name, body := range map[string]string{"FNode": "#!/bin/sh\necho 1.2.3\n", "dns.json": "{}", "geoip.dat": "geo", "geosite.dat": "site"} {
+		w, _ := zw.Create(name)
+		_, _ = w.Write([]byte(body))
+	}
+	if err = zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err = f.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+// The release zip is unpacked with whatever tool the machine has (unzip,
+// bsdtar, python3, busybox) and the unused geo files are left out.
+func TestInstallScript_ExtractZip(t *testing.T) {
+	zipPath := writeReleaseZip(t, false)
+	dest := filepath.Join(t.TempDir(), "out")
+	script := installHelpers(t) + "\nhave_extractor || { echo NO-EXTRACTOR; exit 3; }\nextract_zip '" + filepath.ToSlash(zipPath) + "' '" + filepath.ToSlash(dest) + "'\n"
+	out, err := runBash(t, nil, script)
+	if err != nil {
+		if strings.Contains(out, "NO-EXTRACTOR") {
+			t.Skip("no zip extractor on this machine")
+		}
+		t.Fatalf("extract_zip: %v\n%s", err, out)
+	}
+	for _, want := range []string{"FNode", "dns.json"} {
+		if _, err := os.Stat(filepath.Join(dest, want)); err != nil {
+			t.Errorf("%s not extracted: %v", want, err)
+		}
+	}
+	for _, skip := range []string{"geoip.dat", "geosite.dat"} {
+		if _, err := os.Stat(filepath.Join(dest, skip)); err == nil {
+			t.Errorf("%s must not be extracted", skip)
+		}
+	}
+}
+
+// Without any extractor the helper reports it instead of pretending.
+func TestInstallScript_NoExtractor(t *testing.T) {
+	zipPath := writeReleaseZip(t, false)
+	bash, err := exec.LookPath("bash")
+	if err != nil {
+		t.Skip("bash not available")
+	}
+	script := installHelpers(t) + "\nhave_extractor && echo HAVE; have_downloader && echo HAVE-DL\nextract_zip '" + filepath.ToSlash(zipPath) + "' /nonexistent-dest; echo rc=$?\n"
+	out, err := runBash(t, []string{"PATH=/nonexistent"}, script)
+	_ = bash
+	if err != nil && !strings.Contains(out, "rc=") {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	if strings.Contains(out, "HAVE") || !strings.Contains(out, "rc=1") {
+		t.Errorf("with an empty PATH there is no extractor or downloader and extract_zip must fail:\n%s", out)
+	}
+}
+
+// download_file fails on an HTTP error and saves a good response.
+func TestInstallScript_DownloadFile(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ok.zip" {
+			_, _ = w.Write([]byte("payload"))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer srv.Close()
+	dir := t.TempDir()
+	good := filepath.ToSlash(filepath.Join(dir, "good"))
+	bad := filepath.ToSlash(filepath.Join(dir, "bad"))
+	script := installHelpers(t) + "\nhave_downloader || { echo NO-DL; exit 3; }\n" +
+		"download_file " + srv.URL + "/ok.zip '" + good + "' >/dev/null 2>&1 && echo GOOD-OK\n" +
+		"download_file " + srv.URL + "/missing.zip '" + bad + "' >/dev/null 2>&1 || echo BAD-FAILED\n"
+	out, err := runBash(t, nil, script)
+	if err != nil {
+		if strings.Contains(out, "NO-DL") {
+			t.Skip("no wget or curl")
+		}
+		t.Fatalf("%v\n%s", err, out)
+	}
+	if !strings.Contains(out, "GOOD-OK") || !strings.Contains(out, "BAD-FAILED") {
+		t.Errorf("download_file results:\n%s", out)
+	}
+	if b, _ := os.ReadFile(filepath.FromSlash(good)); string(b) != "payload" {
+		t.Errorf("downloaded content %q", b)
+	}
+}
+
+// The unit must not restart forever when the binary is missing, and the
+// install must verify the binary before it replaces the old one.
+func TestInstallScript_GuardsBrokenInstall(t *testing.T) {
+	src, err := os.ReadFile("../FNode-script/install.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := strings.ReplaceAll(string(src), "\r\n", "\n")
+	for _, want := range []string{
+		"ConditionPathIsExecutable=/usr/local/FNode/FNode",
+		`"$stage/FNode" version --short`,
+		"Nothing was changed",
+		"local started=$?",
+		"start_pre()",
+	} {
+		if !strings.Contains(text, want) {
+			t.Errorf("install.sh misses %q", want)
+		}
+	}
+	// the old install is removed only after the new one is verified
+	if strings.Index(text, "rm -rf /usr/local/FNode/\n") >= 0 {
+		t.Error("install.sh must not delete /usr/local/FNode before the download is verified")
+	}
+	if strings.Index(text, `version --short`) > strings.Index(text, "mv /usr/local/FNode /usr/local/FNode.old") {
+		t.Error("the binary must be verified before the old install is moved away")
 	}
 }
