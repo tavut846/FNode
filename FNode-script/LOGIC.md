@@ -13,11 +13,11 @@ The FNode deployment system consists of three main parts:
 
 ### 1. Installation Logic (`install.sh`)
 -   **Environment Detection**: Automatically identifies the Linux distribution (CentOS, Debian, Ubuntu, Arch, Alpine) and CPU architecture (amd64, arm64).
--   **Dependency Management**: Installs required tools like `curl`, `wget`, `unzip`, and `socat` (for TLS).
+-   **Dependency Management**: Installs only the missing tools (`curl`, `wget`, `unzip`, `tar`, `jq`, `cron`, `ca-certificates`), skipping the package manager when nothing is missing.
 -   **Binary Deployment**:
     -   Fetches the latest version of the FNode backend from GitHub.
     -   Installs the binary to `/usr/local/FNode/`.
-    -   Copies required assets like `geoip.dat` and `geosite.dat` to `/etc/FNode/`.
+    -   Unzips only what FNode needs (no `geoip.dat`/`geosite.dat`).
 -   **Service Setup**: Generates and registers a systemd unit (or OpenRC init script for Alpine) to enable auto-start on boot.
 -   **Management Link**: Downloads the management script and creates a symlink at `/usr/bin/fnode` for easy access.
 

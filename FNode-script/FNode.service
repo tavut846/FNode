@@ -16,6 +16,9 @@ WorkingDirectory=/usr/local/FNode/
 ExecStart=/usr/local/FNode/FNode server
 Restart=always
 RestartSec=10
+# Small VPS (install.sh writes these for you when RAM is under 2 GB / 1.5 GB; example for 715 MB):
+#Environment=GOMEMLIMIT=500MiB
+#MemoryMax=607M
 
 [Install]
 WantedBy=multi-user.target

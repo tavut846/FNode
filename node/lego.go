@@ -18,7 +18,6 @@ import (
 
 	"github.com/go-acme/lego/v4/certificate"
 	"github.com/go-acme/lego/v4/challenge/http01"
-	"github.com/go-acme/lego/v4/providers/dns"
 	"github.com/go-acme/lego/v4/registration"
 
 	"github.com/tavut846/FNode/common/file"
@@ -83,7 +82,7 @@ func (l *Lego) SetProvider() error {
 		for k, v := range l.config.DNSEnv {
 			os.Setenv(k, v)
 		}
-		p, err := dns.NewDNSChallengeProviderByName(l.config.Provider)
+		p, err := newDNSProvider(l.config.Provider)
 		if err != nil {
 			return fmt.Errorf("create dns challenge provider error: %s", err)
 		}

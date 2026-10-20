@@ -156,3 +156,40 @@ func TestInstallScript_MergeReplacesExistingNodes(t *testing.T) {
 		t.Errorf("warn level changed to %q", lvl)
 	}
 }
+
+// The installer sizes Go's memory limit and a cgroup cap to the machine's RAM
+// so a small VPS does not run into the kernel OOM killer.
+func TestInstallScript_MemoryLimits(t *testing.T) {
+	bash, err := exec.LookPath("bash")
+	if err != nil {
+		t.Skip("bash not available")
+	}
+	src, err := os.ReadFile("../FNode-script/install.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := strings.ReplaceAll(string(src), "\r\n", "\n")
+	from := strings.Index(text, "fnode_gomemlimit() {")
+	to := strings.Index(text, "# Advice for a small machine")
+	if from < 0 || to < from {
+		t.Fatal("memory helpers not found in install.sh")
+	}
+	block := text[from:to]
+	for _, c := range []struct{ mem, limit, unit string }{
+		{"715", "500MiB", "Environment=GOMEMLIMIT=500MiB|MemoryMax=607M|"},
+		{"1024", "716MiB", "Environment=GOMEMLIMIT=716MiB|MemoryMax=870M|"},
+		{"1800", "1260MiB", "Environment=GOMEMLIMIT=1260MiB|"},
+		{"4096", "", ""},
+		{"0", "", ""},
+	} {
+		script := "total_mem_mb() { echo " + c.mem + "; }\n" + block +
+			"\nprintf 'limit=%s\n' \"$(fnode_gomemlimit)\"; fnode_unit_memory_lines | tr '\n' '|'\n"
+		out, err := exec.Command(bash, "-c", script).CombinedOutput()
+		if err != nil {
+			t.Fatalf("%s MB: %v\n%s", c.mem, err, out)
+		}
+		if want := "limit=" + c.limit + "\n" + c.unit; string(out) != want {
+			t.Errorf("%s MB: got %q, want %q", c.mem, out, want)
+		}
+	}
+}

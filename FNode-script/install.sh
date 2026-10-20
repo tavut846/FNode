@@ -312,26 +312,89 @@ elif [[ x"${release}" == x"debian" ]]; then
     fi
 fi
 
+# Installs only the packages that are missing and skips the package manager
+# when nothing is (a small VPS saves time, memory and disk). socat is no
+# longer installed: FNode requests certificates itself (lego).
 install_base() {
+    local missing=() c
+    for c in wget curl unzip tar jq; do
+        command -v "$c" >/dev/null 2>&1 || missing+=("$c")
+    done
+    # cron is only used for the weekly log cleanup
+    if [[ x"${release}" != x"alpine" ]] && ! command -v crontab >/dev/null 2>&1; then
+        missing+=("cron")
+    fi
+    if [[ ! -s /etc/ssl/certs/ca-certificates.crt && ! -s /etc/pki/tls/certs/ca-bundle.crt && ! -s /etc/ssl/cert.pem ]]; then
+        missing+=("ca-certificates")
+    fi
+    if [[ ${#missing[@]} -eq 0 ]]; then
+        echo -e "依赖已齐全，跳过安装 (dependencies present, skipping package install)"
+        return 0
+    fi
+    echo -e "安装依赖 (installing): ${missing[*]}"
     if [[ x"${release}" == x"centos" ]]; then
-        yum install epel-release wget curl unzip tar crontabs socat ca-certificates jq -y >/dev/null 2>&1
+        local pkgs=("${missing[@]/cron/crontabs}")
+        [[ " ${missing[*]} " == *" jq "* ]] && yum install epel-release -y >/dev/null
+        yum install "${pkgs[@]}" -y >/dev/null
         update-ca-trust force-enable >/dev/null 2>&1
     elif [[ x"${release}" == x"alpine" ]]; then
-        apk add wget curl unzip tar socat ca-certificates jq >/dev/null 2>&1
+        apk add --no-cache "${missing[@]}" >/dev/null
         update-ca-certificates >/dev/null 2>&1
-    elif [[ x"${release}" == x"debian" ]]; then
-        apt-get update -y >/dev/null 2>&1
-        apt install wget curl unzip tar cron socat ca-certificates jq -y >/dev/null 2>&1
-        update-ca-certificates >/dev/null 2>&1
-    elif [[ x"${release}" == x"ubuntu" ]]; then
-        apt-get update -y >/dev/null 2>&1
-        apt install wget curl unzip tar cron socat jq -y >/dev/null 2>&1
-        apt-get install ca-certificates wget -y >/dev/null 2>&1
+    elif [[ x"${release}" == x"debian" || x"${release}" == x"ubuntu" ]]; then
+        apt-get update -y >/dev/null
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "${missing[@]}" >/dev/null
         update-ca-certificates >/dev/null 2>&1
     elif [[ x"${release}" == x"arch" ]]; then
-        pacman -Sy --noconfirm >/dev/null 2>&1
-        pacman -S --noconfirm --needed wget curl unzip tar cron socat jq >/dev/null 2>&1
-        pacman -S --noconfirm --needed ca-certificates wget >/dev/null 2>&1
+        local pkgs=("${missing[@]/cron/cronie}")
+        pacman -Sy --noconfirm --needed "${pkgs[@]}" >/dev/null
+    fi
+    # wget, curl and unzip are required; the rest only limits optional features
+    for c in wget curl unzip; do
+        if ! command -v "$c" >/dev/null 2>&1; then
+            echo -e "${red}错误：${plain} 无法安装 $c，请手动安装后重试 (could not install $c; check free disk space and the package manager output above)"
+            exit 1
+        fi
+    done
+    command -v jq >/dev/null 2>&1 || echo -e "${yellow}未安装 jq：已有 config.json 无法合并，将被整体重写 (jq missing: an existing config.json is rewritten, not merged)${plain}"
+}
+
+# Total RAM in MiB (0 when unknown).
+total_mem_mb() {
+    awk '/^MemTotal:/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0
+}
+
+# Go GC limit sized to the machine: on small VPSes the Go runtime collects
+# harder before the heap reaches the RAM, instead of the kernel OOM killer
+# picking a victim. Prints nothing on machines with 2 GB or more.
+fnode_gomemlimit() {
+    local mem
+    mem=$(total_mem_mb)
+    if [[ "${mem:-0}" -gt 0 && "$mem" -lt 2048 ]]; then
+        echo "$((mem * 70 / 100))MiB"
+    fi
+    return 0
+}
+
+# systemd [Service] lines for the memory limits; below 1.5 GB RAM FNode is
+# also capped in its own cgroup, so an OOM restarts FNode (Restart=always)
+# and not sshd.
+fnode_unit_memory_lines() {
+    local mem limit
+    mem=$(total_mem_mb)
+    limit=$(fnode_gomemlimit)
+    [[ -n "$limit" ]] && echo "Environment=GOMEMLIMIT=${limit}"
+    [[ "${mem:-0}" -gt 0 && "$mem" -lt 1536 ]] && echo "MemoryMax=$((mem * 85 / 100))M"
+    return 0
+}
+
+# Advice for a small machine without swap (printed, nothing is changed).
+small_vps_hints() {
+    local mem swap
+    mem=$(total_mem_mb)
+    swap=$(awk '/^SwapTotal:/ {print $2}' /proc/meminfo 2>/dev/null)
+    if [[ "${mem:-0}" -gt 0 && "$mem" -lt 1024 && "${swap:-0}" -eq 0 ]]; then
+        echo -e "${yellow}内存只有 ${mem} MB 且没有 swap，建议创建 512 MB swap 防止被 OOM 杀掉 (small RAM and no swap; a swapfile avoids OOM kills):${plain}"
+        echo "  fallocate -l 512M /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile && echo '/swapfile none swap sw 0 0' >> /etc/fstab"
     fi
 }
 
@@ -601,18 +664,28 @@ install_FNode() {
         echo -e "开始安装指定版本 FNode: ${green}${last_version}${plain}"
     fi
 
+    # the zip and the extracted binary are on disk together: about 100 MB
+    local free_mb
+    free_mb=$(df -Pm /usr/local/FNode 2>/dev/null | awk 'NR==2 {print $4}')
+    if [[ -n "$free_mb" && "$free_mb" -lt 120 ]]; then
+        echo -e "${red}磁盘空间不足：/usr/local 只剩 ${free_mb} MB，至少需要 120 MB (not enough free disk: ${free_mb} MB left, need 120 MB). Free some space (apt-get clean, journalctl --vacuum-size=20M) and retry${plain}"
+        exit 1
+    fi
     wget --no-check-certificate -N --progress=bar -O /usr/local/FNode/FNode-linux.zip ${url}
     if [[ $? -ne 0 ]]; then
         echo -e "${red}下载 FNode ${last_version} 失败，请确保你的服务器能够下载 Github 的文件且此版本存在${plain}"
         exit 1
     fi
 
-    unzip FNode-linux.zip
+    # geoip.dat/geosite.dat (older releases) are not used by sing-box 1.12+
+    if ! unzip -o FNode-linux.zip -x geoip.dat geosite.dat >/dev/null; then
+        rm -f FNode-linux.zip
+        echo -e "${red}解压失败，磁盘可能已满 (unzip failed, the disk may be full)${plain}"
+        exit 1
+    fi
     rm FNode-linux.zip -f
     chmod +x FNode
     mkdir /etc/FNode/ -p
-    cp geoip.dat /etc/FNode/
-    cp geosite.dat /etc/FNode/
     if [[ x"${release}" == x"alpine" ]]; then
         rm /etc/init.d/FNode -f
         cat <<EOF > /etc/init.d/FNode
@@ -621,6 +694,7 @@ install_FNode() {
 name="FNode"
 description="FNode"
 
+$(l=$(fnode_gomemlimit); [ -n "$l" ] && echo "export GOMEMLIMIT=$l")
 command="/usr/local/FNode/FNode"
 command_args="server"
 command_user="root"
@@ -656,6 +730,7 @@ WorkingDirectory=/usr/local/FNode/
 ExecStart=/usr/local/FNode/FNode server
 Restart=always
 RestartSec=10
+$(fnode_unit_memory_lines)
 
 [Install]
 WantedBy=multi-user.target
@@ -709,6 +784,7 @@ EOF
         chmod +x /usr/bin/fnode
     fi
     setup_cleanlog_cron
+    small_vps_hints
     cd $cur_dir
     rm -f install.sh
     echo -e ""
