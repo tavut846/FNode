@@ -184,6 +184,8 @@ FNode configuration is JSON5 compatible (permits comments and trailing commas).
       "ListenIP": "0.0.0.0",
       "SendIP": "0.0.0.0",
       "DeviceOnlineMinTraffic": 200, // KB minimum traffic before counting device online
+      "TCPKeepAlive": 30,            // seconds idle before the first TCP keepalive probe on every TCP inbound (0 = 30, -1 = off)
+      "TCPKeepAliveInterval": 15,    // seconds between probes (0 = 15)
       "MinReportTraffic": 0,
       "TCPFastOpen": false,
       "SniffEnabled": true,
@@ -250,7 +252,8 @@ To ensure high availability on cloud VPS providers with dynamic or reassigned IP
 
 ### 4.5 Hysteria 2 Transport & Multi-Port Architecture
 To maximize throughput and resist ISP UDP QoS throttling without requiring subscription resets or panel variable churn:
-- **Socket Recycling (`ReuseAddr: true`)**: Hysteria 2 inbounds bind UDP listening sockets with `ReuseAddr` enabled by default, ensuring instantaneous node reloads without socket-in-use wait delays.
+- **UDP socket (`Hysteria2Config.ReuseAddr`, default off)**: the inbound's UDP socket is closed (`Inbound.Remove`) before a rebuilt inbound binds. `SO_REUSEADDR` used to be forced on; with it an old socket that lingers after a rebuild can keep receiving datagrams for the port (clients then time out) instead of the new bind failing loudly, and FNode is a single process, so it is opt-in now.
+- **Idle behaviour is fixed by the library**: sing-quic's server and client both use `MaxIdleTimeout 30s` and `KeepAlivePeriod 10s` and sing-box does not expose them, so there is nothing to tune in FNode. What FNode controls is not dropping the QUIC connections by rebuilding the inbound (see 4.6.1).
 - **Flexible Masquerade Fallback**: Supports `file://`, `http://`/`https://` reverse proxies, and string/HTML content fallback.
 - **UDP Fragmentation & Timeouts**: Configurable via node config or local `Hysteria2Config` (`UDPFragment`, `UDPTimeout`, `BrutalDebug`).
 - **Multi-Port Port Hopping**:
@@ -271,6 +274,18 @@ Route changes made in the Xboard dashboard reach every FNode server without per-
 - **Generated files** (`core/sing/effective.go`): after every successful apply FNode atomically writes, per node, `<GeneratedDir>/<node>.effective.json` (the merged sing-box config: inbound without users, outbounds, route rules and rule sets, plus an `_fnode` block listing each outbound's source) and `<node>.panel.json` (the raw panel `routes`, `custom_outbounds`, `custom_routes`, `custom_route_rules`). `GeneratedDir` (in the sing core config) defaults to `generated/` next to `config.json` and is not watched. `<node>` is the node tag with unsafe characters replaced by `_`. Files of removed nodes are deleted. The files are mode 0600 and may contain outbound passwords and keys.
 - **CLI**: `FNode config show [-c config.json] [--node <tag|file|part of tag>] [--summary] [--dir <dir>]` prints a per-node summary (outbound tag, type, source, contributing node) followed by the effective JSON.
 - **CLI**: `FNode config status [-c config.json] [--dir <dir>]` (`cmd/config_status.go`) prints, per `Nodes` entry, `Panel:` (ApiHost and `machine N, from dashboard` or `node N`), `Token:` (first and last 5 characters; tokens of 10 characters or fewer show only the first) and `Node:` (the running tags read from the effective files; machine-assigned nodes end in `--Panel`, a node entry's tag is shown alone). Node entries claim their tags before a machine entry on the same panel.
+
+### 4.6.1 Inbound Stability & TCP Keepalive (idle clients that stop working)
+
+Symptom: after a long idle time the next use of an AnyTLS or Hysteria2 proxy fails until the client reconnects.
+
+What FNode does about it:
+- **TCP keepalive on every TCP inbound** (`core/sing/keepalive.go`): the server probes an idle connection after `Options.TCPKeepAlive` seconds (default 30) and then every `Options.TCPKeepAliveInterval` (default 15); `TCPKeepAlive: -1` turns it off. sing-box's own defaults are 300 and 75 seconds, far slower than the 30-120 s after which a home router, CGNAT or firewall forgets an idle mapping. A mapping that is kept alive and a dead peer that is found sooner are all this can do. It does not apply to UDP (Hysteria2, TUIC).
+- **No needless inbound rebuilds** (a rebuild drops every live connection and the client only notices after its own idle timeout): the panel's HTTP `/config` adds `base_config` (the push/pull intervals) while the full `sync.config` it pushes on every WebSocket connect does not, so the same config used to look changed and the inbound was recreated right after start-up (the double "tcp server started" in the journal) and again after a panel-side change. `base_config` is now excluded from `InboundHash` (`notInboundKeys` in `api/panel/node.go`), intervals are applied without a rebuild (`Controller.applyIntervals`), a pushed config without intervals keeps the known ones, and a config whose inbound and routing hashes are unchanged is a no-op. Routing-only changes never rebuild the inbound; user changes are applied in place for every protocol including AnyTLS (the sing-box fork's inbound implements `UpdateUsers`).
+- **Every rebuild is logged at info** with the reason: `Node changed, recreating its inbound (live connections are dropped)` with `reason` (`inbound config changed`, `the previous reload failed`) and the old and new hash, `Inbound created` for a new inbound, and `Recreating inbound (live connections are dropped)` for the (unlikely) in-place user update failure. A pending certificate (`cert_config` file missing) keeps the running inbound and re-fetches the config; it rebuilds once, when the file appears.
+- `recreateInbound` no longer takes the users lock it already holds.
+
+What FNode cannot fix: the sing-anytls client keeps idle sessions in a pool and reuses one without checking it (the library has no active keepalive), so a session dropped by a middlebox only fails on first use. On the client set a short `idle_session_check_interval`/`idle_session_timeout` (about 30 s) and `min_idle_session: 0` so stale sessions are not kept. Hysteria2's QUIC idle timeout (30 s) and keepalive (10 s) are fixed in the library on both sides.
 
 ### 4.7 Machine Mode (Per-Server Token)
 An Xboard *machine* groups nodes under one token (`MachineController`, `ServerV2` middleware). A `Nodes` entry whose `ApiConfig` has `MachineID > 0` runs in machine mode (`node/machine.go`):

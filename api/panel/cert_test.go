@@ -1,6 +1,7 @@
 package panel
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/tavut846/FNode/conf"
@@ -89,5 +90,31 @@ func TestClient_ResetConfigCache(t *testing.T) {
 	c.ResetConfigCache()
 	if n, err := c.ParseNodeConfig(body); err != nil || n == nil {
 		t.Fatalf("after ResetConfigCache the same config must be returned again: %v %v", n, err)
+	}
+}
+
+// The HTTP /config response carries base_config (the intervals); the full
+// sync.config the panel pushes on every WebSocket connect does not. The same
+// config in either shape must have the same inbound and routing hash, or the
+// inbound is rebuilt (dropping every live connection) on each connect.
+func TestConfigHashes_BaseConfigIsNotInbound(t *testing.T) {
+	ws := `{"protocol":"anytls","server_port":443,"server_name":"a.example","routes":[{"id":1,"match":["x.com"],"action":"block"}]}`
+	http := `{"protocol":"anytls","server_port":443,"server_name":"a.example","routes":[{"id":1,"match":["x.com"],"action":"block"}],"base_config":{"push_interval":60,"pull_interval":60}}`
+	httpOtherIntervals := strings.Replace(http, `"push_interval":60,"pull_interval":60`, `"push_interval":30,"pull_interval":45`, 1)
+	fullWS, inWS, rtWS, _ := configHashes([]byte(ws))
+	fullHTTP, inHTTP, rtHTTP, _ := configHashes([]byte(http))
+	fullOther, inOther, rtOther, _ := configHashes([]byte(httpOtherIntervals))
+	if inWS != inHTTP || inHTTP != inOther {
+		t.Error("base_config must not change the inbound hash")
+	}
+	if rtWS != rtHTTP || rtHTTP != rtOther {
+		t.Error("base_config must not change the routing hash")
+	}
+	if fullWS == fullHTTP || fullHTTP == fullOther {
+		t.Error("the full hash still has to notice base_config (interval changes)")
+	}
+	changed := strings.Replace(ws, `"server_port":443`, `"server_port":444`, 1)
+	if _, in, _, _ := configHashes([]byte(changed)); in == inWS {
+		t.Error("a real inbound change must change the inbound hash")
 	}
 }

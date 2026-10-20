@@ -231,9 +231,9 @@ func TestGetInboundOptions_Hysteria2_DefaultPerformance(t *testing.T) {
 		t.Fatalf("expected *option.Hysteria2InboundOptions, got %T", in.Options)
 	}
 
-	// Verify socket reuse is active for high-performance UDP listening
-	if !hy2Opt.ListenOptions.ReuseAddr {
-		t.Errorf("expected ReuseAddr to be true, got false")
+	// SO_REUSEADDR is opt-in (Hysteria2Config.ReuseAddr): FNode is one process
+	if hy2Opt.ListenOptions.ReuseAddr {
+		t.Errorf("expected ReuseAddr to be off by default")
 	}
 
 	if hy2Opt.BrutalDebug {
@@ -284,8 +284,8 @@ func TestGetInboundOptions_Hysteria2_CustomConfig(t *testing.T) {
 
 	hy2Opt := in.Options.(*option.Hysteria2InboundOptions)
 
-	if !hy2Opt.ListenOptions.ReuseAddr {
-		t.Errorf("expected ReuseAddr to be true")
+	if hy2Opt.ListenOptions.ReuseAddr {
+		t.Errorf("expected ReuseAddr to stay off unless Hysteria2Config.ReuseAddr is set")
 	}
 
 	if !hy2Opt.BrutalDebug {

@@ -392,6 +392,13 @@ func (c *Client) GetNodeInfo() (node *NodeInfo, err error) {
 // routingKeys are the config keys that only affect routing, not the inbound.
 var routingKeys = []string{"routes", "custom_outbounds", "custom_routes", "custom_route_rules"}
 
+// notInboundKeys are config keys that change neither the inbound nor the
+// routing. base_config (the push/pull intervals) is only in the HTTP /config
+// response, not in the full sync.config the panel pushes on every WebSocket
+// connect; counting it made the same config look changed when it arrived the
+// other way, and the inbound was rebuilt (dropping every live connection).
+var notInboundKeys = []string{"base_config"}
+
 // configHashes returns a hash of the whole config plus separate hashes of the
 // inbound part and the routing part. The JSON is canonicalised first
 // (encoding/json sorts map keys), so the HTTP body and the WebSocket
@@ -415,6 +422,9 @@ func configHashes(body []byte) (full, inbound, routing string, err error) {
 	full = sum(m)
 	routing = sum(routingPart)
 	for _, k := range routingKeys {
+		delete(m, k)
+	}
+	for _, k := range notInboundKeys {
 		delete(m, k)
 	}
 	inbound = sum(m)

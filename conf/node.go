@@ -133,6 +133,13 @@ type Options struct {
 	DisableIPv6            bool            `json:"DisableIPv6"`
 	ConnectTimeout         int             `json:"ConnectTimeout"`
 	DeviceOnlineMinTraffic int64           `json:"DeviceOnlineMinTraffic"`
+	// TCPKeepAlive and TCPKeepAliveInterval (seconds) set the keepalive
+	// probes of every TCP inbound: first probe after TCPKeepAlive idle
+	// seconds, then every TCPKeepAliveInterval. 0 uses 30 and 15 (sing-box
+	// itself uses 300 and 75, too slow to keep a NAT mapping alive); a
+	// negative TCPKeepAlive turns keepalive off.
+	TCPKeepAlive         int `json:"TCPKeepAlive"`
+	TCPKeepAliveInterval int `json:"TCPKeepAliveInterval"`
 	ReportMinTraffic       int64           `json:"ReportMinTraffic"`
 	LimitConfig            LimitConfig     `json:"LimitConfig"`
 	RawOptions             json.RawMessage `json:"RawOptions"`

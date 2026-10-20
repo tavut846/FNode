@@ -120,6 +120,15 @@ func (c *Controller) failReload(msg string, err error) {
 // applyUpdate applies a changed node config (newN), user list (newU) and alive
 // list (newA); any of them may be nil when unchanged. The caller holds c.mu.
 func (c *Controller) applyUpdate(newN *panel.NodeInfo, newU []panel.UserInfo, newA map[int]int) (err error) {
+	if newN != nil && c.info != nil {
+		// a config pushed over the WebSocket has no intervals: keep the known ones
+		if newN.PullInterval == 0 {
+			newN.PullInterval = c.info.PullInterval
+		}
+		if newN.PushInterval == 0 {
+			newN.PushInterval = c.info.PushInterval
+		}
+	}
 	if newN != nil && !c.rebuild && c.applyRoutingOnly(newN) {
 		newN = nil
 	}
@@ -137,6 +146,13 @@ func (c *Controller) applyUpdate(newN *panel.NodeInfo, newU []panel.UserInfo, ne
 		}
 	}
 	if newN != nil {
+		reason, oldHash := "inbound config changed", ""
+		if c.info != nil {
+			oldHash = c.info.InboundHash
+		}
+		if c.rebuild {
+			reason = "the previous reload failed"
+		}
 		c.info = newN
 		// nodeInfo changed
 		if newU != nil {
@@ -145,7 +161,11 @@ func (c *Controller) applyUpdate(newN *panel.NodeInfo, newU []panel.UserInfo, ne
 		c.traffic = make(map[string]int64)
 
 		// Remove old node
-		log.WithField("tag", c.tag).Info("Node changed, reload")
+		log.WithFields(log.Fields{
+			"tag":    c.tag,
+			"reason": reason,
+			"hash":   shortHash(oldHash) + " -> " + shortHash(newN.InboundHash),
+		}).Info("Node changed, recreating its inbound (live connections are dropped)")
 		if err = c.server.DelNode(c.tag); err != nil && !c.rebuild {
 			c.failReload("Delete node failed", err)
 			return nil
@@ -197,19 +217,7 @@ func (c *Controller) applyUpdate(newN *panel.NodeInfo, newU []panel.UserInfo, ne
 			return nil
 		}
 		c.rebuild = false
-		// Check interval
-		if c.nodeInfoMonitorPeriodic.Interval != newN.PullInterval &&
-			newN.PullInterval != 0 {
-			c.nodeInfoMonitorPeriodic.Interval = newN.PullInterval
-			c.nodeInfoMonitorPeriodic.Close()
-			_ = c.nodeInfoMonitorPeriodic.Start(false)
-		}
-		if c.userReportPeriodic.Interval != newN.PushInterval &&
-			newN.PushInterval != 0 {
-			c.userReportPeriodic.Interval = newN.PushInterval
-			c.userReportPeriodic.Close()
-			_ = c.userReportPeriodic.Start(false)
-		}
+		c.applyIntervals(newN)
 		log.WithField("tag", c.tag).Infof("Added %d new users", len(c.userList))
 		// exit
 		return nil
@@ -288,6 +296,13 @@ func (c *Controller) applyRoutingOnly(newN *panel.NodeInfo) bool {
 	if c.info == nil || newN.InboundHash == "" || c.info.InboundHash != newN.InboundHash {
 		return false
 	}
+	if c.info.RoutingHash == newN.RoutingHash {
+		// same inbound, same routing: only the shape or the intervals differ
+		c.info = newN
+		c.applyIntervals(newN)
+		log.WithField("tag", c.tag).Debug("Node config unchanged apart from intervals")
+		return true
+	}
 	ru, ok := c.server.(vCore.RoutingUpdater)
 	if !ok {
 		return false
@@ -310,6 +325,28 @@ func (c *Controller) applyRoutingOnly(newN *panel.NodeInfo) bool {
 	c.info = newN
 	log.WithField("tag", c.tag).Info("Node routing changed, applied without inbound reload")
 	return true
+}
+
+// applyIntervals restarts the poll and report tasks when the panel changed
+// their intervals (0 means the config did not carry one).
+func (c *Controller) applyIntervals(n *panel.NodeInfo) {
+	if c.nodeInfoMonitorPeriodic != nil && n.PullInterval != 0 && c.nodeInfoMonitorPeriodic.Interval != n.PullInterval {
+		c.nodeInfoMonitorPeriodic.Interval = n.PullInterval
+		c.nodeInfoMonitorPeriodic.Close()
+		_ = c.nodeInfoMonitorPeriodic.Start(false)
+	}
+	if c.userReportPeriodic != nil && n.PushInterval != 0 && c.userReportPeriodic.Interval != n.PushInterval {
+		c.userReportPeriodic.Interval = n.PushInterval
+		c.userReportPeriodic.Close()
+		_ = c.userReportPeriodic.Start(false)
+	}
+}
+
+func shortHash(h string) string {
+	if len(h) > 8 {
+		return h[:8]
+	}
+	return h
 }
 
 func (c *Controller) SpeedChecker() error {

@@ -116,6 +116,11 @@ type Hysteria2Config struct {
 	UDPFragment *bool  `json:"UDPFragment,omitempty"` // enable or disable UDP packet fragmentation
 	UDPTimeout  string `json:"UDPTimeout,omitempty"`  // custom UDP session timeout, e.g. "60s"
 	BrutalDebug bool   `json:"BrutalDebug,omitempty"` // enable sing-box Brutal CC internal debug logs
+	// ReuseAddr sets SO_REUSEADDR on the UDP socket. Off by default: FNode is
+	// one process, and with it an old socket that lingers after a rebuild can
+	// keep receiving datagrams for the port (clients then time out) instead of
+	// the new bind failing loudly.
+	ReuseAddr bool `json:"ReuseAddr,omitempty"`
 }
 
 type SingNtpConfig struct {

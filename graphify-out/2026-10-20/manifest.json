@@ -9522,9 +9522,9 @@
     "semantic_hash": ""
   },
   "FNode-script/FNode.sh": {
-    "mtime": 1792393891.4841366,
-    "seen": 1792397801.6573398,
-    "ast_hash": "572acff8bc565129ec2d309a3e05a464",
+    "mtime": 1792460439.1597297,
+    "seen": 1792461050.0747242,
+    "ast_hash": "c4d1898041754cd8ce3575aa4fb9e9df",
     "semantic_hash": ""
   },
   "FNode-script/initconfig.sh": {
@@ -9534,9 +9534,9 @@
     "semantic_hash": ""
   },
   "FNode-script/install.sh": {
-    "mtime": 1792457741.022955,
-    "seen": 1792458284.8424504,
-    "ast_hash": "f6c847c95f9b8256c3462d17dca1c139",
+    "mtime": 1792460223.8891585,
+    "seen": 1792461050.074753,
+    "ast_hash": "ca93d0081dc0e0c2d0b8a3e66176d29e",
     "semantic_hash": ""
   },
   "SupportProject/V2bX-script/V2bX.sh": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1792457831.1649659,
-    "seen": 1792458284.8500218,
-    "ast_hash": "0300e72ff17c5319ad9e31f6980f58ee",
+    "mtime": 1792460487.416712,
+    "seen": 1792461050.0840147,
+    "ast_hash": "545964900dfa7d128c01ac510963c1b1",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10707,6 +10707,12 @@
     "mtime": 1792456767.006369,
     "seen": 1792457605.2624793,
     "ast_hash": "48054b32e43c4fa304e97ab7b896c9a4",
+    "semantic_hash": ""
+  },
+  "conf/install_update_test.go": {
+    "mtime": 1792460454.8360815,
+    "seen": 1792461050.0818887,
+    "ast_hash": "fdd1cc516da3a04952067771352be332",
     "semantic_hash": ""
   }
 }

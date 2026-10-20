@@ -60,6 +60,12 @@ type XhttpNetworkConfig struct {
 }
 
 func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (option.Inbound, error) {
+	return b.buildInboundOptions(tag, info, c, false)
+}
+
+// buildInboundOptions is getInboundOptions; usersLocked says the caller
+// already holds b.users.mapLock (taking it again would deadlock).
+func (b *Sing) buildInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options, usersLocked bool) (option.Inbound, error) {
 	addr, err := netip.ParseAddr(c.ListenIP)
 	if err != nil {
 		return option.Inbound{}, fmt.Errorf("the listen ip not vail")
@@ -71,6 +77,7 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 	if c.SingOptions != nil {
 		listen.TCPFastOpen = c.SingOptions.TCPFastOpen
 	}
+	applyTCPKeepAlive(&listen, c)
 	var multiplex *option.InboundMultiplexOptions
 	if c.SingOptions != nil && c.SingOptions.Multiplex != nil {
 		multiplexOption := option.InboundMultiplexOptions{
@@ -418,7 +425,7 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 			Transport: &t,
 			Multiplex: multiplex,
 		}
-		if c.SingOptions.FallBackConfigs != nil {
+		if c.SingOptions != nil && c.SingOptions.FallBackConfigs != nil {
 			// fallback handling
 			fallback := c.SingOptions.FallBackConfigs.FallBack
 			fallbackPort, err := strconv.Atoi(fallback.ServerPort)
@@ -456,7 +463,9 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 			},
 		}
 		if b != nil {
-			b.users.mapLock.RLock()
+			if !usersLocked {
+				b.users.mapLock.RLock()
+			}
 			if uList, ok := b.inboundUsers[tag]; ok && len(uList) > 0 {
 				anytlsOpt.Users = make([]option.AnyTLSUser, len(uList))
 				for i, u := range uList {
@@ -466,7 +475,9 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 					}
 				}
 			}
-			b.users.mapLock.RUnlock()
+			if !usersLocked {
+				b.users.mapLock.RUnlock()
+			}
 		}
 		in.Options = anytlsOpt
 	case "hysteria":
@@ -532,10 +543,7 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 		}
 
 		// Transport & Performance enhancements (Option A):
-		// 1. Enable UDP socket reuse for rapid restart and multi-process socket load distribution
-		listen.ReuseAddr = true
-
-		// 2. Configure UDP packet fragmentation based on local config with panel override
+		// 1. Configure UDP packet fragmentation based on local config with panel override
 		var udpFragment *bool
 		var hy2Cfg *conf.Hysteria2Config
 		if c.Hysteria2Config != nil {
@@ -543,6 +551,8 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 		} else if c.SingOptions != nil && c.SingOptions.Hysteria2Config != nil {
 			hy2Cfg = c.SingOptions.Hysteria2Config
 		}
+		// 2. UDP socket reuse is opt-in (Hysteria2Config.ReuseAddr)
+		listen.ReuseAddr = hy2Cfg != nil && hy2Cfg.ReuseAddr
 
 		if hy2Cfg != nil && hy2Cfg.UDPFragment != nil {
 			udpFragment = hy2Cfg.UDPFragment
@@ -609,6 +619,7 @@ func (b *Sing) AddNode(tag string, info *panel.NodeInfo, config *conf.Options) e
 	if err != nil {
 		return fmt.Errorf("add inbound error: %s", err)
 	}
+	logrus.WithFields(logrus.Fields{"tag": tag, "type": c.Type, "port": info.Common.ServerPort}).Info("Inbound created")
 	b.users.mapLock.Lock()
 	b.inboundOptions[tag] = c
 	b.users.mapLock.Unlock()
