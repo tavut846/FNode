@@ -121,6 +121,15 @@ type Hysteria2Config struct {
 	// keep receiving datagrams for the port (clients then time out) instead of
 	// the new bind failing loudly.
 	ReuseAddr bool `json:"ReuseAddr,omitempty"`
+	// IgnoreClientBandwidth makes the server use BBR for every client instead
+	// of Brutal at the rate the client declares (DownMbps is then forced to 0,
+	// otherwise sing-quic rejects clients that declare no rate). BBR backs off
+	// on loss, so it is the safe choice behind a provider that flags UDP floods.
+	IgnoreClientBandwidth bool `json:"IgnoreClientBandwidth,omitempty"`
+	// MaxBrutalMbps caps the server's Brutal send rate in Mbps. Unset = 100,
+	// used only when the panel's up_mbps is 0; 0 or -1 = no cap; a positive
+	// value also lowers a larger panel up_mbps.
+	MaxBrutalMbps *int `json:"MaxBrutalMbps,omitempty"`
 }
 
 type SingNtpConfig struct {

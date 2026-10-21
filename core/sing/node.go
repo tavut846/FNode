@@ -577,11 +577,16 @@ func (b *Sing) buildInboundOptions(tag string, info *panel.NodeInfo, c *conf.Opt
 			listen.UDPFragment = udpFragment
 		}
 
+		bw := resolveHysteria2Bandwidth(info.Hysteria2, hy2Cfg)
+		if bw.Reason != "" {
+			logrus.WithFields(logrus.Fields{"tag": tag, "up_mbps": bw.UpMbps, "down_mbps": bw.DownMbps, "ignore_client_bandwidth": bw.Ignore}).
+				Info("Hysteria2 Brutal rate limited: " + bw.Reason)
+		}
 		in.Options = &option.Hysteria2InboundOptions{
 			ListenOptions:         listen,
-			UpMbps:                int(info.Hysteria2.UpMbps),
-			DownMbps:              int(info.Hysteria2.DownMbps),
-			IgnoreClientBandwidth: info.Hysteria2.Ignore_Client_Bandwidth,
+			UpMbps:                bw.UpMbps,
+			DownMbps:              bw.DownMbps,
+			IgnoreClientBandwidth: bw.Ignore,
 			Obfs:                  obfs,
 			Masquerade:            masquerade,
 			BrutalDebug:           brutalDebug,
