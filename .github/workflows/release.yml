@@ -118,15 +118,15 @@ jobs:
             IS_LATEST="true"
             RELEASE_TITLE="FNode $TAG_NAME"
           elif [[ "$REF_NAME" == "dev" || "$REF_NAME" == "dev_new" || "$REF_NAME" == dev/* ]]; then
-            # Dev branch pre-release
-            TAG_NAME="${UPGRADED_VERSION}-pre-${COMMITS_SINCE}"
+            # Dev branch rolling pre-release (e.g. 0.0.22-pre)
+            TAG_NAME="${UPGRADED_VERSION}-pre"
             VERSION="$TAG_NAME"
             IS_PRERELEASE="true"
             IS_LATEST="false"
             RELEASE_TITLE="FNode $TAG_NAME (Pre-release)"
           else
             # Default / PR / other branches
-            TAG_NAME="${UPGRADED_VERSION}-pre-${COMMITS_SINCE}"
+            TAG_NAME="${UPGRADED_VERSION}-pre"
             VERSION="$TAG_NAME"
             IS_PRERELEASE="true"
             IS_LATEST="false"
@@ -265,19 +265,12 @@ jobs:
         run: |
           cd ./build_assets || exit 1
           mv FNode FNode.exe
-      - name: Prepare to release
+      - name: Prepare release assets
         run: |
           cp ${GITHUB_WORKSPACE}/README.md ./build_assets/README.md
           cp ${GITHUB_WORKSPACE}/LICENSE ./build_assets/LICENSE
           cp ${GITHUB_WORKSPACE}/example/*.json ./build_assets/
-          LIST=('geoip' 'geosite')
-          for i in "${LIST[@]}"
-          do
-            DOWNLOAD_URL="https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/${i}.dat"
-            FILE_NAME="${i}.dat"
-            echo -e "Downloading ${DOWNLOAD_URL}..."
-            curl -L "${DOWNLOAD_URL}" -o ./build_assets/${FILE_NAME}
-          done
+          # geoip.dat/geosite.dat are no longer shipped: sing-box 1.12+ does not read them (28 MB saved per download)
       - name: Create ZIP archive
         shell: bash
         run: |
@@ -302,7 +295,7 @@ jobs:
             ./FNode-${{ steps.get_filename.outputs.ASSET_NAME }}.zip*
 
   publish:
-    name: Publish Release
+    name: ${{ needs.version.outputs.is_prerelease == 'true' && 'Publish Pre-release' || 'Publish Release' }}
     needs: [version, build]
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
@@ -320,15 +313,76 @@ jobs:
       - name: Display downloaded files
         run: ls -lh ./artifacts
 
-      - name: Publish GitHub Release
+      - name: Update git tag for pre-release
+        if: needs.version.outputs.is_prerelease == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          TAG="${{ needs.version.outputs.tag_name }}"
+          echo "Updating git tag $TAG to commit ${{ github.sha }}"
+          git tag -f "$TAG" "${{ github.sha }}"
+          git push -f origin "$TAG" || true
+
+      - name: Clean up stale draft releases
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Scanning and cleaning up stale draft releases..."
+          DRAFT_IDS=$(gh api --paginate "/repos/${{ github.repository }}/releases" --jq '.[] | select(.draft == true) | .id' 2>/dev/null || true)
+          for DRAFT_ID in $DRAFT_IDS; do
+            echo "Deleting stale draft release ID: $DRAFT_ID..."
+            gh api -X DELETE "/repos/${{ github.repository }}/releases/$DRAFT_ID" || true
+          done
+
+      - name: Publish GitHub Pre-release
+        if: needs.version.outputs.is_prerelease == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.version.outputs.tag_name }}
           target_commitish: ${{ github.sha }}
           name: ${{ needs.version.outputs.release_title }}
-          prerelease: ${{ needs.version.outputs.is_prerelease == 'true' }}
-          make_latest: ${{ needs.version.outputs.is_latest == 'true' }}
+          prerelease: true
+          make_latest: false
           files: ./artifacts/*
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish GitHub Official Release
+        if: needs.version.outputs.is_prerelease != 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.tag_name }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ needs.version.outputs.release_title }}
+          prerelease: false
+          make_latest: true
+          files: ./artifacts/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean up obsolete pre-releases
+        if: needs.version.outputs.is_prerelease == 'false'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_TAG="${{ needs.version.outputs.tag_name }}"
+          CLEAN_VER="${RELEASE_TAG#v}"
+          echo "Official release published: $RELEASE_TAG ($CLEAN_VER). Checking for pre-releases to clean up..."
+
+          ALL_PRERELEASES=$(gh release list --limit 100 --json tagName,isPrerelease --jq '.[] | select(.isPrerelease == true) | .tagName' 2>/dev/null || true)
+          for PRE in $ALL_PRERELEASES; do
+            PRE_CLEAN="${PRE#v}"
+            PRE_BASE="${PRE_CLEAN%%-*}"
+            # Compare versions: delete if pre-release base version <= official version
+            LOWEST=$(printf "%s\n%s\n" "$PRE_BASE" "$CLEAN_VER" | sort -V | head -n 1)
+            if [ "$LOWEST" = "$PRE_BASE" ]; then
+              echo "Deleting obsolete pre-release: $PRE (base $PRE_BASE <= official $CLEAN_VER)..."
+              gh release delete "$PRE" --cleanup-tag --yes || true
+              git push origin :refs/tags/"$PRE" 2>/dev/null || true
+            fi
+          done

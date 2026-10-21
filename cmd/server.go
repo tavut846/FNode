@@ -4,9 +4,11 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
+	"github.com/tavut846/FNode/common/logship"
 	"github.com/tavut846/FNode/conf"
 	vCore "github.com/tavut846/FNode/core"
 	"github.com/tavut846/FNode/limiter"
@@ -45,31 +47,36 @@ func serverHandle(_ *cobra.Command, _ []string) {
 		log.WithField("err", err).Error("Load config file failed")
 		return
 	}
-	switch c.LogConfig.Level {
-	case "debug":
+	// info is the default: start-up, panel connection and reload messages
+	// are visible without the per-request noise of debug
+	switch strings.ToLower(strings.TrimSpace(c.LogConfig.Level)) {
+	case "debug", "trace":
 		log.SetLevel(log.DebugLevel)
-	case "info":
-		log.SetLevel(log.InfoLevel)
-	case "warn":
+	case "warn", "warning":
 		log.SetLevel(log.WarnLevel)
 	case "error":
 		log.SetLevel(log.ErrorLevel)
 	default:
-		log.SetLevel(log.DebugLevel)
+		log.SetLevel(log.InfoLevel)
 	}
 	if c.LogConfig.Output != "" {
 		f, err := os.OpenFile(c.LogConfig.Output, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 		if err != nil {
 			log.WithField("err", err).Error("Open log file failed, using stdout instead")
+		} else {
+			log.SetOutput(f)
 		}
-		log.SetOutput(f)
 	}
+	// Ship FNode and sing-box logs to the panel when its CustomNode plugin asks
+	// for them (the console keeps the configured level)
+	logship.InstallLogrus(logship.Default)
 	// Start automatic log cleaner every 7 days
 	stopCleaner := startAutoLogCleaner(7*24*time.Hour, c.LogConfig.Output)
 	defer stopCleaner()
 
 	limiter.Init()
 	log.Info("Start FNode...")
+	c.SetGeneratedDirs(config)
 	vc, err := vCore.NewCore(c.CoresConfig)
 	if err != nil {
 		log.WithField("err", err).Error("new core failed")
@@ -97,6 +104,7 @@ func serverHandle(_ *cobra.Command, _ []string) {
 				log.WithField("err", err).Error("Restart node failed")
 				return
 			}
+			c.SetGeneratedDirs(config)
 			vc, err = vCore.NewCore(c.CoresConfig)
 			if err != nil {
 				log.WithField("err", err).Error("New core failed")

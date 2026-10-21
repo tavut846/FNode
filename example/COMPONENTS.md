@@ -4,13 +4,23 @@ This document details all supported components, protocols, features, and configu
 
 ---
 
-## 1. Core Engines (`Cores[].Type`)
+## 1. Core Engines (`Cores[].Type`) & Ecosystem
 
+### 1.1 Server Core Engine
 FNode exclusively integrates and embeds the modern **sing-box** core engine for superior memory efficiency, high throughput, and unified protocol routing.
 
 | Core Identifier | Engine | Notes |
 | :--- | :--- | :--- |
-| `"sing"` | **sing-box** (v1.11+ / v1.14+) | Complete in-memory lifecycle control; supports dynamic inbounds, outbounds, and router rules without process restarts. |
+| `"sing"` | **sing-box** (v1.11+ / v1.14+) | Complete in-memory Go lifecycle control; dynamically injects inbounds, outbounds, rate limiters, and router rules without process restarts. |
+
+### 1.2 Client Core Engines & Client Applications
+In the proxy ecosystem, client applications connect to FNode via two primary underlying client core engines:
+
+| Client Core | Repository / Project | Primary Client Applications | Configuration Format | Supported Features / Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **Mihomo (Clash.Meta)** | [`MetaCubeX/mihomo`](https://github.com/MetaCubeX/mihomo.git)<br>*(Local: `SupportProject/mihomo-Meta`)* | **Clash Verge** / **Clash Verge Rev**, **Clash Mi**, **Clash Nyanpasu**, **Flclash**, **Mihomo Party** | Clash Meta YAML (`proxies: ...`) | Dominant core for Clash-family apps. Each client application wraps Mihomo with self-modified GUI interfaces, rule processors, or embedded scripts. Supports Shadowsocks 2022, VLESS Reality, TUIC v5, and Hysteria 2. |
+| **sing-box** | [`sagernet/sing-box`](https://github.com/sagernet/sing-box)<br>*(Local: `SupportProject/sing-box`)* | **sing-box** (Official iOS/Android/Desktop), **Karing**, **Hiddify**, **NekoBox** | sing-box JSON (`outbounds: ...`) | Besides powering FNode on the server side, sing-box is a universal, first-class client core. Enables modern protocol stacks, rule-sets (`.srs`), Tun mode, and advanced obfuscation natively across platforms. |
+
 
 ---
 
@@ -27,7 +37,7 @@ FNode synchronizes configuration and users from the panel for the following node
 | `"tuic"` | TUIC v5 | QUIC / HTTP/3 transport, Congestion Control (`bbr`, `cubic`), Zero-RTT handshakes (`ZeroRTTHandshake`). |
 | `"anytls"` | AnyTLS | Direct TLS tunneling with customizable padding scheme (`PaddingScheme`) and dynamic per-user authentication. |
 | `"hysteria"` | Hysteria 1 | QUIC / UDP-based protocol, bandwidth rate control (`UpMbps`, `DownMbps`), port hopping, obfuscation (`Obfs`). |
-| `"hysteria2"` | Hysteria 2 | QUIC / HTTP/3 transport, Salamander obfuscation (`salamander`), masquerade (HTTP/HTTPS reverse proxy or static file directory), client bandwidth overrides. |
+| `"hysteria2"` | Hysteria 2 | QUIC / HTTP/3 transport, Salamander obfuscation (`salamander`), masquerade (reverse proxy, static directory, or HTML string fallback), client bandwidth overrides, socket recycling (`ReuseAddr`), UDP fragmentation (`UDPFragment`), custom UDP timeout (`UDPTimeout`), Brutal debug telemetry (`BrutalDebug`), and multi-port port hopping (`iptables` REDIRECT). |
 
 ### 2.1 Supported Custom Outbound Protocols (`custom_outbound.json` / `sing_origin.json`)
 
@@ -97,6 +107,41 @@ Configured under `Cores[].SingConfig` and `Nodes[].Options`:
     - `"route"`: Route through a specific `Target` outbound tag.
 - **Custom Outbounds (`CustomOutbounds`)**: Pass raw sing-box outbound definitions (e.g. Warp, Tor, secondary proxies).
 - **Base Template Merging (`OriginalPath`)**: Merge custom JSON configurations (e.g., [`sing_origin.json`](./sing_origin.json)) directly into the active sing-box instance.
+
+### 5.1 Hysteria 2 Performance Tuning & Multi-Port Hopping (`Nodes[].Hysteria2Config`)
+
+To maximize UDP throughput, overcome ISP UDP rate throttling, and ensure rapid reconnection without port collision:
+
+```json
+{
+  "Core": "sing",
+  "NodeType": "hysteria2",
+  "NodeID": 35,
+  "ListenIP": "0.0.0.0",
+  "Hysteria2Config": {
+    "UDPFragment": true,
+    "UDPTimeout": "60s",
+    "BrutalDebug": false
+  },
+  "CertConfig": {
+    "CertMode": "file",
+    "CertDomain": "hy2.example.com"
+  }
+}
+```
+
+- **Socket Recycling (`listen.reuse_addr`)**: Enabled automatically by default for all Hysteria 2 inbounds. Solves `bind: address already in use` when reloads or restarts occur during active UDP sessions.
+- **`UDPFragment`** (`*bool`): Controls whether sing-box enables UDP packet fragmentation (`listen.udp_fragment`). Defaults to `true` on Hysteria 2.
+- **`UDPTimeout`** (`string`): Sets custom UDP session NAT expiration timeout (e.g., `"60s"`, `"120s"`, `"5m"`).
+- **`BrutalDebug`** (`bool`): Enables verbose TCP/QUIC Brutal congestion control logging and diagnostic telemetry.
+- **Masquerade Flexibility**: Supports reverse proxy (`ProxyOptions`), local file serving (`FileOptions`), and custom HTML string responses (`StringOptions`).
+- **Multi-Port Port Hopping (`FNode.sh` Option 19)**:
+  - FNode/sing-box listens on the single primary backend port (`server_port`, e.g. `443`).
+  - Xboard issues client subscription configs with port hopping ranges (e.g. `10000-20000`).
+  - The host firewall redirects incoming traffic via `iptables` / `ip6tables`:
+    ```bash
+    iptables -t nat -A PREROUTING -p udp --dport 10000:20000 -j REDIRECT --to-ports 443
+    ```
 
 ---
 

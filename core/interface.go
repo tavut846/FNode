@@ -22,3 +22,9 @@ type Core interface {
 	Protocols() []string
 	Type() string
 }
+
+// RoutingUpdater is implemented by cores that can apply a routing-only config
+// change (panel routes and custom outbounds) without recreating the inbound.
+type RoutingUpdater interface {
+	UpdateNodeRouting(tag string, info *panel.NodeInfo) error
+}

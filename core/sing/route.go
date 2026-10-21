@@ -9,6 +9,7 @@ import (
 	"github.com/tavut846/FNode/conf"
 	C "github.com/sagernet/sing-box/constant"
 	"github.com/sagernet/sing-box/option"
+	log "github.com/sirupsen/logrus"
 )
 
 var PrivateIPv4CIDR = []string{
@@ -77,14 +78,35 @@ func BuildDefaultOutbounds(connectTimeout time.Duration, domainStrategy option.D
 // CompileRouteRules compiles panel routes, custom route rules, anti-SSRF protections,
 // and optional IPv6 blocking into sing-box native rule map representations.
 func CompileRouteRules(disableIPv6 bool, panelRoutes []panel.Route, customRules []conf.CustomRouteRule) []map[string]any {
+	return compileAllRouteRules(disableIPv6, panelRoutes, customRules, nil, nil)
+}
+
+// compileAllRouteRules is CompileRouteRules plus the panel's structured
+// custom_route_rules and raw sing-box custom_routes. The order follows
+// xboard-node: local custom rules, panel custom rules, panel raw routes,
+// anti-SSRF, IPv6 block, panel routes. sing_origin.json rules come after.
+func compileAllRouteRules(disableIPv6 bool, panelRoutes []panel.Route, customRules []conf.CustomRouteRule,
+	panelCustomRules []conf.CustomRouteRule, panelRawRoutes []map[string]any) []map[string]any {
 	var rules []map[string]any
 
-	// 1. Structured custom rules (highest priority)
+	// 1. Structured custom rules (highest priority): local first, then panel
 	for _, cr := range customRules {
 		if cr.Disabled {
 			continue
 		}
 		rules = append(rules, compileCustomRouteRule(cr)...)
+	}
+	for _, cr := range panelCustomRules {
+		if cr.Disabled {
+			continue
+		}
+		rules = append(rules, compileCustomRouteRule(cr)...)
+	}
+	// Raw sing-box rules from the panel's custom_routes
+	for _, r := range panelRawRoutes {
+		if len(r) > 0 {
+			rules = append(rules, r)
+		}
 	}
 
 	// 2. Anti-SSRF Protection: Block private IPv4 and IPv6 addresses
@@ -226,8 +248,8 @@ func compilePanelRoute(pr panel.Route) []map[string]any {
 	var domains []string
 	var domainSuffixes []string
 	var domainRegex []string
-	var geosites []string
-	var geoips []string
+	var unsupported []string
+	private := false
 	var ipCidrs []string
 	var protocols []string
 
@@ -241,10 +263,12 @@ func compilePanelRoute(pr panel.Route) []map[string]any {
 			protocols = append(protocols, strings.TrimPrefix(item, "protocol:"))
 		case strings.HasPrefix(item, "regexp:"):
 			domainRegex = append(domainRegex, strings.TrimPrefix(item, "regexp:"))
-		case strings.HasPrefix(item, "geosite:"):
-			geosites = append(geosites, strings.TrimPrefix(item, "geosite:"))
-		case strings.HasPrefix(item, "geoip:"):
-			geoips = append(geoips, strings.TrimPrefix(item, "geoip:"))
+		case item == "geoip:private":
+			private = true
+		case strings.HasPrefix(item, "geosite:"), strings.HasPrefix(item, "geoip:"):
+			// sing-box 1.12+ removed the geosite/geoip databases; such a rule
+			// would make the router reject the whole rule list
+			unsupported = append(unsupported, item)
 		case strings.Contains(item, "/"):
 			ipCidrs = append(ipCidrs, item)
 		case strings.HasPrefix(item, "*."):
@@ -274,17 +298,15 @@ func compilePanelRoute(pr panel.Route) []map[string]any {
 			"outbound":     outbound,
 		})
 	}
-	if len(geosites) > 0 {
+	if private {
 		compiled = append(compiled, map[string]any{
-			"geosite":  geosites,
-			"outbound": outbound,
+			"ip_is_private": true,
+			"outbound":      outbound,
 		})
 	}
-	if len(geoips) > 0 {
-		compiled = append(compiled, map[string]any{
-			"geoip":    geoips,
-			"outbound": outbound,
-		})
+	if len(unsupported) > 0 {
+		log.WithFields(log.Fields{"route_id": pr.Id, "items": unsupported}).
+			Warn("Panel route uses geosite/geoip, which sing-box no longer supports; those items are skipped (use domain_suffix, ip_cidr or geoip:private)")
 	}
 	if len(ipCidrs) > 0 {
 		compiled = append(compiled, map[string]any{
@@ -335,4 +357,58 @@ func ConvertStrategy(s string) option.DomainStrategy {
 	default:
 		return option.DomainStrategy(C.DomainStrategyPreferIPv4)
 	}
+}
+
+// sanitizeRawRule drops geosite/geoip fields from a raw panel rule (sing-box
+// rejects them), translating geoip:private to ip_is_private. It returns nil
+// when nothing matchable is left.
+func sanitizeRawRule(rule map[string]any) map[string]any {
+	removed := false
+	out := make(map[string]any, len(rule))
+	for k, v := range rule {
+		switch k {
+		case "geosite", "source_geoip":
+			removed = true
+			continue
+		case "geoip":
+			removed = true
+			if routeMatchesAny(v, "private") {
+				out["ip_is_private"] = true
+			}
+			continue
+		}
+		out[k] = v
+	}
+	if !removed {
+		return rule
+	}
+	log.WithField("rule", rule).Warn("Panel custom route uses geosite/geoip, which sing-box no longer supports; those fields are dropped")
+	for k := range out {
+		switch k {
+		case "outbound", "action", "inbound", "invert":
+		default:
+			return out
+		}
+	}
+	return nil
+}
+
+func routeMatchesAny(v any, want string) bool {
+	switch t := v.(type) {
+	case string:
+		return t == want
+	case []any:
+		for _, it := range t {
+			if s, ok := it.(string); ok && s == want {
+				return true
+			}
+		}
+	case []string:
+		for _, s := range t {
+			if s == want {
+				return true
+			}
+		}
+	}
+	return false
 }

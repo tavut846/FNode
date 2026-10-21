@@ -16,6 +16,7 @@ import (
 	"github.com/tavut846/FNode/common/format"
 	"github.com/tavut846/FNode/conf"
 	"github.com/sagernet/sing-box/option"
+	logrus "github.com/sirupsen/logrus"
 	F "github.com/sagernet/sing/common/format"
 	"github.com/sagernet/sing/common/json/badoption"
 )
@@ -59,17 +60,26 @@ type XhttpNetworkConfig struct {
 }
 
 func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options) (option.Inbound, error) {
+	return b.buildInboundOptions(tag, info, c, false)
+}
+
+// buildInboundOptions is getInboundOptions; usersLocked says the caller
+// already holds b.users.mapLock (taking it again would deadlock).
+func (b *Sing) buildInboundOptions(tag string, info *panel.NodeInfo, c *conf.Options, usersLocked bool) (option.Inbound, error) {
 	addr, err := netip.ParseAddr(c.ListenIP)
 	if err != nil {
 		return option.Inbound{}, fmt.Errorf("the listen ip not vail")
 	}
 	listen := option.ListenOptions{
-		Listen:      (*badoption.Addr)(&addr),
-		ListenPort:  uint16(info.Common.ServerPort),
-		TCPFastOpen: c.SingOptions.TCPFastOpen,
+		Listen:     (*badoption.Addr)(&addr),
+		ListenPort: uint16(info.Common.ServerPort),
 	}
+	if c.SingOptions != nil {
+		listen.TCPFastOpen = c.SingOptions.TCPFastOpen
+	}
+	applyTCPKeepAlive(&listen, c)
 	var multiplex *option.InboundMultiplexOptions
-	if c.SingOptions.Multiplex != nil {
+	if c.SingOptions != nil && c.SingOptions.Multiplex != nil {
 		multiplexOption := option.InboundMultiplexOptions{
 			Enabled: c.SingOptions.Multiplex.Enabled,
 			Padding: c.SingOptions.Multiplex.Padding,
@@ -105,8 +115,16 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 		if tlsSettings == nil {
 			return option.Inbound{}, fmt.Errorf("reality tls settings missing for tag %s", tag)
 		}
-		if tlsSettings.PrivateKey == "" {
+		if strings.TrimSpace(tlsSettings.PrivateKey) == "" {
 			return option.Inbound{}, fmt.Errorf("reality tls requires private_key for tag %s", tag)
+		}
+		privateKey, err := NormalizeRealityPrivateKey(tlsSettings.PrivateKey)
+		if err != nil {
+			return option.Inbound{}, fmt.Errorf("reality private_key for tag %s: %w", tag, err)
+		}
+		shortIDs, err := ValidateRealityShortIDs(tlsSettings.GetShortIds())
+		if err != nil {
+			return option.Inbound{}, fmt.Errorf("reality short_id for tag %s: %w", tag, err)
 		}
 
 		serverName := strings.TrimSpace(tlsSettings.ServerName)
@@ -154,8 +172,8 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 
 		tls.Reality = &option.InboundRealityOptions{
 			Enabled:    true,
-			ShortID:    tlsSettings.GetShortIds(),
-			PrivateKey: tlsSettings.PrivateKey,
+			ShortID:    shortIDs,
+			PrivateKey: privateKey,
 			Handshake: option.InboundRealityHandshakeOptions{
 				ServerOptions: option.ServerOptions{
 					Server:     destHost,
@@ -407,7 +425,7 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 			Transport: &t,
 			Multiplex: multiplex,
 		}
-		if c.SingOptions.FallBackConfigs != nil {
+		if c.SingOptions != nil && c.SingOptions.FallBackConfigs != nil {
 			// fallback handling
 			fallback := c.SingOptions.FallBackConfigs.FallBack
 			fallbackPort, err := strconv.Atoi(fallback.ServerPort)
@@ -445,7 +463,9 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 			},
 		}
 		if b != nil {
-			b.users.mapLock.RLock()
+			if !usersLocked {
+				b.users.mapLock.RLock()
+			}
 			if uList, ok := b.inboundUsers[tag]; ok && len(uList) > 0 {
 				anytlsOpt.Users = make([]option.AnyTLSUser, len(uList))
 				for i, u := range uList {
@@ -455,7 +475,9 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 					}
 				}
 			}
-			b.users.mapLock.RUnlock()
+			if !usersLocked {
+				b.users.mapLock.RUnlock()
+			}
 		}
 		in.Options = anytlsOpt
 	case "hysteria":
@@ -509,16 +531,65 @@ func (b *Sing) getInboundOptions(tag string, info *panel.NodeInfo, c *conf.Optio
 						RewriteHost: true,
 					},
 				}
+			} else {
+				masquerade = &option.Hysteria2Masquerade{
+					Type: "string",
+					StringOptions: option.Hysteria2MasqueradeString{
+						StatusCode: 200,
+						Content:    target,
+					},
+				}
 			}
 		}
 
+		// Transport & Performance enhancements (Option A):
+		// 1. Configure UDP packet fragmentation based on local config with panel override
+		var udpFragment *bool
+		var hy2Cfg *conf.Hysteria2Config
+		if c.Hysteria2Config != nil {
+			hy2Cfg = c.Hysteria2Config
+		} else if c.SingOptions != nil && c.SingOptions.Hysteria2Config != nil {
+			hy2Cfg = c.SingOptions.Hysteria2Config
+		}
+		// 2. UDP socket reuse is opt-in (Hysteria2Config.ReuseAddr)
+		listen.ReuseAddr = hy2Cfg != nil && hy2Cfg.ReuseAddr
+
+		if hy2Cfg != nil && hy2Cfg.UDPFragment != nil {
+			udpFragment = hy2Cfg.UDPFragment
+		}
+		if info.Hysteria2.UDPFragment {
+			frag := true
+			udpFragment = &frag
+		}
+
+		brutalDebug := info.Hysteria2.BrutalDebug
+		if hy2Cfg != nil {
+			if !brutalDebug {
+				brutalDebug = hy2Cfg.BrutalDebug
+			}
+			if hy2Cfg.UDPTimeout != "" {
+				if d, err := time.ParseDuration(hy2Cfg.UDPTimeout); err == nil {
+					listen.UDPTimeout = option.UDPTimeoutCompat(badoption.Duration(d))
+				}
+			}
+		}
+		if udpFragment != nil {
+			listen.UDPFragment = udpFragment
+		}
+
+		bw := resolveHysteria2Bandwidth(info.Hysteria2, hy2Cfg)
+		if bw.Reason != "" {
+			logrus.WithFields(logrus.Fields{"tag": tag, "up_mbps": bw.UpMbps, "down_mbps": bw.DownMbps, "ignore_client_bandwidth": bw.Ignore}).
+				Info("Hysteria2 Brutal rate limited: " + bw.Reason)
+		}
 		in.Options = &option.Hysteria2InboundOptions{
 			ListenOptions:         listen,
-			UpMbps:                int(info.Hysteria2.UpMbps),
-			DownMbps:              int(info.Hysteria2.DownMbps),
-			IgnoreClientBandwidth: info.Hysteria2.Ignore_Client_Bandwidth,
+			UpMbps:                bw.UpMbps,
+			DownMbps:              bw.DownMbps,
+			IgnoreClientBandwidth: bw.Ignore,
 			Obfs:                  obfs,
 			Masquerade:            masquerade,
+			BrutalDebug:           brutalDebug,
 			InboundTLSOptionsContainer: option.InboundTLSOptionsContainer{
 				TLS: &tls,
 			},
@@ -553,7 +624,13 @@ func (b *Sing) AddNode(tag string, info *panel.NodeInfo, config *conf.Options) e
 	if err != nil {
 		return fmt.Errorf("add inbound error: %s", err)
 	}
-	_ = b.UpdateRouterRules()
+	logrus.WithFields(logrus.Fields{"tag": tag, "type": c.Type, "port": info.Common.ServerPort}).Info("Inbound created")
+	b.users.mapLock.Lock()
+	b.inboundOptions[tag] = c
+	b.users.mapLock.Unlock()
+	if err := b.applyPanelState(true); err != nil {
+		logrus.WithFields(logrus.Fields{"tag": tag, "err": err}).Error("Apply panel outbounds and routes failed")
+	}
 	return nil
 }
 
@@ -562,12 +639,31 @@ func (b *Sing) DelNode(tag string) error {
 	delete(b.inboundInfo, tag)
 	delete(b.inboundUsers, tag)
 	delete(b.inboundConfig, tag)
+	delete(b.inboundOptions, tag)
 	b.users.mapLock.Unlock()
 	in := b.box.Inbound()
 	err := in.Remove(tag)
 	if err != nil {
 		return fmt.Errorf("delete inbound error: %s", err)
 	}
-	_ = b.UpdateRouterRules()
+	// Keep this node's panel outbounds until the next AddNode: a config
+	// reload removes and re-adds the node, and the outbounds usually survive.
+	if err := b.applyPanelState(false); err != nil {
+		logrus.WithFields(logrus.Fields{"tag": tag, "err": err}).Error("Apply panel outbounds and routes failed")
+	}
 	return nil
+}
+
+// UpdateNodeRouting applies a config whose only changes are routing fields
+// (routes, custom_outbounds, custom_routes, custom_route_rules). The inbound
+// and its users keep running; outbounds and rules are reconciled in place.
+func (b *Sing) UpdateNodeRouting(tag string, info *panel.NodeInfo) error {
+	b.users.mapLock.Lock()
+	if _, ok := b.inboundInfo[tag]; !ok {
+		b.users.mapLock.Unlock()
+		return fmt.Errorf("node %s not found", tag)
+	}
+	b.inboundInfo[tag] = info
+	b.users.mapLock.Unlock()
+	return b.applyPanelState(true)
 }

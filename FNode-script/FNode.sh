@@ -108,20 +108,107 @@ before_show_menu() {
     show_menu
 }
 
+FNODE_BRANCH="${FNODE_BRANCH:-master}"
+FNODE_RAW="${FNODE_RAW:-https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}}"
+
+# run_remote_installer ARGS...: downloads install.sh and runs it. An empty or
+# non-script download is an error (running an empty script would report
+# success while nothing was installed).
+run_remote_installer() {
+    local tmp rc
+    tmp=$(mktemp) || return 1
+    if ! curl -fsSL -o "$tmp" "${FNODE_RAW}/FNode-script/install.sh" || [[ "$(head -c 2 "$tmp")" != "#!" ]]; then
+        rm -f "$tmp"
+        echo -e "${red}下载 install.sh 失败，未做任何更改 (could not download install.sh from ${FNODE_RAW}; nothing was changed)${plain}"
+        return 1
+    fi
+    bash "$tmp" "$@"
+    rc=$?
+    rm -f "$tmp"
+    return $rc
+}
+
 install() {
-    bash <(curl -Ls https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh)
+    # Extra arguments are passed to install.sh (e.g. --mode machine --panel ... --token ... --machine-id 3)
+    [[ "$1" == "0" ]] && shift
+    run_remote_installer "$@"
 }
 
 update() {
+    local target_ver=""
     if [[ $# == 0 ]]; then
-        echo && echo -n -e "输入指定版本(默认最新版): " && read version
+        echo -e "\n请选择更新版本类型:"
+        echo -e "  ${green}1.${plain} 最新正式版 (Latest Release, 默认)"
+        echo -e "  ${green}2.${plain} 预发布预览版 (Pre-release)"
+        echo -e "  ${green}3.${plain} 自定义指定版本 (Specific Version)"
+        echo -e "  ${green}0.${plain} 返回主菜单"
+        echo && read -rp "请输入选择 [0-3] (默认 1): " update_choice
+        case "${update_choice}" in
+            0)
+                show_menu
+                return
+                ;;
+            2)
+                target_ver="pre"
+                ;;
+            3)
+                read -rp "请输入指定版本号 (例如 0.0.21 或 0.0.22-pre): " custom_ver
+                if [[ -z "${custom_ver}" ]]; then
+                    echo -e "${red}版本号不能为空${plain}"
+                    before_show_menu
+                    return
+                fi
+                target_ver="${custom_ver}"
+                ;;
+            1|"")
+                target_ver="latest"
+                ;;
+            *)
+                echo -e "${yellow}输入无效，默认更新至最新正式版${plain}"
+                target_ver="latest"
+                ;;
+        esac
     else
-        version=$2
+        if [[ -z "$2" ]]; then
+            echo -e "\n请选择更新版本类型:"
+            echo -e "  ${green}1.${plain} 最新正式版 (Latest Release, 默认)"
+            echo -e "  ${green}2.${plain} 预发布预览版 (Pre-release)"
+            echo -e "  ${green}3.${plain} 自定义指定版本 (Specific Version)"
+            echo -e "  ${green}0.${plain} 取消退出"
+            echo && read -rp "请输入选择 [0-3] (默认 1): " update_choice
+            case "${update_choice}" in
+                0)
+                    exit 0
+                    ;;
+                2)
+                    target_ver="pre"
+                    ;;
+                3)
+                    read -rp "请输入指定版本号 (例如 0.0.21 或 0.0.22-pre): " custom_ver
+                    if [[ -z "${custom_ver}" ]]; then
+                        echo -e "${red}版本号不能为空${plain}"
+                        exit 1
+                    fi
+                    target_ver="${custom_ver}"
+                    ;;
+                1|"")
+                    target_ver="latest"
+                    ;;
+                *)
+                    echo -e "${yellow}输入无效，默认更新至最新正式版${plain}"
+                    target_ver="latest"
+                    ;;
+            esac
+        else
+            target_ver="$2"
+        fi
     fi
-    bash <(curl -Ls https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh) $version
+
+    echo -e "准备更新 FNode: ${green}${target_ver}${plain}"
+    run_remote_installer "${target_ver}"
     if [[ $? == 0 ]]; then
         echo -e "${green}更新完成，已自动重启 FNode，请使用 FNode log 查看运行日志${plain}"
-        exit
+        exit 0
     fi
 
     if [[ $# == 0 ]]; then
@@ -153,12 +240,18 @@ config() {
 }
 
 uninstall() {
-    confirm "确定要卸载 FNode 吗?" "n"
-    if [[ $? != 0 ]]; then
-        if [[ $# == 0 ]]; then
-            show_menu
+    local assume_yes=false
+    for a in "$@"; do
+        [[ "$a" == "--yes" || "$a" == "-y" ]] && assume_yes=true
+    done
+    if [[ $assume_yes != true ]]; then
+        confirm "确定要卸载 FNode 吗?" "n"
+        if [[ $? != 0 ]]; then
+            if [[ $# == 0 ]]; then
+                show_menu
+            fi
+            return 0
         fi
-        return 0
     fi
     if [[ x"${release}" == x"alpine" ]]; then
         service FNode stop
@@ -247,12 +340,21 @@ restart() {
     fi
 }
 
+# Panel, masked token and node tags of each config entry (FNode config status)
+show_panel_info() {
+    if [[ -x /usr/local/FNode/FNode && -f /etc/FNode/config.json ]]; then
+        echo ""
+        /usr/local/FNode/FNode config status -c /etc/FNode/config.json 2>/dev/null || echo -e "${yellow}无法读取面板信息 (this FNode version has no 'config status'; run FNode update)${plain}"
+    fi
+}
+
 status() {
     if [[ x"${release}" == x"alpine" ]]; then
         service FNode status
     else
         systemctl status FNode --no-pager -l
     fi
+    show_panel_info
     if [[ $# == 0 ]]; then
         before_show_menu
     fi
@@ -385,7 +487,7 @@ install_bbr() {
 }
 
 update_shell() {
-    wget -O /usr/bin/FNode -N --no-check-certificate https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/FNode.sh
+    wget -O /usr/bin/FNode -N --no-check-certificate "https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}/FNode-script/FNode.sh"
     if [[ $? != 0 ]]; then
         echo ""
         echo -e "${red}下载脚本失败，请检查本机能否连接 Github${plain}"
@@ -512,6 +614,28 @@ add_node_config() {
     core_type="1"
     core="sing"
     core_sing=true
+    isreality=""
+    istls=""
+    echo -e "${yellow}请选择对接模式：${plain}"
+    echo -e "${green}1. 机器模式 Machine（推荐：与面板「服务器机器」一致，一个 FNode 运行面板分配给该机器的全部节点，避免与面板节点冲突）${plain}"
+    echo -e "${green}2. 单节点模式 Node（通讯密钥 server_token + 节点 ID）${plain}"
+    read -rp "请输入 (默认 1)：" panel_mode
+    if [[ "$panel_mode" == "2" ]]; then
+        machine_mode=false
+    else
+        machine_mode=true
+        NodeType=""
+        while true; do
+            read -rp "请输入机器 Machine ID：" MachineID
+            if [[ "$MachineID" =~ ^[0-9]+$ ]] && [[ "$MachineID" -gt 0 ]]; then
+                break
+            else
+                echo "错误：请输入正确的数字作为 Machine ID。"
+            fi
+        done
+        echo -e "${yellow}机器模式：API Key 需填写该机器的 Token（面板 → 服务器机器）。节点协议由面板决定。${plain}"
+    fi
+    if [ "$machine_mode" != true ]; then
     while true; do
         read -rp "请输入节点Node ID：" NodeID
         # 判断NodeID是否为正整数
@@ -523,6 +647,7 @@ add_node_config() {
     done
 
     echo -e "${yellow}请选择节点传输协议：${plain}"
+    echo -e "${green}0. 自动识别（推荐，使用面板中该节点的协议，避免与面板配置冲突）${plain}"
     echo -e "${green}1. Shadowsocks${plain}"
     echo -e "${green}2. Vless${plain}"
     echo -e "${green}3. Vmess${plain}"
@@ -531,8 +656,9 @@ add_node_config() {
     echo -e "${green}6. Trojan${plain}"  
     echo -e "${green}7. Tuic${plain}"
     echo -e "${green}8. AnyTLS${plain}"
-    read -rp "请输入：" NodeType
+    read -rp "请输入 (默认 0)：" NodeType
     case "$NodeType" in
+        0 | "" ) NodeType="" ;;
         1 ) NodeType="shadowsocks" ;;
         2 ) NodeType="vless" ;;
         3 ) NodeType="vmess" ;;
@@ -543,6 +669,7 @@ add_node_config() {
         8 ) NodeType="anytls" ;;
         * ) NodeType="shadowsocks" ;;
     esac
+    fi
     fastopen=true
     if [ "$NodeType" == "vless" ]; then
         read -rp "请选择是否为reality节点？(y/n)" isreality
@@ -610,21 +737,28 @@ add_node_config() {
         listen_ip="::"
     fi
     node_config=""
+    if [ "$machine_mode" = true ]; then
+        panel_fields="\"MachineID\": $MachineID,"
+    elif [ -n "$NodeType" ]; then
+        panel_fields="\"NodeID\": $NodeID,
+            \"NodeType\": \"$NodeType\","
+    else
+        panel_fields="\"NodeID\": $NodeID,"
+    fi
     node_config=$(cat <<EOF
 {
             "Core": "$core",
             "ApiHost": "$ApiHost",
             "ApiKey": "$ApiKey",
-            "NodeID": $NodeID,
-            "NodeType": "$NodeType",
+            $panel_fields
             "Timeout": 30,
             "ListenIP": "$listen_ip",
             "SendIP": "0.0.0.0",
             "DisableIPv6": $disable_ipv6_node,
             "DeviceOnlineMinTraffic": 200,
-            "MinReportTraffic": 0,
-            "TCPFastOpen": $fastopen,
-            "SniffEnabled": true,
+            "ReportMinTraffic": 0,
+            "EnableTFO": $fastopen,
+            "EnableSniff": true,
             "Masquerade": "$masquerade_target",
             "CertConfig": {
                 "CertMode": "$certmode",
@@ -705,7 +839,7 @@ generate_config_file() {
     {
         \"Type\": \"sing\",
         \"Log\": {
-            \"Level\": \"error\",
+            \"Level\": \"warn\",
             \"Timestamp\": true
         },
         \"DisableIPv6\": ${disable_ipv6_core},
@@ -722,7 +856,7 @@ generate_config_file() {
     cd /etc/FNode
     
     # 备份旧的配置文件
-    mv config.json config.json.bak
+    [ -f config.json ] && cp -f config.json config.json.bak
     nodes_config_str="${nodes_config[*]}"
     formatted_nodes_config="${nodes_config_str%,}"
 
@@ -730,7 +864,7 @@ generate_config_file() {
     cat <<EOF > /etc/FNode/config.json
 {
     "Log": {
-        "Level": "error",
+        "Level": "info",
         "Output": ""
     },
     "Cores": $cores_config,
@@ -824,31 +958,19 @@ EOF
     }
 EOF
 
-    ipv6_support=$(check_ipv6_support)
-    dnsstrategy="ipv4_only"
-    if [ "$ipv6_support" -eq 1 ]; then
-        dnsstrategy="prefer_ipv4"
-    fi
-    # 创建 sing_origin.json 文件
-    cat <<EOF > /etc/FNode/sing_origin.json
+    # 创建 sing_origin.json 文件（FNode 默认出站与路由，与内置默认一致）
+    cat <<'EOF' > /etc/FNode/sing_origin.json
 {
-  "dns": {
-    "servers": [
-      {
-        "tag": "cf",
-        "address": "1.1.1.1"
-      }
-    ],
-    "strategy": "$dnsstrategy"
-  },
   "outbounds": [
     {
       "tag": "direct",
       "type": "direct",
-      "domain_resolver": {
-        "server": "cf",
-        "strategy": "$dnsstrategy"
-      }
+      "domain_strategy": "prefer_ipv4"
+    },
+    {
+      "tag": "direct6",
+      "type": "direct",
+      "domain_strategy": "prefer_ipv6"
     },
     {
       "type": "block",
@@ -863,44 +985,56 @@ EOF
         "outbound": "block"
       },
       {
+        "protocol": [
+          "bittorrent"
+        ],
+        "outbound": "block"
+      },
+      {
+        "port": [
+          25,
+          465,
+          587
+        ],
+        "network": [
+          "tcp"
+        ],
+        "outbound": "block"
+      },
+      {
         "domain_regex": [
-            "(api|ps|sv|offnavi|newvector|ulog.imap|newloc)(.map|).(baidu|n.shifen).com",
-            "(.+.|^)(360|so).(cn|com)",
-            "(Subject|HELO|SMTP)",
-            "(torrent|.torrent|peer_id=|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=)",
-            "(^.@)(guerrillamail|guerrillamailblock|sharklasers|grr|pokemail|spam4|bccto|chacuo|027168).(info|biz|com|de|net|org|me|la)",
-            "(.?)(xunlei|sandai|Thunder|XLLiveUD)(.)",
-            "(..||)(dafahao|mingjinglive|botanwang|minghui|dongtaiwang|falunaz|epochtimes|ntdtv|falundafa|falungong|wujieliulan|zhengjian).(org|com|net)",
-            "(ed2k|.torrent|peer_id=|announce|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=|magnet:|xunlei|sandai|Thunder|XLLiveUD|bt_key)",
-            "(.+.|^)(360).(cn|com|net)",
-            "(.*.||)(guanjia.qq.com|qqpcmgr|QQPCMGR)",
-            "(.*.||)(rising|kingsoft|duba|xindubawukong|jinshanduba).(com|net|org)",
-            "(.*.||)(netvigator|torproject).(com|cn|net|org)",
-            "(..||)(visa|mycard|gash|beanfun|bank).",
-            "(.*.||)(gov|12377|12315|talk.news.pts.org|creaders|zhuichaguoji|efcc.org|cyberpolice|aboluowang|tuidang|epochtimes|zhengjian|110.qq|mingjingnews|inmediahk|xinsheng|breakgfw|chengmingmag|jinpianwang|qi-gong|mhradio|edoors|renminbao|soundofhope|xizang-zhiye|bannedbook|ntdtv|12321|secretchina|dajiyuan|boxun|chinadigitaltimes|dwnews|huaglad|oneplusnews|epochweekly|cn.rfi).(cn|com|org|net|club|net|fr|tw|hk|eu|info|me)",
-            "(.*.||)(miaozhen|cnzz|talkingdata|umeng).(cn|com)",
-            "(.*.||)(mycard).(com|tw)",
-            "(.*.||)(gash).(com|tw)",
-            "(.bank.)",
-            "(.*.||)(pincong).(rocks)",
-            "(.*.||)(taobao).(com)",
-            "(.*.||)(laomoe|jiyou|ssss|lolicp|vv1234|0z|4321q|868123|ksweb|mm126).(com|cloud|fun|cn|gs|xyz|cc)",
-            "(flows|miaoko).(pages).(dev)"
+          "(api|ps|sv|offnavi|newvector|ulog.imap|newloc)(.map|).(baidu|n.shifen).com",
+          "(.+.|^)(360|so).(cn|com)",
+          "(Subject|HELO|SMTP)",
+          "(torrent|.torrent|peer_id=|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=)",
+          "(^.@)(guerrillamail|guerrillamailblock|sharklasers|grr|pokemail|spam4|bccto|chacuo|027168).(info|biz|com|de|net|org|me|la)",
+          "(.?)(xunlei|sandai|Thunder|XLLiveUD)(.)",
+          "(..||)(dafahao|mingjinglive|botanwang|minghui|dongtaiwang|falunaz|epochtimes|ntdtv|falundafa|falungong|wujieliulan|zhengjian).(org|com|net)",
+          "(ed2k|.torrent|peer_id=|announce|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=|magnet:|xunlei|sandai|Thunder|XLLiveUD|bt_key)",
+          "(.+.|^)(360).(cn|com|net)",
+          "(.*.||)(guanjia.qq.com|qqpcmgr|QQPCMGR)",
+          "(.*.||)(rising|kingsoft|duba|xindubawukong|jinshanduba).(com|net|org)",
+          "(.*.||)(netvigator|torproject).(com|cn|net|org)",
+          "(..||)(visa|mycard|gash|beanfun).",
+          "(.*.||)(gov|12377|12315|talk.news.pts.org|creaders|zhuichaguoji|efcc.org|cyberpolice|aboluowang|tuidang|epochtimes|zhengjian|110.qq|mingjingnews|inmediahk|xinsheng|breakgfw|chengmingmag|jinpianwang|qi-gong|mhradio|edoors|renminbao|soundofhope|xizang-zhiye|bannedbook|ntdtv|12321|secretchina|dajiyuan|boxun|chinadigitaltimes|dwnews|huaglad|oneplusnews|epochweekly|cn.rfi).(cn|com|org|net|club|net|fr|tw|hk|eu|info|me)",
+          "(.*.||)(miaozhen|cnzz|talkingdata|umeng).(cn|com)",
+          "(.*.||)(mycard).(com|tw)",
+          "(.*.||)(gash).(com|tw)",
+          "(.*.||)(pincong).(rocks)",
+          "(.*.||)(taobao).(com)",
+          "(.*.||)(laomoe|jiyou|ssss|lolicp|vv1234|0z|4321q|868123|ksweb|mm126).(com|cloud|fun|cn|gs|xyz|cc)",
+          "(flows|miaoko).(pages).(dev)"
         ],
         "outbound": "block"
       },
       {
         "outbound": "direct",
         "network": [
-          "udp","tcp"
+          "udp",
+          "tcp"
         ]
       }
     ]
-  },
-  "experimental": {
-    "cache_file": {
-      "enabled": true
-    }
   }
 }
 EOF
@@ -925,6 +1059,64 @@ open_ports() {
     iptables -X 2>/dev/null
     netfilter-persistent save 2>/dev/null
     echo -e "${green}放开防火墙端口成功！${plain}"
+}
+
+# Hysteria 2 多端口/端口跳跃 (Port Hopping) NAT 转发设置
+setup_hy2_port_hopping() {
+    echo -e "${green}=== Hysteria 2 多端口/跳跃 NAT 转发配置 ===${plain}"
+    echo -e "${yellow}说明: 将客户端跳跃端口范围 (例如: 10000:20000) 自动转发重定向到 FNode 实际监听端口 (例如: 443)${plain}"
+    echo -e " 1. 查看当前 UDP 端口转发规则"
+    echo -e " 2. 添加/更新 UDP 端口跳跃转发规则"
+    echo -e " 3. 清理所有 NAT 端口转发规则"
+    echo -e " 0. 返回主菜单"
+    read -rp "请输入选项 [0-3]: " opt
+    case "$opt" in
+        1)
+            echo -e "${green}=== iptables NAT PREROUTING 规则 ===${plain}"
+            iptables -t nat -L PREROUTING -n -v --line-numbers 2>/dev/null
+            if command -v ip6tables &>/dev/null; then
+                echo -e "${green}=== ip6tables NAT PREROUTING 规则 ===${plain}"
+                ip6tables -t nat -L PREROUTING -n -v --line-numbers 2>/dev/null
+            fi
+            ;;
+        2)
+            read -rp "请输入 FNode 实际监听的 UDP 端口 (默认: 443): " s_port
+            [[ -z "$s_port" ]] && s_port="443"
+            read -rp "请输入客户端跳跃端口范围 (例如: 10000:20000 或 10000-20000): " c_range
+            if [[ -z "$c_range" ]]; then
+                echo -e "${red}端口范围不能为空！${plain}"
+                return
+            fi
+            c_range="${c_range//-/:}"
+
+            iptables -t nat -A PREROUTING -p udp --dport "$c_range" -j REDIRECT --to-ports "$s_port"
+            if command -v ip6tables &>/dev/null; then
+                ip6tables -t nat -A PREROUTING -p udp --dport "$c_range" -j REDIRECT --to-ports "$s_port" 2>/dev/null
+            fi
+
+            if command -v netfilter-persistent &>/dev/null; then
+                netfilter-persistent save 2>/dev/null
+            elif command -v iptables-save &>/dev/null; then
+                mkdir -p /etc/iptables
+                iptables-save > /etc/iptables/rules.v4 2>/dev/null
+            fi
+            echo -e "${green}成功配置 UDP 端口转发: ${c_range} -> ${s_port}${plain}"
+            ;;
+        3)
+            echo -e "${yellow}正在清除 NAT PREROUTING 端口转发规则...${plain}"
+            iptables -t nat -F PREROUTING 2>/dev/null
+            if command -v ip6tables &>/dev/null; then
+                ip6tables -t nat -F PREROUTING 2>/dev/null
+            fi
+            if command -v netfilter-persistent &>/dev/null; then
+                netfilter-persistent save 2>/dev/null
+            fi
+            echo -e "${green}端口转发规则已清理！${plain}"
+            ;;
+        *)
+            return
+            ;;
+    esac
 }
 
 # 安装 Caddy (集成 Cloudflare DNS 模块)
@@ -1155,17 +1347,20 @@ show_usage() {
     echo "FNode start        - 启动 FNode"
     echo "FNode stop         - 停止 FNode"
     echo "FNode restart      - 重启 FNode"
-    echo "FNode status       - 查看 FNode 状态"
+    echo "FNode status       - 查看 FNode 状态 (含面板地址、令牌、节点标签)"
     echo "FNode enable       - 设置 FNode 开机自启"
     echo "FNode disable      - 取消 FNode 开机自启"
     echo "FNode log          - 查看 FNode 日志"
     echo "FNode clearlog     - 清理 FNode 日志"
     echo "FNode x25519       - 生成 x25519 密钥"
     echo "FNode generate     - 生成 FNode 配置文件"
-    echo "FNode update       - 更新 FNode"
+    echo "FNode update       - 更新 FNode (交互式选择: 最新版/预发布版/指定版本)"
+    echo "FNode update pre   - 更新 FNode 至最新预发布预览版"
     echo "FNode update x.x.x - 安装 FNode 指定版本"
-    echo "FNode install      - 安装 FNode"
-    echo "FNode uninstall    - 卸载 FNode"
+    echo "FNode install      - 安装 FNode (可选: --mode machine|node --panel --token --machine-id|--node-id)"
+    echo "FNode uninstall    - 卸载 FNode (--yes 跳过确认)"
+    echo "FNode config show  - 查看生效配置与出站来源 (--node 标签 --summary)"
+    echo "FNode config status - 查看面板地址、令牌(部分)与节点标签"
     echo "FNode caddy        - 安装/配置 Caddy (支持 Cloudflare DNS 反代与证书)"
     echo "FNode version      - 查看 FNode 版本"
     echo "------------------------------------------"
@@ -1182,7 +1377,7 @@ show_menu() {
 --- https://github.com/tavut846/FNode ---
   ${green}0.${plain} 修改配置
   ${green}1.${plain} 安装 FNode
-  ${green}2.${plain} 更新 FNode
+  ${green}2.${plain} 更新 FNode (稳定版/预发布版/指定版本)
   ${green}3.${plain} 卸载 FNode
 ————————————————
   ${green}4.${plain} 启动 FNode
@@ -1202,11 +1397,12 @@ show_menu() {
   ${green}16.${plain} 生成 FNode 配置文件
   ${green}17.${plain} 放行 VPS 的所有网络端口
   ${green}18.${plain} 安装/配置 Caddy 反代与证书
-  ${green}19.${plain} 退出脚本
+  ${green}19.${plain} 配置 Hysteria 2 多端口/跳跃 NAT 转发
+  ${green}20.${plain} 退出脚本
  "
  #后续更新可加入上方字符串中
     show_status
-    echo && read -rp "请输入选择 [0-19]: " num
+    echo && read -rp "请输入选择 [0-20]: " num
 
     case "${num}" in
         0) config ;;
@@ -1228,8 +1424,9 @@ show_menu() {
         16) generate_config_file ;;
         17) open_ports ;;
         18) setup_caddy_reverse_proxy ;;
-        19) exit ;;
-        *) echo -e "${red}请输入正确的数字 [0-19]${plain}" ;;
+        19) setup_hy2_port_hopping ;;
+        20) exit ;;
+        *) echo -e "${red}请输入正确的数字 [0-20]${plain}" ;;
     esac
 }
 
@@ -1245,14 +1442,23 @@ if [[ $# > 0 ]]; then
         "log") check_install 0 && show_log 0 ;;
         "clearlog"|"cleanlog"|"clean_log") check_install 0 && clean_log 0 ;;
         "update") check_install 0 && update 0 $2 ;;
-        "config") config $* ;;
+        "config")
+            if [[ "$2" == "show" || "$2" == "status" ]]; then
+                # FNode config show [--node tag] [--summary]: effective config per node
+                # FNode config status: panel, masked token and node tags per entry
+                /usr/local/FNode/FNode config "$2" -c /etc/FNode/config.json "${@:3}"
+            else
+                config $*
+            fi
+            ;;
         "generate") generate_config_file ;;
-        "install") check_uninstall 0 && install 0 ;;
-        "uninstall") check_install 0 && uninstall 0 ;;
+        "install") check_uninstall 0 && install 0 "${@:2}" ;;
+        "uninstall") check_install 0 && uninstall 0 "${@:2}" ;;
         "x25519") check_install 0 && generate_x25519_key 0 ;;
         "version") check_install 0 && show_FNode_version 0 ;;
         "caddy") setup_caddy_reverse_proxy 0 ;;
         "install_caddy") install_caddy 0 ;;
+        "porthop"|"port_hop"|"mport") setup_hy2_port_hopping ;;
         "update_shell") update_shell ;;
         *) show_usage
     esac

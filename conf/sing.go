@@ -1,19 +1,54 @@
 package conf
 
 import (
+	"path/filepath"
+
 	"github.com/sagernet/sing-box/option"
 )
 
 type SingConfig struct {
-	LogConfig        SingLogConfig     `json:"Log"`
-	NtpConfig        SingNtpConfig     `json:"NTP"`
-	OriginalPath     string            `json:"OriginalPath"`
-	ConnectTimeout   int               `json:"ConnectTimeout"` // dial timeout in seconds, default 5s
-	DomainStrategy   string            `json:"DomainStrategy"` // "prefer_ipv4", "ipv4_only", "prefer_ipv6", "ipv6_only"
+	LogConfig           SingLogConfig     `json:"Log"`
+	NtpConfig           SingNtpConfig     `json:"NTP"`
+	OriginalPath        string            `json:"OriginalPath"`
+	ConnectTimeout      int               `json:"ConnectTimeout"`      // dial timeout in seconds, default 5s
+	DomainStrategy      string            `json:"DomainStrategy"`      // "prefer_ipv4", "ipv4_only", "prefer_ipv6", "ipv6_only"
 	DisableIPv6         bool              `json:"DisableIPv6"`         // block ipv6 traffic immediately to avoid timeouts on IPv4-only hosts
 	AutoDetectInterface *bool             `json:"AutoDetectInterface"` // automatically track default network interface and gateway changes (defaults to true)
 	CustomOutbounds     []map[string]any  `json:"CustomOutbounds"`
 	CustomRouteRules    []CustomRouteRule `json:"CustomRouteRules"`
+	// GeneratedDir receives the generated <node>.effective.json and
+	// <node>.panel.json debug files. Defaults to "generated" next to the
+	// main config file. It is never watched for reloads.
+	GeneratedDir string `json:"GeneratedDir"`
+}
+
+// DefaultGeneratedDir returns the generated-files directory for a config file.
+func DefaultGeneratedDir(configPath string) string {
+	if abs, err := filepath.Abs(configPath); err == nil {
+		configPath = abs
+	}
+	return filepath.Join(filepath.Dir(configPath), "generated")
+}
+
+// SetGeneratedDirs fills an empty GeneratedDir of every sing core with the
+// default for configPath.
+func (p *Conf) SetGeneratedDirs(configPath string) {
+	for i := range p.CoresConfig {
+		if sc := p.CoresConfig[i].SingConfig; sc != nil && sc.GeneratedDir == "" {
+			sc.GeneratedDir = DefaultGeneratedDir(configPath)
+		}
+	}
+}
+
+// GeneratedDir returns the generated-files directory of the first sing core,
+// or the default for configPath.
+func (p *Conf) GeneratedDir(configPath string) string {
+	for _, c := range p.CoresConfig {
+		if c.SingConfig != nil && c.SingConfig.GeneratedDir != "" {
+			return c.SingConfig.GeneratedDir
+		}
+	}
+	return DefaultGeneratedDir(configPath)
 }
 
 type CustomRouteRule struct {
@@ -74,6 +109,27 @@ type SingOptions struct {
 	Multiplex                *MultiplexConfig       `json:"MultiplexConfig"`
 	DisableIPv6              bool                   `json:"DisableIPv6"`
 	ConnectTimeout           int                    `json:"ConnectTimeout"`
+	Hysteria2Config          *Hysteria2Config       `json:"Hysteria2Config,omitempty"`
+}
+
+type Hysteria2Config struct {
+	UDPFragment *bool  `json:"UDPFragment,omitempty"` // enable or disable UDP packet fragmentation
+	UDPTimeout  string `json:"UDPTimeout,omitempty"`  // custom UDP session timeout, e.g. "60s"
+	BrutalDebug bool   `json:"BrutalDebug,omitempty"` // enable sing-box Brutal CC internal debug logs
+	// ReuseAddr sets SO_REUSEADDR on the UDP socket. Off by default: FNode is
+	// one process, and with it an old socket that lingers after a rebuild can
+	// keep receiving datagrams for the port (clients then time out) instead of
+	// the new bind failing loudly.
+	ReuseAddr bool `json:"ReuseAddr,omitempty"`
+	// IgnoreClientBandwidth makes the server use BBR for every client instead
+	// of Brutal at the rate the client declares (DownMbps is then forced to 0,
+	// otherwise sing-quic rejects clients that declare no rate). BBR backs off
+	// on loss, so it is the safe choice behind a provider that flags UDP floods.
+	IgnoreClientBandwidth bool `json:"IgnoreClientBandwidth,omitempty"`
+	// MaxBrutalMbps caps the server's Brutal send rate in Mbps. Unset = 100,
+	// used only when the panel's up_mbps is 0; 0 or -1 = no cap; a positive
+	// value also lowers a larger panel up_mbps.
+	MaxBrutalMbps *int `json:"MaxBrutalMbps,omitempty"`
 }
 
 type SingNtpConfig struct {

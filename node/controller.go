@@ -1,10 +1,13 @@
 package node
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/common/logship"
 	"github.com/tavut846/FNode/common/task"
 	"github.com/tavut846/FNode/conf"
 	vCore "github.com/tavut846/FNode/core"
@@ -27,8 +30,31 @@ type Controller struct {
 	dynamicSpeedLimitPeriodic *task.Task
 	onlineIpReportPeriodic    *task.Task
 	lastReportedUIDs          map[int]struct{}
+	// mu serialises the HTTP poll and panel WebSocket events.
+	mu       sync.Mutex
+	closed   bool
+	// rebuild is set when a reload failed after the old inbound was removed;
+	// the next poll fetches the full config and recreates the node.
+	rebuild  bool
+	ws       *panel.WSClient
+	wsCancel context.CancelFunc
+	// sharedWS is the machine connection in machine mode (events are routed
+	// to this controller by the Machine); nil for a standalone node.
+	sharedWS *panel.WSClient
+	// shipper sends this node's logs to the panel; the machine's shipper in
+	// machine mode, otherwise created in startLogs.
+	shipper    *logship.Shipper
+	ownShipper bool
+	logCancel  context.CancelFunc
+	// localCert is the CertConfig of the local config. Options.CertConfig is
+	// the one in use: the dashboard cert_config when the panel sends one.
+	localCert *conf.CertConfig
 	*conf.Options
 }
+
+// ErrNoUsers means the panel has no user for the node yet (no plan in the
+// node's groups). The node is retried until users appear.
+var ErrNoUsers = errors.New("the panel has no users for this node yet (assign the node to a group with an active plan)")
 
 // NewController return a Node controller with default parameters.
 func NewController(server vCore.Core, api *panel.Client, config *conf.Options) *Controller {
@@ -37,6 +63,7 @@ func NewController(server vCore.Core, api *panel.Client, config *conf.Options) *
 		Options:          config,
 		apiClient:        api,
 		lastReportedUIDs: make(map[int]struct{}),
+		localCert:        config.CertConfig,
 	}
 	return controller
 }
@@ -46,8 +73,23 @@ func (c *Controller) Start() error {
 	// First fetch Node Info
 	var err error
 	node, err := c.apiClient.GetNodeInfo()
+	if err != nil && c.apiClient.NodeType != "" {
+		// A NodeType in config.json that differs from the panel node makes the
+		// v1 API answer "server does not exist". Retry with the panel's type.
+		configured := c.apiClient.NodeType
+		if c.apiClient.UseAutoType() {
+			if n, err2 := c.apiClient.GetNodeInfo(); err2 == nil && n != nil {
+				log.WithFields(log.Fields{"node_id": c.apiClient.NodeId, "config_type": configured, "panel_type": n.Type}).
+					Warn("NodeType in config.json does not match the panel node, using the panel's type. Remove NodeType or fix it in config.json")
+				node, err = n, nil
+			}
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("get node info error: %s", err)
+	}
+	if node == nil {
+		return errors.New("get node info error: empty config")
 	}
 	// Update user
 	c.userList, err = c.apiClient.GetUserList()
@@ -55,7 +97,7 @@ func (c *Controller) Start() error {
 		return fmt.Errorf("get user list error: %s", err)
 	}
 	if len(c.userList) == 0 {
-		return errors.New("add users error: not have any user")
+		return ErrNoUsers
 	}
 	c.aliveMap, err = c.apiClient.GetUserAlive()
 	if err != nil {
@@ -75,7 +117,7 @@ func (c *Controller) Start() error {
 	}
 	c.limiter = l
 	if node.Security == panel.Tls {
-		err = c.requestCert()
+		err = c.requestCert(node)
 		if err != nil {
 			return fmt.Errorf("request cert error: %s", err)
 		}
@@ -95,12 +137,27 @@ func (c *Controller) Start() error {
 	}
 	log.WithField("tag", c.tag).Infof("Added %d new users", added)
 	c.info = node
+	// Hold mu so a WebSocket event cannot run before the tasks exist
+	c.mu.Lock()
+	c.startLogs()
+	c.startWS()
 	c.startTasks(node)
+	c.mu.Unlock()
 	return nil
 }
 
 // Close implement the Close() function of the service interface
 func (c *Controller) Close() error {
+	c.stopWS()
+	c.stopLogs()
+	// Wait for an in-flight poll or WS event, then refuse new ones
+	c.mu.Lock()
+	c.closed = true
+	c.mu.Unlock()
+	if c.tag == "" {
+		// Start failed before the node existed in the core
+		return nil
+	}
 	limiter.DeleteLimiter(c.tag)
 	if c.nodeInfoMonitorPeriodic != nil {
 		c.nodeInfoMonitorPeriodic.Close()
@@ -126,4 +183,28 @@ func (c *Controller) Close() error {
 
 func (c *Controller) buildNodeTag(node *panel.NodeInfo) string {
 	return fmt.Sprintf("[%s]-%s:%d", c.apiClient.APIHost, node.Type, node.Id)
+}
+
+// startLogs maps this node's tag to its panel log shipper, creating (and
+// running) a shipper of its own unless the machine provided one.
+func (c *Controller) startLogs() {
+	if c.shipper == nil {
+		c.shipper = logship.NewShipper(c.apiClient)
+		c.ownShipper = true
+		logship.Default.Register(c.shipper)
+		ctx, cancel := context.WithCancel(context.Background())
+		c.logCancel = cancel
+		go c.shipper.Run(ctx)
+	}
+	logship.Default.MapNode(c.tag, c.apiClient.NodeId, c.shipper)
+}
+
+func (c *Controller) stopLogs() {
+	logship.Default.UnmapNode(c.tag)
+	if c.ownShipper {
+		if c.logCancel != nil {
+			c.logCancel()
+		}
+		logship.Default.Unregister(c.shipper)
+	}
 }

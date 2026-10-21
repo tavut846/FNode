@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,7 +18,6 @@ import (
 
 	"github.com/go-acme/lego/v4/certificate"
 	"github.com/go-acme/lego/v4/challenge/http01"
-	"github.com/go-acme/lego/v4/providers/dns"
 	"github.com/go-acme/lego/v4/registration"
 
 	"github.com/tavut846/FNode/common/file"
@@ -70,7 +70,11 @@ func checkPath(p string) error {
 func (l *Lego) SetProvider() error {
 	switch l.config.CertMode {
 	case "http":
-		err := l.client.Challenge.SetHTTP01Provider(http01.NewProviderServer("", "80"))
+		port := "80"
+		if l.config.HTTPPort > 0 {
+			port = strconv.Itoa(l.config.HTTPPort)
+		}
+		err := l.client.Challenge.SetHTTP01Provider(http01.NewProviderServer("", port))
 		if err != nil {
 			return err
 		}
@@ -78,7 +82,7 @@ func (l *Lego) SetProvider() error {
 		for k, v := range l.config.DNSEnv {
 			os.Setenv(k, v)
 		}
-		p, err := dns.NewDNSChallengeProviderByName(l.config.Provider)
+		p, err := newDNSProvider(l.config.Provider)
 		if err != nil {
 			return fmt.Errorf("create dns challenge provider error: %s", err)
 		}

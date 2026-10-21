@@ -1,0 +1,52 @@
+name: Clean Draft Releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      delete_all_drafts:
+        description: "Confirm deleting all draft releases"
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  clean-drafts:
+    name: Delete All Draft Releases
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find and delete all draft releases
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Scanning for draft releases in ${{ github.repository }}..."
+          DRAFTS=$(gh api --paginate "/repos/${{ github.repository }}/releases" --jq '.[] | select(.draft == true) | "\(.id) \(.tag_name // "no-tag") \(.name // "unnamed")"' 2>/dev/null || true)
+
+          if [ -z "$DRAFTS" ]; then
+            echo "No draft releases found in ${{ github.repository }}."
+            exit 0
+          fi
+
+          echo "Found draft releases:"
+          echo "$DRAFTS"
+          echo "----------------------------------------"
+
+          while IFS=' ' read -r DRAFT_ID DRAFT_TAG DRAFT_NAME; do
+            [ -z "$DRAFT_ID" ] && continue
+            echo "Deleting draft release ID: $DRAFT_ID (Tag: $DRAFT_TAG, Name: $DRAFT_NAME)..."
+            gh api -X DELETE "/repos/${{ github.repository }}/releases/$DRAFT_ID" || true
+
+            # If tag starts with 0. or v or -pre and is an unreferenced draft tag, clean up remote ref
+            if [[ "$DRAFT_TAG" != "no-tag" && "$DRAFT_TAG" == *"-pre"* ]]; then
+              echo "Cleaning up associated draft tag: $DRAFT_TAG"
+              git push origin :refs/tags/"$DRAFT_TAG" 2>/dev/null || true
+            fi
+          done <<< "$DRAFTS"
+
+          echo "Successfully cleaned up all draft releases."

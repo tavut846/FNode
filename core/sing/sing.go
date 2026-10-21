@@ -11,12 +11,14 @@ import (
 	"github.com/sagernet/sing-box/log"
 
 	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/common/logship"
 	"github.com/tavut846/FNode/conf"
 	vCore "github.com/tavut846/FNode/core"
 	box "github.com/sagernet/sing-box"
 	"github.com/sagernet/sing-box/adapter"
 	"github.com/sagernet/sing-box/option"
 	"github.com/sagernet/sing/common/json"
+	logrus "github.com/sirupsen/logrus"
 )
 
 var _ vCore.Core = (*Sing)(nil)
@@ -36,11 +38,29 @@ type Sing struct {
 	inboundUsers              map[string][]panel.UserInfo
 	inboundInfo               map[string]*panel.NodeInfo
 	inboundConfig             map[string]*conf.Options
+	inboundOptions            map[string]option.Inbound
 	nodeReportMinTrafficBytes map[string]int64
 	coreConfig                *conf.CoreConfig
 	originRules               []option.Rule
 	originRuleSets            []option.RuleSet
-	mu                        sync.RWMutex
+	routeFinal                string
+	endpointTags              []string
+	capture                   *logCapture
+	baseLogVerbosity          int
+	removeFloor               func()
+
+	// baseOutbounds is the static outbound set (sing_origin.json, local
+	// CustomOutbounds and builtin direct/block) the box was created with.
+	baseOutbounds []outboundEntry
+	// appliedOutbounds maps every outbound tag FNode manages to the hash of
+	// the options it is currently running with.
+	appliedOutbounds map[string]string
+	// lastRaw holds the raw options of the outbounds currently applied.
+	lastRaw map[string]map[string]any
+	// last holds the result of the last apply, for the effective-config dump.
+	last *appliedState
+
+	mu sync.RWMutex
 }
 
 type UserMap struct {
@@ -55,28 +75,15 @@ func init() {
 func New(c *conf.CoreConfig) (vCore.Core, error) {
 	ctx := context.Background()
 	ctx = box.Context(ctx, include.InboundRegistry(), include.OutboundRegistry(), include.EndpointRegistry(), include.DNSTransportRegistry(), include.ServiceRegistry())
-	options := option.Options{}
 	var originRules []option.Rule
 	var originRuleSets []option.RuleSet
-	if len(c.SingConfig.OriginalPath) != 0 {
-		data, err := os.ReadFile(c.SingConfig.OriginalPath)
-		if err != nil {
-			return nil, fmt.Errorf("read original config error: %s", err)
-		}
-		options, err = json.UnmarshalExtendedContext[option.Options](ctx, data)
-		if err != nil {
-			return nil, fmt.Errorf("unmarshal original config error: %s", err)
-		}
-		if options.Route != nil {
-			originRules = options.Route.Rules
-			originRuleSets = options.Route.RuleSet
-		}
+	options, err := loadOrigin(ctx, c.SingConfig.OriginalPath)
+	if err != nil {
+		return nil, err
 	}
-	options.Log = &option.LogOptions{
-		Disabled:  c.SingConfig.LogConfig.Disabled,
-		Level:     c.SingConfig.LogConfig.Level,
-		Timestamp: c.SingConfig.LogConfig.Timestamp,
-		Output:    c.SingConfig.LogConfig.Output,
+	if options.Route != nil {
+		originRules = options.Route.Rules
+		originRuleSets = options.Route.RuleSet
 	}
 	options.NTP = &option.NTPOptions{
 		Enabled:       c.SingConfig.NtpConfig.Enable,
@@ -87,30 +94,61 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 		},
 	}
 
-	// 1. Build default outbounds (direct with 5s timeout & prefer_ipv4 to prevent hangs on IPv4-only hosts)
+	// 1. Build the static outbound set. Merge order: sing_origin.json, then the
+	// local CustomOutbounds (a duplicate tag replaces the origin one and logs a
+	// warning). Without origin outbounds FNode adds builtin direct (5s timeout,
+	// prefer_ipv4, to prevent hangs on IPv4-only hosts) and block.
 	connectTimeout := 5 * time.Second
 	if c.SingConfig.ConnectTimeout > 0 {
 		connectTimeout = time.Duration(c.SingConfig.ConnectTimeout) * time.Second
 	}
 	domainStrategy := ConvertStrategy(c.SingConfig.DomainStrategy)
 
-	if len(options.Outbounds) == 0 {
-		rawOutbounds := BuildDefaultOutbounds(connectTimeout, domainStrategy, "", c.SingConfig.CustomOutbounds)
-		outboundsData, err := json.Marshal(rawOutbounds)
+	var originEntries []outboundEntry
+	for _, o := range options.Outbounds {
+		e, err := newEntryFromOption(ctx, o, SourceOrigin)
 		if err != nil {
-			return nil, fmt.Errorf("marshal default outbounds error: %s", err)
+			return nil, fmt.Errorf("marshal original outbound %q error: %s", o.Tag, err)
 		}
-		options.Outbounds, err = json.UnmarshalExtendedContext[[]option.Outbound](ctx, outboundsData)
+		originEntries = append(originEntries, e)
+	}
+	localTags := make(map[string]bool)
+	for _, co := range c.SingConfig.CustomOutbounds {
+		if tag, ok := co["tag"].(string); ok {
+			localTags[tag] = true
+		}
+	}
+	rawLocal := c.SingConfig.CustomOutbounds
+	if len(originEntries) == 0 {
+		rawLocal = BuildDefaultOutbounds(connectTimeout, domainStrategy, "", c.SingConfig.CustomOutbounds)
+	}
+	var localEntries []outboundEntry
+	for _, raw := range rawLocal {
+		source := SourceLocal
+		if tag, _ := raw["tag"].(string); !localTags[tag] {
+			source = SourceBuiltin
+		}
+		e, err := newEntryFromRaw(ctx, raw, source, "")
 		if err != nil {
-			return nil, fmt.Errorf("unmarshal default outbounds error: %s", err)
-		}
-	} else if len(c.SingConfig.CustomOutbounds) > 0 {
-		customOutboundsData, err := json.Marshal(c.SingConfig.CustomOutbounds)
-		if err == nil {
-			if customOutbounds, err := json.UnmarshalExtendedContext[[]option.Outbound](ctx, customOutboundsData); err == nil {
-				options.Outbounds = append(options.Outbounds, customOutbounds...)
+			if source == SourceBuiltin {
+				return nil, fmt.Errorf("unmarshal default outbounds error: %s", err)
 			}
+			logrus.WithFields(logrus.Fields{"outbound": raw["tag"], "err": err}).Warn("Skip invalid local CustomOutbound")
+			continue
 		}
+		localEntries = append(localEntries, e)
+	}
+	baseOutbounds, warnings := mergeOutbounds(originEntries, localEntries)
+	for _, w := range warnings {
+		logrus.Warn(w)
+	}
+	options.Outbounds = make([]option.Outbound, 0, len(baseOutbounds))
+	appliedOutbounds := make(map[string]string, len(baseOutbounds))
+	lastRaw := make(map[string]map[string]any, len(baseOutbounds))
+	for _, e := range baseOutbounds {
+		options.Outbounds = append(options.Outbounds, e.Option)
+		appliedOutbounds[e.Tag] = e.Hash
+		lastRaw[e.Tag] = e.Raw
 	}
 
 	// 2. Build default routing rules (anti-SSRF and IPv6 disable if configured)
@@ -128,112 +166,115 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 	} else if !options.Route.AutoDetectInterface {
 		options.Route.AutoDetectInterface = autoDetect
 	}
-	if len(options.Route.Rules) == 0 {
-		rawRules := CompileRouteRules(c.SingConfig.DisableIPv6, nil, c.SingConfig.CustomRouteRules)
-		rulesData, err := json.Marshal(rawRules)
-		if err != nil {
-			return nil, fmt.Errorf("marshal default rules error: %s", err)
-		}
-		options.Route.Rules, err = json.UnmarshalExtendedContext[[]option.Rule](ctx, rulesData)
-		if err != nil {
-			return nil, fmt.Errorf("unmarshal default rules error: %s", err)
-		}
-	} else {
-		// Ensure Anti-SSRF, IPv6 blocking and custom config rules precede origin rules at startup
-		rawRules := CompileRouteRules(c.SingConfig.DisableIPv6, nil, c.SingConfig.CustomRouteRules)
-		rulesData, err := json.Marshal(rawRules)
-		if err != nil {
-			return nil, fmt.Errorf("marshal default rules error: %s", err)
-		}
-		compiledRules, err := json.UnmarshalExtendedContext[[]option.Rule](ctx, rulesData)
-		if err != nil {
-			return nil, fmt.Errorf("unmarshal default rules error: %s", err)
-		}
-		options.Route.Rules = append(compiledRules, originRules...)
+	// Ensure Anti-SSRF, IPv6 blocking and custom config rules precede origin rules at startup
+	rawRules := CompileRouteRules(c.SingConfig.DisableIPv6, nil, c.SingConfig.CustomRouteRules)
+	rulesData, err := json.Marshal(rawRules)
+	if err != nil {
+		return nil, fmt.Errorf("marshal default rules error: %s", err)
+	}
+	compiledRules, err := json.UnmarshalExtendedContext[[]option.Rule](ctx, rulesData)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal default rules error: %s", err)
+	}
+	options.Route.Rules = append(compiledRules, originRules...)
+
+	var endpointTags []string
+	for _, ep := range options.Endpoints {
+		endpointTags = append(endpointTags, ep.Tag)
 	}
 
+	// sing-box logs through a capture (core/sing/logcapture.go) so FNode can
+	// demote REALITY probe noise and ship logs to the panel. The destination
+	// and level the user configured are honoured by the capture.
+	capture, err := newLogCapture(&c.SingConfig.LogConfig)
+	if err != nil {
+		return nil, err
+	}
+	logLevel := c.SingConfig.LogConfig.Level
+	if c.SingConfig.LogConfig.Disabled {
+		logLevel = "error"
+	}
+	options.Log = &option.LogOptions{
+		Level:     logLevel,
+		Timestamp: c.SingConfig.LogConfig.Timestamp,
+		Output:    "stderr",
+	}
 	os.Setenv("SING_DNS_PATH", "")
+	restoreStderr := capture.install()
 	b, err := box.New(box.Options{
 		Context: ctx,
 		Options: options,
 	})
+	restoreStderr()
 	if err != nil {
+		capture.Close()
 		return nil, err
 	}
+	capture.onLine = shipToPanel
+	capture.start()
 	hs := &HookServer{
 		counter: sync.Map{},
 	}
 	b.Router().AppendTracker(hs)
-	return &Sing{
-		ctx:                       ctx,
-		box:                       b,
-		hookServer:                hs,
-		router:                    b.Router(),
-		logFactory:                b.LogFactory(),
+	baseVerbosity := levelToVerbosity(c.SingConfig.LogConfig.Level)
+	if c.SingConfig.LogConfig.Disabled {
+		baseVerbosity = verbError
+	}
+	s := &Sing{
+		ctx:        ctx,
+		box:        b,
+		hookServer: hs,
+		router:     b.Router(),
+		logFactory: b.LogFactory(),
 		users: &UserMap{
 			uidMap: make(map[string]int),
 		},
 		inboundUsers:              make(map[string][]panel.UserInfo),
 		inboundInfo:               make(map[string]*panel.NodeInfo),
 		inboundConfig:             make(map[string]*conf.Options),
+		inboundOptions:            make(map[string]option.Inbound),
 		nodeReportMinTrafficBytes: make(map[string]int64),
 		coreConfig:                c,
 		originRules:               originRules,
 		originRuleSets:            originRuleSets,
-	}, nil
+		routeFinal:                options.Route.Final,
+		endpointTags:              endpointTags,
+		capture:                   capture,
+		baseOutbounds:             baseOutbounds,
+		appliedOutbounds:          appliedOutbounds,
+		lastRaw:                   lastRaw,
+		baseLogVerbosity:          baseVerbosity,
+	}
+	// Raise sing-box's log level while a panel wants more verbose entries than
+	// the configured level (the capture keeps the console at the configured one).
+	s.removeFloor = logship.Default.OnFloorChange(s.setLogFloor)
+	return s, nil
 }
 
+var sbLevels = []log.Level{log.LevelError, log.LevelWarn, log.LevelInfo, log.LevelDebug, log.LevelTrace}
+
+// setLogFloor sets the sing-box logger level to the more verbose of the
+// configured level and what the panel's log mode needs.
+func (b *Sing) setLogFloor(floor logship.Level) {
+	target := b.baseLogVerbosity
+	if floor != logship.Off && int(floor) > target {
+		target = int(floor)
+	}
+	if target < 0 {
+		target = 0
+	}
+	if target >= len(sbLevels) {
+		target = len(sbLevels) - 1
+	}
+	if b.logFactory != nil {
+		b.logFactory.SetLevel(sbLevels[target])
+	}
+}
+
+// UpdateRouterRules recompiles the route rules from every node's panel routes
+// and applies the panel outbounds (without removing stale ones).
 func (b *Sing) UpdateRouterRules() error {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-
-	var allPanelRoutes []panel.Route
-	disableIPv6 := false
-	if b.coreConfig != nil && b.coreConfig.SingConfig.DisableIPv6 {
-		disableIPv6 = true
-	}
-
-	for _, info := range b.inboundInfo {
-		if info != nil && info.Common != nil {
-			allPanelRoutes = append(allPanelRoutes, info.Common.Routes...)
-		}
-	}
-
-	for _, cfg := range b.inboundConfig {
-		if cfg != nil {
-			if cfg.DisableIPv6 || (cfg.SingOptions != nil && cfg.SingOptions.DisableIPv6) {
-				disableIPv6 = true
-			}
-		}
-	}
-
-	var customRules []conf.CustomRouteRule
-	if b.coreConfig != nil {
-		customRules = b.coreConfig.SingConfig.CustomRouteRules
-	}
-
-	rawRules := CompileRouteRules(disableIPv6, allPanelRoutes, customRules)
-	rulesData, err := json.Marshal(rawRules)
-	if err != nil {
-		return fmt.Errorf("marshal route rules error: %w", err)
-	}
-
-	rules, err := json.UnmarshalExtendedContext[[]option.Rule](b.ctx, rulesData)
-	if err != nil {
-		return fmt.Errorf("unmarshal route rules error: %w", err)
-	}
-
-	allRules := make([]option.Rule, 0, len(rules)+len(b.originRules))
-	allRules = append(allRules, rules...)
-	allRules = append(allRules, b.originRules...)
-
-	type updatableRouter interface {
-		UpdateRules(rules []option.Rule, ruleSets []option.RuleSet) error
-	}
-	if ur, ok := b.router.(updatableRouter); ok {
-		return ur.UpdateRules(allRules, b.originRuleSets)
-	}
-	return nil
+	return b.applyPanelState(false)
 }
 
 func (b *Sing) Start() error {
@@ -241,7 +282,14 @@ func (b *Sing) Start() error {
 }
 
 func (b *Sing) Close() error {
-	return b.box.Close()
+	if b.removeFloor != nil {
+		b.removeFloor()
+	}
+	err := b.box.Close()
+	if b.capture != nil {
+		b.capture.Close()
+	}
+	return err
 }
 
 func (b *Sing) Protocols() []string {

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/tavut846/FNode/common/file"
+	"github.com/tavut846/FNode/conf"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -71,36 +72,39 @@ func (c *Controller) renewCertTask() error {
 	return nil
 }
 
-func (c *Controller) requestCert() error {
-	switch c.CertConfig.CertMode {
+// obtainCert makes sure the cert and key of cc exist: checks them (file),
+// generates them (self) or requests them over ACME (http, dns). It may fill
+// cc.CertFile/KeyFile from a Caddy certificate in file mode.
+func (c *Controller) obtainCert(cc *conf.CertConfig) error {
+	switch cc.CertMode {
 	case "none", "":
 	case "file":
 		// If cert or key file is not explicitly set, or not found, try auto-detecting from Caddy
-		if (c.CertConfig.CertFile == "" || c.CertConfig.KeyFile == "" || !file.IsExist(c.CertConfig.CertFile) || !file.IsExist(c.CertConfig.KeyFile)) && c.CertConfig.CertDomain != "" {
-			caddyCert, caddyKey := findCaddyCertificate(c.CertConfig.CertDomain)
+		if (cc.CertFile == "" || cc.KeyFile == "" || !file.IsExist(cc.CertFile) || !file.IsExist(cc.KeyFile)) && cc.CertDomain != "" {
+			caddyCert, caddyKey := findCaddyCertificate(cc.CertDomain)
 			if caddyCert != "" && caddyKey != "" {
-				c.CertConfig.CertFile = caddyCert
-				c.CertConfig.KeyFile = caddyKey
-				log.WithField("tag", c.tag).Infof("auto-detected Caddy certificates for domain %s: cert=%s, key=%s", c.CertConfig.CertDomain, caddyCert, caddyKey)
+				cc.CertFile = caddyCert
+				cc.KeyFile = caddyKey
+				log.WithField("tag", c.tag).Infof("auto-detected Caddy certificates for domain %s: cert=%s, key=%s", cc.CertDomain, caddyCert, caddyKey)
 			}
 		}
-		if c.CertConfig.CertFile == "" || c.CertConfig.KeyFile == "" {
+		if cc.CertFile == "" || cc.KeyFile == "" {
 			return fmt.Errorf("cert file path or key file path not specified")
 		}
-		if !file.IsExist(c.CertConfig.CertFile) {
-			return fmt.Errorf("cert file not found: %s", c.CertConfig.CertFile)
+		if !file.IsExist(cc.CertFile) {
+			return fmt.Errorf("cert file not found: %s", cc.CertFile)
 		}
-		if !file.IsExist(c.CertConfig.KeyFile) {
-			return fmt.Errorf("key file not found: %s", c.CertConfig.KeyFile)
+		if !file.IsExist(cc.KeyFile) {
+			return fmt.Errorf("key file not found: %s", cc.KeyFile)
 		}
 	case "dns", "http":
-		if c.CertConfig.CertFile == "" || c.CertConfig.KeyFile == "" {
+		if cc.CertFile == "" || cc.KeyFile == "" {
 			return fmt.Errorf("cert file path or key file path not exist")
 		}
-		if file.IsExist(c.CertConfig.CertFile) && file.IsExist(c.CertConfig.KeyFile) {
+		if file.IsExist(cc.CertFile) && file.IsExist(cc.KeyFile) {
 			return nil
 		}
-		l, err := NewLego(c.CertConfig)
+		l, err := NewLego(cc)
 		if err != nil {
 			return fmt.Errorf("create lego object error: %s", err)
 		}
@@ -109,21 +113,21 @@ func (c *Controller) requestCert() error {
 			return fmt.Errorf("create lego cert error: %s", err)
 		}
 	case "self":
-		if c.CertConfig.CertFile == "" || c.CertConfig.KeyFile == "" {
+		if cc.CertFile == "" || cc.KeyFile == "" {
 			return fmt.Errorf("cert file path or key file path not exist")
 		}
-		if file.IsExist(c.CertConfig.CertFile) && file.IsExist(c.CertConfig.KeyFile) {
+		if file.IsExist(cc.CertFile) && file.IsExist(cc.KeyFile) {
 			return nil
 		}
 		err := generateSelfSslCertificate(
-			c.CertConfig.CertDomain,
-			c.CertConfig.CertFile,
-			c.CertConfig.KeyFile)
+			cc.CertDomain,
+			cc.CertFile,
+			cc.KeyFile)
 		if err != nil {
 			return fmt.Errorf("generate self cert error: %s", err)
 		}
 	default:
-		return fmt.Errorf("unsupported certmode: %s", c.CertConfig.CertMode)
+		return fmt.Errorf("unsupported certmode: %s", cc.CertMode)
 	}
 	return nil
 }
@@ -147,27 +151,27 @@ func generateSelfSslCertificate(domain, certPath, keyPath string) error {
 	if err != nil {
 		return err
 	}
-	f, err := os.OpenFile(certPath, os.O_CREATE|os.O_RDWR, 0644)
-	if err != nil {
-		return err
-	}
-	err = pem.Encode(f, &pem.Block{
+	err = writePEM(certPath, &pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: cert,
 	})
 	if err != nil {
 		return err
 	}
-	f, err = os.OpenFile(keyPath, os.O_CREATE|os.O_RDWR, 0644)
-	if err != nil {
-		return err
-	}
-	err = pem.Encode(f, &pem.Block{
+	return writePEM(keyPath, &pem.Block{
 		Type:  "EC PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
 	})
+}
+
+func writePEM(path string, b *pem.Block) error {
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
-	return nil
+	if err = pem.Encode(f, b); err != nil {
+		_ = f.Close()
+		return err
+	}
+	return f.Close()
 }

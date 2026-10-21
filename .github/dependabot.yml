@@ -13,9 +13,19 @@ updates:
       prefix: "chore"
       include: "scope"
     groups:
+      # Own PR: a new REALITY release can raise the minimum Go version
+      reality:
+        patterns:
+          - "github.com/xtls/reality"
       dependencies:
         patterns:
           - "*"
+    # Direct dependencies plus the REALITY library, which only comes in through
+    # the sing-box fork (indirect) and would otherwise never get an update PR.
+    allow:
+      - dependency-type: "direct"
+      - dependency-name: "github.com/xtls/reality"
+        dependency-type: "indirect"
     ignore:
       - dependency-name: "github.com/sagernet/sing"
         update-types: ["version-update:semver-minor", "version-update:semver-major"]

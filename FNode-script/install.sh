@@ -6,6 +6,247 @@ yellow='\033[0;33m'
 plain='\033[0m'
 
 cur_dir=$(pwd)
+FNODE_BRANCH="${FNODE_BRANCH:-master}"
+# GitHub endpoints; overridable for tests and mirrors
+FNODE_GH_API="${FNODE_GH_API:-https://api.github.com/repos/tavut846/FNode}"
+FNODE_GH_WEB="${FNODE_GH_WEB:-https://github.com/tavut846/FNode}"
+FNODE_RAW="${FNODE_RAW:-https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}}"
+
+usage() {
+    cat <<'USAGE'
+Usage:
+  install.sh [version]                                   interactive install (old behaviour)
+  install.sh --mode machine --panel URL --token MACHINE_TOKEN --machine-id ID [options]
+  install.sh --mode node    --panel URL --token SERVER_TOKEN  --node-id ID [--type TYPE] [options]
+  install.sh uninstall [--yes]
+
+Piped:  curl -fsSL https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh | sudo bash -s -- --mode machine --panel 'https://panel' --token 'MACHINE_TOKEN' --machine-id 3
+
+Options:
+  --version x.y.z|latest|pre   FNode release to install (default: latest)
+  --branch NAME                branch used for the FNode.sh management script (default: master)
+  --type TYPE                  node mode only: vless, vmess, trojan, shadowsocks, hysteria, hysteria2,
+                               tuic, anytls. Omit it to let FNode read the type from the panel (v2 API)
+  --cert-mode MODE             none (default), http, dns, self or file
+  --cert-domain DOMAIN         certificate domain for http/dns/self/file
+  --keep-config                leave an existing /etc/FNode/config.json untouched. By default its
+                               Nodes block is replaced by the panel flags (a backup is kept)
+  --force                      accepted for older dashboard commands; replacing is now the default
+  -y, --yes                    do not ask for confirmation (uninstall)
+  --print-config               print the config.json the flags produce and exit (dry run)
+  --existing PATH              with --print-config: print PATH merged with the flags instead
+  -h, --help                   show this help
+USAGE
+}
+
+# Arguments. Any of --mode/--panel/--token/--machine-id/--node-id switches the
+# script to non-interactive mode: no read prompts at all.
+action="install"
+arg_version=""
+arg_mode=""
+arg_panel=""
+arg_token=""
+arg_machine_id=""
+arg_node_id=""
+arg_type=""
+arg_cert_mode="none"
+arg_cert_domain=""
+arg_keep_config=false
+arg_yes=false
+arg_print=false
+arg_existing=""
+noninteractive=false
+
+need_value() {
+    if [[ -z "$2" || "$2" == --* ]]; then
+        echo -e "${red}错误：${plain} $1 需要一个值 (missing value for $1)"
+        exit 1
+    fi
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --mode) need_value "$1" "$2"; arg_mode="$2"; noninteractive=true; shift 2 ;;
+        --mode=*) arg_mode="${1#*=}"; noninteractive=true; shift ;;
+        --panel|--api-host) need_value "$1" "$2"; arg_panel="$2"; noninteractive=true; shift 2 ;;
+        --panel=*|--api-host=*) arg_panel="${1#*=}"; noninteractive=true; shift ;;
+        --token) need_value "$1" "$2"; arg_token="$2"; noninteractive=true; shift 2 ;;
+        --token=*) arg_token="${1#*=}"; noninteractive=true; shift ;;
+        --machine-id) need_value "$1" "$2"; arg_machine_id="$2"; noninteractive=true; shift 2 ;;
+        --machine-id=*) arg_machine_id="${1#*=}"; noninteractive=true; shift ;;
+        --node-id) need_value "$1" "$2"; arg_node_id="$2"; noninteractive=true; shift 2 ;;
+        --node-id=*) arg_node_id="${1#*=}"; noninteractive=true; shift ;;
+        --type) need_value "$1" "$2"; arg_type="$2"; shift 2 ;;
+        --type=*) arg_type="${1#*=}"; shift ;;
+        --version) need_value "$1" "$2"; arg_version="$2"; shift 2 ;;
+        --version=*) arg_version="${1#*=}"; shift ;;
+        --branch) need_value "$1" "$2"; FNODE_BRANCH="$2"; shift 2 ;;
+        --branch=*) FNODE_BRANCH="${1#*=}"; shift ;;
+        --cert-mode) need_value "$1" "$2"; arg_cert_mode="$2"; shift 2 ;;
+        --cert-mode=*) arg_cert_mode="${1#*=}"; shift ;;
+        --cert-domain) need_value "$1" "$2"; arg_cert_domain="$2"; shift 2 ;;
+        --cert-domain=*) arg_cert_domain="${1#*=}"; shift ;;
+        --force) shift ;;
+        --keep-config) arg_keep_config=true; shift ;;
+        --existing) need_value "$1" "$2"; arg_existing="$2"; shift 2 ;;
+        --existing=*) arg_existing="${1#*=}"; shift ;;
+        -y|--yes) arg_yes=true; shift ;;
+        --print-config) arg_print=true; shift ;;
+        -h|--help) usage; exit 0 ;;
+        uninstall) action="uninstall"; shift ;;
+        install) shift ;;
+        -*) echo -e "${red}错误：${plain} 未知参数 (unknown option) $1"; usage; exit 1 ;;
+        *)
+            # Old positional version argument: install.sh 0.0.21 / pre / latest
+            if [[ -z "$arg_version" ]]; then
+                arg_version="$1"
+            fi
+            shift
+            ;;
+    esac
+done
+
+if [[ "$noninteractive" == true && "$action" == "install" ]]; then
+    case "$arg_mode" in
+        machine)
+            [[ "$arg_machine_id" =~ ^[0-9]+$ && "$arg_machine_id" -gt 0 ]] || { echo -e "${red}错误：${plain} --mode machine 需要 --machine-id <正整数>"; exit 1; }
+            ;;
+        node)
+            [[ "$arg_node_id" =~ ^[0-9]+$ && "$arg_node_id" -gt 0 ]] || { echo -e "${red}错误：${plain} --mode node 需要 --node-id <正整数>"; exit 1; }
+            if [[ -n "$arg_type" ]]; then
+                case "$arg_type" in
+                    vless|vmess|v2ray|trojan|shadowsocks|hysteria|hysteria2|tuic|anytls) ;;
+                    *) echo -e "${red}错误：${plain} 不支持的 --type $arg_type"; exit 1 ;;
+                esac
+            fi
+            ;;
+        *)
+            echo -e "${red}错误：${plain} 需要 --mode machine 或 --mode node"; usage; exit 1
+            ;;
+    esac
+    [[ "$arg_panel" =~ ^https?:// ]] || { echo -e "${red}错误：${plain} --panel 必须是 http:// 或 https:// 开头的面板地址"; exit 1; }
+    [[ -n "$arg_token" ]] || { echo -e "${red}错误：${plain} 需要 --token"; exit 1; }
+    case "$arg_cert_mode" in
+        none|http|dns|self|file) ;;
+        *) echo -e "${red}错误：${plain} --cert-mode 只能是 none/http/dns/self/file"; exit 1 ;;
+    esac
+    arg_panel="${arg_panel%/}"
+    [[ -z "$arg_version" ]] && arg_version="latest"
+fi
+
+json_escape() {
+    printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
+}
+
+has_ipv6() {
+    ip -6 addr show scope global 2>/dev/null | grep -q "inet6" && ip -6 route show default 2>/dev/null | grep -q "default"
+}
+
+# Prints the Nodes entry for the selected mode (flat ApiConfig + Options).
+panel_node_entry() {
+    local listen_ip="0.0.0.0"
+    has_ipv6 && listen_ip="::"
+    local api
+    if [[ "$arg_mode" == "machine" ]]; then
+        api="\"ApiHost\": \"$(json_escape "$arg_panel")\",
+            \"MachineID\": ${arg_machine_id},
+            \"MachineToken\": \"$(json_escape "$arg_token")\","
+    else
+        api="\"ApiHost\": \"$(json_escape "$arg_panel")\",
+            \"ApiKey\": \"$(json_escape "$arg_token")\",
+            \"NodeID\": ${arg_node_id},"
+        if [[ -n "$arg_type" ]]; then
+            api="${api}
+            \"NodeType\": \"$(json_escape "$arg_type")\","
+        fi
+    fi
+    cat <<EOF
+        {
+            "Core": "sing",
+            ${api}
+            "Timeout": 30,
+            "ListenIP": "${listen_ip}",
+            "SendIP": "0.0.0.0",
+            "DisableIPv6": true,
+            "DeviceOnlineMinTraffic": 200,
+            "EnableSniff": true,
+            "CertConfig": {
+                "CertMode": "$(json_escape "$arg_cert_mode")",
+                "RejectUnknownSni": false,
+                "CertDomain": "$(json_escape "${arg_cert_domain:-example.com}")",
+                "CertFile": "/etc/FNode/fullchain.cer",
+                "KeyFile": "/etc/FNode/cert.key",
+                "Email": "fnode@github.com",
+                "Provider": "cloudflare",
+                "DNSEnv": {
+                    "EnvName": "env1"
+                }
+            }
+        }
+EOF
+}
+
+# Prints a full config.json with the given Nodes entry.
+render_config() {
+    local entry="$1"
+    cat <<EOF
+{
+    "Log": {
+        "Level": "info",
+        "Output": ""
+    },
+    "Cores": [
+        {
+            "Type": "sing",
+            "Log": {
+                "Level": "warn",
+                "Timestamp": true
+            },
+            "DisableIPv6": true,
+            "DomainStrategy": "prefer_ipv4",
+            "NTP": {
+                "Enable": true,
+                "Server": "time.apple.com",
+                "ServerPort": 0
+            },
+            "OriginalPath": "/etc/FNode/sing_origin.json"
+        }
+    ],
+    "Nodes": [
+${entry}
+    ]
+}
+EOF
+}
+
+# Prints the config at $1 with its Nodes replaced by the entry in $2, keeping
+# Log/Cores. A FNode log level of error (or quieter) is raised to info so the
+# panel connection shows in the journal. Fails when jq is missing or the file
+# is not plain JSON (JSON5 comments).
+merge_panel_config() {
+    command -v jq >/dev/null 2>&1 || return 1
+    jq -e . "$1" >/dev/null 2>&1 || return 1
+    printf '%s' "$2" | jq -s --slurpfile cfg "$1" '
+        $cfg[0] + {Nodes: .}
+        | if ((.Log.Level // "") | ascii_downcase) as $l
+             | ["error", "fatal", "panic"] | index($l)
+          then .Log.Level = "info" else . end'
+}
+
+# --print-config: show the config the flags would produce and exit (no root,
+# nothing installed). Used by the tests and for a dry run.
+if [[ "$arg_print" == true ]]; then
+    if [[ "$noninteractive" != true ]]; then
+        echo "--print-config needs --mode, --panel, --token and --machine-id/--node-id" >&2
+        exit 1
+    fi
+    if [[ -n "$arg_existing" ]]; then
+        merge_panel_config "$arg_existing" "$(panel_node_entry)" || { echo "cannot merge $arg_existing (needs jq and plain JSON)" >&2; exit 1; }
+        exit 0
+    fi
+    render_config "$(panel_node_entry)"
+    exit 0
+fi
 
 # check root
 [[ $EUID -ne 0 ]] && echo -e "${red}错误：${plain} 必须使用root用户运行此脚本！\n" && exit 1
@@ -62,39 +303,349 @@ if [[ -z "$os_version" && -f /etc/lsb-release ]]; then
 fi
 
 if [[ x"${release}" == x"centos" ]]; then
-    if [[ ${os_version} -le 6 ]]; then
+    if [[ -n "$os_version" && ${os_version} -le 6 ]]; then
         echo -e "${red}请使用 CentOS 7 或更高版本的系统！${plain}\n" && exit 1
     fi
 elif [[ x"${release}" == x"ubuntu" ]]; then
-    if [[ ${os_version} -lt 16 ]]; then
+    if [[ -n "$os_version" && ${os_version} -lt 16 ]]; then
         echo -e "${red}请使用 Ubuntu 16 或更高版本的系统！${plain}\n" && exit 1
     fi
 elif [[ x"${release}" == x"debian" ]]; then
-    if [[ ${os_version} -lt 8 ]]; then
+    if [[ -n "$os_version" && ${os_version} -lt 8 ]]; then
         echo -e "${red}请使用 Debian 8 或更高版本的系统！${plain}\n" && exit 1
     fi
 fi
 
-install_base() {
+# --- extract helpers ---
+have_downloader() {
+    command -v wget >/dev/null 2>&1 || command -v curl >/dev/null 2>&1
+}
+
+# unzip, or a fallback that can read a zip: bsdtar, python3, busybox
+have_extractor() {
+    command -v unzip >/dev/null 2>&1 && return 0
+    command -v bsdtar >/dev/null 2>&1 && return 0
+    command -v python3 >/dev/null 2>&1 && return 0
+    command -v busybox >/dev/null 2>&1 && busybox unzip 2>&1 | grep -qi usage && return 0
+    return 1
+}
+
+# extract_zip ZIP DIR: unzips ZIP into DIR with the first tool that works.
+# geoip.dat/geosite.dat (older releases) are not used by sing-box 1.12+.
+extract_zip() {
+    local zip="$1" dest="$2"
+    mkdir -p "$dest"
+    if command -v unzip >/dev/null 2>&1; then
+        unzip -o -q "$zip" -x geoip.dat geosite.dat -d "$dest" && return 0
+    fi
+    if command -v bsdtar >/dev/null 2>&1; then
+        bsdtar -xf "$zip" -C "$dest" --exclude geoip.dat --exclude geosite.dat && return 0
+    fi
+    if command -v python3 >/dev/null 2>&1; then
+        python3 -c 'import sys, zipfile
+z = zipfile.ZipFile(sys.argv[1])
+for n in z.namelist():
+    if n not in ("geoip.dat", "geosite.dat"):
+        z.extract(n, sys.argv[2])' "$zip" "$dest" && return 0
+    fi
+    if command -v busybox >/dev/null 2>&1 && busybox unzip 2>&1 | grep -qi usage; then
+        busybox unzip -o "$zip" -d "$dest" >/dev/null && rm -f "$dest/geoip.dat" "$dest/geosite.dat" && return 0
+    fi
+    return 1
+}
+
+# download_file URL FILE: wget, then curl; fails on an HTTP error
+download_file() {
+    local url="$1" out="$2"
+    if command -v wget >/dev/null 2>&1; then
+        wget --no-check-certificate --tries=3 --progress=bar -O "$out" "$url" && return 0
+    fi
+    if command -v curl >/dev/null 2>&1; then
+        curl -fL --retry 3 -o "$out" "$url" && return 0
+    fi
+    return 1
+}
+# --- end extract helpers ---
+
+# --- release lookup ---
+GH_STATUS=""
+
+# gh_get URL FILE: GET with the GitHub headers; GH_STATUS gets the HTTP status.
+# GITHUB_TOKEN (optional) lifts the 60 requests/hour limit per IP.
+gh_get() {
+    local url="$1" out="$2" auth=()
+    GH_STATUS=""
+    [[ -n "$GITHUB_TOKEN" ]] && auth=(-H "Authorization: Bearer $GITHUB_TOKEN")
+    if command -v curl >/dev/null 2>&1; then
+        GH_STATUS=$(curl -sSL "${auth[@]}" -H "Accept: application/vnd.github+json" -o "$out" -w '%{http_code}' "$url" 2>/dev/null)
+        [[ "$GH_STATUS" == "200" ]]
+        return
+    fi
+    if command -v wget >/dev/null 2>&1; then
+        if wget -q ${GITHUB_TOKEN:+--header="Authorization: Bearer $GITHUB_TOKEN"} -O "$out" "$url"; then
+            GH_STATUS=200
+            return 0
+        fi
+        GH_STATUS="error"
+    fi
+    return 1
+}
+
+# gh_reason FILE: why the last gh_get failed, for the user
+gh_reason() {
+    local msg
+    msg=$(grep -o '"message"[^,}]*' "$1" 2>/dev/null | head -1 | sed 's/.*: *"\(.*\)"/\1/')
+    case "$GH_STATUS" in
+        403|429) echo "HTTP ${GH_STATUS}: GitHub API rate limit reached (60 requests/hour per IP${msg:+; $msg}); set GITHUB_TOKEN to raise it" ;;
+        "") echo "no response (is github.com reachable from this server?)" ;;
+        *) echo "HTTP ${GH_STATUS}${msg:+: $msg}" ;;
+    esac
+}
+
+# release_rows FILE ASSET: one line per release in the API list:
+# tag<TAB>prerelease<TAB>draft<TAB>has_asset. Uses jq when present, else a
+# small awk JSON walker that does not depend on key order or line breaks
+# (it follows the nesting: release keys at depth 2, asset names at depth 4).
+release_rows() {
+    local file="$1" asset="$2"
+    if [[ -z "$FNODE_NO_JQ" ]] && command -v jq >/dev/null 2>&1; then
+        jq -r --arg a "$asset" '.[] | [.tag_name, (.prerelease|tostring), (.draft|tostring), ((.assets // []) | any(.name == $a) | tostring)] | @tsv' "$file" 2>/dev/null && return 0
+    fi
+    awk -v asset="$asset" '
+        { buf = buf $0 "\n" }
+        END {
+            n = length(buf); i = 1; depth = 0
+            while (i <= n) {
+                c = substr(buf, i, 1)
+                if (c == "\"") {
+                    j = i + 1; str = ""
+                    while (j <= n) {
+                        d = substr(buf, j, 1)
+                        if (d == "\\") { str = str substr(buf, j, 2); j += 2; continue }
+                        if (d == "\"") break
+                        str = str d; j++
+                    }
+                    i = j + 1
+                    k = i
+                    while (k <= n && substr(buf, k, 1) ~ /[ \t\r\n]/) k++
+                    if (substr(buf, k, 1) == ":") {
+                        key[depth] = str; i = k + 1
+                    } else if (depth == 2 && key[2] == "tag_name") {
+                        tag = str
+                    } else if (depth == 4 && key[2] == "assets" && key[4] == "name" && str == asset) {
+                        has = "true"
+                    }
+                } else if (c == "{" || c == "[") {
+                    depth++
+                    if (depth == 2 && c == "{") { tag = ""; pre = "false"; draft = "false"; has = "false" }
+                    i++
+                } else if (c == "}" || c == "]") {
+                    if (depth == 2 && c == "}" && tag != "") print tag "\t" pre "\t" draft "\t" has
+                    depth--; i++
+                } else if (c ~ /[a-z]/) {
+                    j = i; word = ""
+                    while (j <= n && substr(buf, j, 1) ~ /[a-z]/) { word = word substr(buf, j, 1); j++ }
+                    i = j
+                    if (depth == 2 && key[2] == "prerelease") pre = word
+                    if (depth == 2 && key[2] == "draft") draft = word
+                } else {
+                    i++
+                }
+            }
+        }' "$file"
+}
+
+# pick_release KIND < rows: the first usable release. latest = newest stable;
+# pre = newest of all (a pre-release channel never goes back behind a stable
+# release). Drafts, "draft-*" tags and releases without the zip are skipped.
+pick_release() {
+    awk -F'\t' -v kind="$1" '$3 != "true" && $4 == "true" && $1 !~ /^draft-/ && $1 != "latest" && (kind == "pre" || $2 != "true") { print $1; exit }'
+}
+
+# asset_exists TAG ASSET: the release has the download for this arch
+asset_exists() {
+    local url="$FNODE_GH_WEB/releases/download/$1/$2" code
+    if command -v curl >/dev/null 2>&1; then
+        code=$(curl -sIL -o /dev/null -w '%{http_code}' "$url" 2>/dev/null)
+        [[ "$code" == "200" ]]
+        return
+    fi
+    if command -v wget >/dev/null 2>&1; then
+        wget -q --spider "$url" 2>/dev/null
+        return
+    fi
+    return 0
+}
+
+# first_existing KIND ASSET < tags: the first tag (in order) whose zip exists
+first_existing() {
+    local kind="$1" asset="$2" t n=0
+    while read -r t; do
+        [[ -z "$t" || "$t" == draft-* || "$t" == "latest" ]] && continue
+        [[ "$kind" == "latest" && ! "$t" =~ ^v?[0-9]+(\.[0-9]+)*$ ]] && continue
+        n=$((n + 1))
+        [[ $n -gt 8 ]] && break
+        if asset_exists "$t" "$asset"; then
+            echo "$t"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# resolve_version KIND ARCH: prints the tag of the newest release of KIND
+# (latest|pre) that has FNode-linux-ARCH.zip. Order: the GitHub API, then the
+# releases page redirect / Atom feed, then git ls-remote. Diagnostics go to
+# stderr.
+resolve_version() {
+    local kind="$1" asset="FNode-linux-$2.zip" tmp tag
+    tmp=$(mktemp)
+    if gh_get "$FNODE_GH_API/releases?per_page=30" "$tmp"; then
+        tag=$(release_rows "$tmp" "$asset" | pick_release "$kind")
+        if [[ -n "$tag" ]]; then
+            rm -f "$tmp"
+            echo "$tag"
+            return 0
+        fi
+        echo "GitHub API: no ${kind} release with ${asset} found, trying other sources" >&2
+    else
+        echo "GitHub API failed: $(gh_reason "$tmp"); trying other sources" >&2
+    fi
+    rm -f "$tmp"
+    if [[ "$kind" == "latest" ]] && command -v curl >/dev/null 2>&1; then
+        tag=$(curl -sIL -o /dev/null -w '%{url_effective}' "$FNODE_GH_WEB/releases/latest" 2>/dev/null | sed -n 's#.*/releases/tag/\([^/?]*\)$#\1#p')
+        if [[ -n "$tag" && "$tag" != draft-* ]] && asset_exists "$tag" "$asset"; then
+            echo "$tag"
+            return 0
+        fi
+    fi
+    if command -v curl >/dev/null 2>&1; then
+        tag=$(curl -sL "$FNODE_GH_WEB/releases.atom" 2>/dev/null | grep -o '/releases/tag/[^"<]*' | sed 's#.*/tag/##' | awk '!seen[$0]++' | first_existing "$kind" "$asset")
+        if [[ -n "$tag" ]]; then
+            echo "$tag"
+            return 0
+        fi
+    fi
+    if command -v git >/dev/null 2>&1; then
+        tag=$(git ls-remote --tags --refs "$FNODE_GH_WEB.git" 2>/dev/null | sed 's#.*refs/tags/##' | sort -rV | first_existing "$kind" "$asset")
+        if [[ -n "$tag" ]]; then
+            echo "$tag"
+            return 0
+        fi
+    fi
+    return 1
+}
+
+# resolve_explicit VERSION ARCH: the release tag for a version the user typed
+# (0.0.22-pre, v0.0.22); tries the tag with and without a leading "v".
+resolve_explicit() {
+    local v="$1" asset="FNode-linux-$2.zip" cand
+    for cand in "$v" "${v#v}" "v${v#v}"; do
+        if asset_exists "$cand" "$asset"; then
+            echo "$cand"
+            return 0
+        fi
+    done
+    return 1
+}
+# --- end release lookup ---
+
+# pkg_install PACKAGE...: installs with the system package manager, showing
+# errors (only stdout is silenced)
+pkg_install() {
     if [[ x"${release}" == x"centos" ]]; then
-        yum install epel-release wget curl unzip tar crontabs socat ca-certificates -y >/dev/null 2>&1
+        local pkgs=("${@/cron/crontabs}")
+        [[ " $* " == *" jq "* ]] && yum install epel-release -y >/dev/null
+        yum install "${pkgs[@]}" -y >/dev/null
         update-ca-trust force-enable >/dev/null 2>&1
     elif [[ x"${release}" == x"alpine" ]]; then
-        apk add wget curl unzip tar socat ca-certificates >/dev/null 2>&1
+        apk add --no-cache "$@" >/dev/null
         update-ca-certificates >/dev/null 2>&1
-    elif [[ x"${release}" == x"debian" ]]; then
-        apt-get update -y >/dev/null 2>&1
-        apt install wget curl unzip tar cron socat ca-certificates -y >/dev/null 2>&1
-        update-ca-certificates >/dev/null 2>&1
-    elif [[ x"${release}" == x"ubuntu" ]]; then
-        apt-get update -y >/dev/null 2>&1
-        apt install wget curl unzip tar cron socat -y >/dev/null 2>&1
-        apt-get install ca-certificates wget -y >/dev/null 2>&1
+    elif [[ x"${release}" == x"debian" || x"${release}" == x"ubuntu" ]]; then
+        apt-get update -y >/dev/null
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$@" >/dev/null
         update-ca-certificates >/dev/null 2>&1
     elif [[ x"${release}" == x"arch" ]]; then
-        pacman -Sy --noconfirm >/dev/null 2>&1
-        pacman -S --noconfirm --needed wget curl unzip tar cron socat >/dev/null 2>&1
-        pacman -S --noconfirm --needed ca-certificates wget >/dev/null 2>&1
+        local pkgs=("${@/cron/cronie}")
+        pacman -Sy --noconfirm --needed "${pkgs[@]}" >/dev/null
+    fi
+}
+
+# Installs only the packages that are missing and skips the package manager
+# when nothing is (a small VPS saves time, memory and disk). socat is no
+# longer installed: FNode requests certificates itself (lego). The install
+# stops here, with the package manager's message, when it still cannot
+# download or unpack a zip afterwards.
+install_base() {
+    local missing=() c
+    for c in wget curl unzip tar jq; do
+        command -v "$c" >/dev/null 2>&1 || missing+=("$c")
+    done
+    # cron is only used for the weekly log cleanup
+    if [[ x"${release}" != x"alpine" ]] && ! command -v crontab >/dev/null 2>&1; then
+        missing+=("cron")
+    fi
+    if [[ ! -s /etc/ssl/certs/ca-certificates.crt && ! -s /etc/pki/tls/certs/ca-bundle.crt && ! -s /etc/ssl/cert.pem ]]; then
+        missing+=("ca-certificates")
+    fi
+    if [[ ${#missing[@]} -eq 0 ]]; then
+        echo -e "依赖已齐全，跳过安装 (dependencies present, skipping package install)"
+        return 0
+    fi
+    echo -e "安装依赖 (installing): ${missing[*]}"
+    pkg_install "${missing[@]}"
+    if ! have_downloader || ! have_extractor; then
+        echo -e "${yellow}依赖安装未完成，重试一次 (dependencies still missing, retrying once; package manager output follows)${plain}"
+        pkg_install "${missing[@]}" 2>&1
+    fi
+    if ! have_downloader; then
+        echo -e "${red}错误：${plain} 没有 wget 或 curl，无法下载 FNode (neither wget nor curl could be installed; check the network, free disk space and the package manager output above)"
+        exit 1
+    fi
+    if ! have_extractor; then
+        echo -e "${red}错误：${plain} 没有 unzip，也没有 bsdtar/python3/busybox，无法解压 (no unzip, bsdtar, python3 or busybox: install one by hand, e.g. apt-get install unzip, then run this again)"
+        exit 1
+    fi
+    command -v jq >/dev/null 2>&1 || echo -e "${yellow}未安装 jq：已有 config.json 无法合并，将被整体重写 (jq missing: an existing config.json is rewritten, not merged)${plain}"
+}
+
+# Total RAM in MiB (0 when unknown).
+total_mem_mb() {
+    awk '/^MemTotal:/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0
+}
+
+# Go GC limit sized to the machine: on small VPSes the Go runtime collects
+# harder before the heap reaches the RAM, instead of the kernel OOM killer
+# picking a victim. Prints nothing on machines with 2 GB or more.
+fnode_gomemlimit() {
+    local mem
+    mem=$(total_mem_mb)
+    if [[ "${mem:-0}" -gt 0 && "$mem" -lt 2048 ]]; then
+        echo "$((mem * 70 / 100))MiB"
+    fi
+    return 0
+}
+
+# systemd [Service] lines for the memory limits; below 1.5 GB RAM FNode is
+# also capped in its own cgroup, so an OOM restarts FNode (Restart=always)
+# and not sshd.
+fnode_unit_memory_lines() {
+    local mem limit
+    mem=$(total_mem_mb)
+    limit=$(fnode_gomemlimit)
+    [[ -n "$limit" ]] && echo "Environment=GOMEMLIMIT=${limit}"
+    [[ "${mem:-0}" -gt 0 && "$mem" -lt 1536 ]] && echo "MemoryMax=$((mem * 85 / 100))M"
+    return 0
+}
+
+# Advice for a small machine without swap (printed, nothing is changed).
+small_vps_hints() {
+    local mem swap
+    mem=$(total_mem_mb)
+    swap=$(awk '/^SwapTotal:/ {print $2}' /proc/meminfo 2>/dev/null)
+    if [[ "${mem:-0}" -gt 0 && "$mem" -lt 1024 && "${swap:-0}" -eq 0 ]]; then
+        echo -e "${yellow}内存只有 ${mem} MB 且没有 swap，建议创建 512 MB swap 防止被 OOM 杀掉 (small RAM and no swap; a swapfile avoids OOM kills):${plain}"
+        echo "  fallocate -l 512M /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile && echo '/swapfile none swap sw 0 0' >> /etc/fstab"
     fi
 }
 
@@ -139,44 +690,290 @@ EOF
     fi
 }
 
+write_default_sing_origin() {
+    [[ -f /etc/FNode/sing_origin.json ]] && return 0
+    # FNode default outbounds and routes (same as the built-in default)
+    cat <<'EOF' > /etc/FNode/sing_origin.json
+{
+  "outbounds": [
+    {
+      "tag": "direct",
+      "type": "direct",
+      "domain_strategy": "prefer_ipv4"
+    },
+    {
+      "tag": "direct6",
+      "type": "direct",
+      "domain_strategy": "prefer_ipv6"
+    },
+    {
+      "type": "block",
+      "tag": "block"
+    }
+  ],
+  "route": {
+    "auto_detect_interface": true,
+    "rules": [
+      {
+        "ip_is_private": true,
+        "outbound": "block"
+      },
+      {
+        "protocol": [
+          "bittorrent"
+        ],
+        "outbound": "block"
+      },
+      {
+        "port": [
+          25,
+          465,
+          587
+        ],
+        "network": [
+          "tcp"
+        ],
+        "outbound": "block"
+      },
+      {
+        "domain_regex": [
+          "(api|ps|sv|offnavi|newvector|ulog.imap|newloc)(.map|).(baidu|n.shifen).com",
+          "(.+.|^)(360|so).(cn|com)",
+          "(Subject|HELO|SMTP)",
+          "(torrent|.torrent|peer_id=|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=)",
+          "(^.@)(guerrillamail|guerrillamailblock|sharklasers|grr|pokemail|spam4|bccto|chacuo|027168).(info|biz|com|de|net|org|me|la)",
+          "(.?)(xunlei|sandai|Thunder|XLLiveUD)(.)",
+          "(..||)(dafahao|mingjinglive|botanwang|minghui|dongtaiwang|falunaz|epochtimes|ntdtv|falundafa|falungong|wujieliulan|zhengjian).(org|com|net)",
+          "(ed2k|.torrent|peer_id=|announce|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=|magnet:|xunlei|sandai|Thunder|XLLiveUD|bt_key)",
+          "(.+.|^)(360).(cn|com|net)",
+          "(.*.||)(guanjia.qq.com|qqpcmgr|QQPCMGR)",
+          "(.*.||)(rising|kingsoft|duba|xindubawukong|jinshanduba).(com|net|org)",
+          "(.*.||)(netvigator|torproject).(com|cn|net|org)",
+          "(..||)(visa|mycard|gash|beanfun).",
+          "(.*.||)(gov|12377|12315|talk.news.pts.org|creaders|zhuichaguoji|efcc.org|cyberpolice|aboluowang|tuidang|epochtimes|zhengjian|110.qq|mingjingnews|inmediahk|xinsheng|breakgfw|chengmingmag|jinpianwang|qi-gong|mhradio|edoors|renminbao|soundofhope|xizang-zhiye|bannedbook|ntdtv|12321|secretchina|dajiyuan|boxun|chinadigitaltimes|dwnews|huaglad|oneplusnews|epochweekly|cn.rfi).(cn|com|org|net|club|net|fr|tw|hk|eu|info|me)",
+          "(.*.||)(miaozhen|cnzz|talkingdata|umeng).(cn|com)",
+          "(.*.||)(mycard).(com|tw)",
+          "(.*.||)(gash).(com|tw)",
+          "(.*.||)(pincong).(rocks)",
+          "(.*.||)(taobao).(com)",
+          "(.*.||)(laomoe|jiyou|ssss|lolicp|vv1234|0z|4321q|868123|ksweb|mm126).(com|cloud|fun|cn|gs|xyz|cc)",
+          "(flows|miaoko).(pages).(dev)"
+        ],
+        "outbound": "block"
+      },
+      {
+        "outbound": "direct",
+        "network": [
+          "udp",
+          "tcp"
+        ]
+      }
+    ]
+  }
+}
+EOF
+}
+
+# Writes /etc/FNode/config.json for --mode machine|node. The dashboard flags
+# win: an existing config is backed up and its Nodes block replaced (the
+# whole file when jq is missing or cannot parse it). --keep-config leaves it.
+write_panel_config() {
+    mkdir -p /etc/FNode
+    write_default_sing_origin
+    local entry
+    entry=$(panel_node_entry)
+    if [[ "$had_config" == true && "$arg_keep_config" == true ]]; then
+        echo -e "${yellow}已存在 /etc/FNode/config.json，未修改 (--keep-config: existing config kept, the --panel/--token flags are NOT applied)${plain}"
+        return 0
+    fi
+    if [[ -f /etc/FNode/config.json ]]; then
+        local backup
+        backup="/etc/FNode/config.json.bak.$(date +%Y%m%d%H%M%S)"
+        cp /etc/FNode/config.json "$backup"
+        echo -e "${yellow}已备份旧配置 (old config backed up): ${backup}${plain}"
+    fi
+    if [[ "$had_config" == true ]]; then
+        local tmp
+        tmp=$(mktemp /etc/FNode/.config.json.XXXXXX.tmp)
+        if merge_panel_config /etc/FNode/config.json "$entry" > "$tmp" 2>/dev/null; then
+            mv -f "$tmp" /etc/FNode/config.json
+            chmod 600 /etc/FNode/config.json
+            echo -e "${green}已替换 /etc/FNode/config.json 的 Nodes 配置为面板 ${arg_panel} (${arg_mode} mode; panel block replaced, Log/Cores kept)${plain}"
+            return 0
+        fi
+        rm -f "$tmp"
+        echo -e "${yellow}无法合并旧配置 (jq missing or config is not plain JSON): rewriting the whole file, Log/Cores reset to defaults${plain}"
+    fi
+    render_config "$entry" > /etc/FNode/config.json
+    chmod 600 /etc/FNode/config.json
+    echo -e "${green}已生成 /etc/FNode/config.json (${arg_mode} mode)${plain}"
+}
+
+start_service() {
+    if [[ x"${release}" == x"alpine" ]]; then
+        service FNode restart
+    else
+        systemctl restart FNode
+    fi
+    sleep 3
+    check_status
+    if [[ $? == 0 ]]; then
+        echo -e "${green}FNode 已启动 (running)${plain}"
+        return 0
+    fi
+    echo -e "${red}FNode 启动失败 (FNode is not running). Last log lines:${plain}"
+    if [[ x"${release}" != x"alpine" ]]; then
+        journalctl -u FNode -n 15 --no-pager 2>/dev/null
+    fi
+    echo -e "${red}请检查 /etc/FNode/config.json 和面板地址/令牌，然后运行: FNode restart; FNode log${plain}"
+    return 1
+}
+
+uninstall_FNode() {
+    if [[ "$arg_yes" != true ]]; then
+        if [ -t 0 ]; then
+            read -rp "确定要卸载 FNode 吗? (uninstall FNode) [y/N]: " confirm_uninstall
+            [[ "$confirm_uninstall" == [Yy] ]] || { echo "已取消 (cancelled)"; exit 0; }
+        else
+            echo -e "${red}错误：${plain} 非交互模式卸载需要 --yes (pass --yes to uninstall without a terminal)"
+            exit 1
+        fi
+    fi
+    if [[ x"${release}" == x"alpine" ]]; then
+        service FNode stop 2>/dev/null
+        rc-update del FNode 2>/dev/null
+        rm /etc/init.d/FNode -f
+    else
+        systemctl stop FNode 2>/dev/null
+        systemctl disable FNode 2>/dev/null
+        rm /etc/systemd/system/FNode.service -f
+        systemctl daemon-reload
+        systemctl reset-failed 2>/dev/null
+    fi
+    rm /etc/FNode/ -rf
+    rm /usr/local/FNode/ -rf
+    rm -f /etc/cron.d/FNode-cleanlog /etc/periodic/weekly/fnode-cleanlog
+    (crontab -l 2>/dev/null | grep -v "FNode clearlog") | crontab - 2>/dev/null || true
+    rm -f /usr/bin/FNode /usr/bin/fnode
+    echo -e "${green}FNode 已卸载 (uninstalled)${plain}"
+}
+
 install_FNode() {
 
-    if [[ -e /usr/local/FNode/ ]]; then
-        rm -rf /usr/local/FNode/
+    # Download and verify in a staging directory; the installed FNode is only
+    # replaced once the new binary runs, so a failed update leaves it working.
+    stage=/usr/local/FNode.new
+    rm -rf "$stage"
+    mkdir -p "$stage"
+    trap 'rm -rf /usr/local/FNode.new' EXIT
+    cd "$stage"
+
+    target_type="$1"
+    if [[ -z "$target_type" ]]; then
+        if [ -t 0 ]; then
+            echo -e "请选择要安装的 FNode 版本:"
+            echo -e "  ${green}1.${plain} 最新正式版 (Latest Release, 默认)"
+            echo -e "  ${green}2.${plain} 预发布预览版 (Pre-release)"
+            echo -e "  ${green}3.${plain} 自定义指定版本 (Specific Version)"
+            read -rp "请输入选择 [1-3] (默认 1): " ver_choice
+            case "$ver_choice" in
+                2)
+                    target_type="pre"
+                    ;;
+                3)
+                    read -rp "请输入指定版本号 (例如 0.0.21 或 0.0.22-pre): " custom_ver
+                    target_type="${custom_ver}"
+                    ;;
+                1|"")
+                    target_type="latest"
+                    ;;
+                *)
+                    echo -e "${yellow}输入无效，默认安装最新正式版${plain}"
+                    target_type="latest"
+                    ;;
+            esac
+        else
+            target_type="latest"
+        fi
     fi
 
-    mkdir /usr/local/FNode/ -p
-    cd /usr/local/FNode/
-
-    if  [ $# == 0 ] ;then
-        last_version=$(curl -Ls "https://api.github.com/repos/tavut846/FNode/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-        if [[ ! -n "$last_version" ]]; then
-            echo -e "${red}检测 FNode 版本失败，可能是超出 Github API 限制，请稍后再试，或手动指定 FNode 版本安装${plain}"
+    local kind=""
+    case "$target_type" in
+        pre|prerelease|pre-release) kind="pre" ;;
+        latest) kind="latest" ;;
+    esac
+    if [[ -n "$kind" ]]; then
+        echo -e "正在获取最新$([[ $kind == pre ]] && echo 预发布版 || echo 正式版)信息 (looking up the newest ${kind} release)..."
+        last_version=$(resolve_version "$kind" "$arch")
+        if [[ -z "$last_version" ]]; then
+            echo -e "${red}检测 FNode 版本失败 (could not find a ${kind} release with FNode-linux-${arch}.zip). Nothing was changed.${plain}"
+            echo -e "可以直接指定版本重试 (retry with an explicit version): ${green}FNode update 0.0.22-pre${plain}; 版本列表 / versions: ${FNODE_GH_WEB}/releases"
             exit 1
         fi
-        echo -e "检测到 FNode 最新版本：${last_version}，开始安装"
-        wget --no-check-certificate -N --progress=bar -O /usr/local/FNode/FNode-linux.zip https://github.com/tavut846/FNode/releases/download/${last_version}/FNode-linux-${arch}.zip
-        if [[ $? -ne 0 ]]; then
-            echo -e "${red}下载 FNode 失败，请确保你的服务器能够下载 Github 的文件${plain}"
-            exit 1
-        fi
+        echo -e "检测到 FNode 最新版本：${green}${last_version}${plain}，开始安装"
     else
-        last_version=$1
-        url="https://github.com/tavut846/FNode/releases/download/${last_version}/FNode-linux-${arch}.zip"
-        echo -e "开始安装 FNode $1"
-        wget --no-check-certificate -N --progress=bar -O /usr/local/FNode/FNode-linux.zip ${url}
-        if [[ $? -ne 0 ]]; then
-            echo -e "${red}下载 FNode $1 失败，请确保此版本存在${plain}"
+        last_version=$(resolve_explicit "$target_type" "$arch")
+        if [[ -z "$last_version" ]]; then
+            echo -e "${red}找不到版本 ${target_type} 的 FNode-linux-${arch}.zip (no release ${target_type} with FNode-linux-${arch}.zip). Nothing was changed.${plain}"
+            echo -e "版本列表 / versions: ${FNODE_GH_WEB}/releases"
             exit 1
         fi
+        echo -e "开始安装指定版本 FNode: ${green}${last_version}${plain}"
     fi
+    url="$FNODE_GH_WEB/releases/download/${last_version}/FNode-linux-${arch}.zip"
 
-    unzip FNode-linux.zip
-    rm FNode-linux.zip -f
-    chmod +x FNode
+    # the zip and the extracted binary are on disk together: about 100 MB
+    local free_mb
+    free_mb=$(df -Pm /usr/local 2>/dev/null | awk 'NR==2 {print $4}')
+    if [[ -n "$free_mb" && "$free_mb" -lt 120 ]]; then
+        echo -e "${red}磁盘空间不足：/usr/local 只剩 ${free_mb} MB，至少需要 120 MB (not enough free disk: ${free_mb} MB left, need 120 MB). Free some space (apt-get clean, journalctl --vacuum-size=20M) and retry${plain}"
+        exit 1
+    fi
+    if ! download_file "${url}" "$stage/FNode-linux.zip"; then
+        echo -e "${red}下载 FNode ${last_version} 失败，请确保你的服务器能够下载 Github 的文件且此版本存在 (download failed: ${url}). Nothing was changed.${plain}"
+        exit 1
+    fi
+    if [[ $(wc -c < "$stage/FNode-linux.zip") -lt 1000000 ]]; then
+        echo -e "${red}下载的文件太小，不是 FNode 安装包 (the download is not a FNode release zip; wrong version or arch?): ${url}. Nothing was changed.${plain}"
+        exit 1
+    fi
+    if ! extract_zip "$stage/FNode-linux.zip" "$stage"; then
+        echo -e "${red}解压失败：压缩包损坏或磁盘已满 (could not extract the zip: it is damaged or the disk is full). Nothing was changed. Free space and run again.${plain}"
+        exit 1
+    fi
+    rm -f "$stage/FNode-linux.zip"
+    if [[ ! -s "$stage/FNode" ]]; then
+        echo -e "${red}压缩包里没有 FNode 程序 (the zip has no FNode binary). Nothing was changed.${plain}"
+        exit 1
+    fi
+    chmod +x "$stage/FNode"
+    if ! ver_out=$("$stage/FNode" version --short 2>&1); then
+        echo -e "${red}FNode 无法运行 (the downloaded binary does not run on this machine, ${arch} / $(uname -m)): ${ver_out}. Nothing was changed.${plain}"
+        exit 1
+    fi
+    for f in dns.json route.json custom_outbound.json custom_inbound.json; do
+        [[ -f "$stage/$f" ]] || echo -e "${yellow}压缩包缺少 $f (zip lacks $f)${plain}"
+    done
+    # An update never changes the user's config: remember it, and put it back
+    # if anything below changed it (a dashboard install passes flags and is
+    # meant to rewrite it).
+    cfg_sum=""
+    if [[ "$noninteractive" != true && -f /etc/FNode/config.json ]]; then
+        cfg_snap=$(mktemp) && cp -p /etc/FNode/config.json "$cfg_snap" && cfg_sum=$(cksum < "$cfg_snap")
+    fi
+    # swap in the verified install, keep the old one until it is in place
+    rm -rf /usr/local/FNode.old
+    [[ -e /usr/local/FNode ]] && mv /usr/local/FNode /usr/local/FNode.old
+    if ! mv "$stage" /usr/local/FNode; then
+        [[ -e /usr/local/FNode.old ]] && mv /usr/local/FNode.old /usr/local/FNode
+        echo -e "${red}无法移动到 /usr/local/FNode (could not move the new install into place); the old one was restored${plain}"
+        exit 1
+    fi
+    rm -rf /usr/local/FNode.old
+    trap - EXIT
+    cd /usr/local/FNode
+    echo -e "FNode 程序已验证 (binary verified): ${green}${ver_out}${plain}"
     mkdir /etc/FNode/ -p
-    cp geoip.dat /etc/FNode/
-    cp geosite.dat /etc/FNode/
     if [[ x"${release}" == x"alpine" ]]; then
         rm /etc/init.d/FNode -f
         cat <<EOF > /etc/init.d/FNode
@@ -185,6 +982,7 @@ install_FNode() {
 name="FNode"
 description="FNode"
 
+$(l=$(fnode_gomemlimit); [ -n "$l" ] && echo "export GOMEMLIMIT=$l")
 command="/usr/local/FNode/FNode"
 command_args="server"
 command_user="root"
@@ -194,6 +992,13 @@ command_background="yes"
 
 depend() {
         need net
+}
+
+start_pre() {
+        if [ ! -x /usr/local/FNode/FNode ]; then
+                eerror "/usr/local/FNode/FNode is missing: reinstall FNode"
+                return 1
+        fi
 }
 EOF
         chmod +x /etc/init.d/FNode
@@ -206,6 +1011,8 @@ EOF
 Description=FNode Service
 After=network.target nss-lookup.target
 Wants=network.target
+# do not restart forever when the binary is missing (a broken install)
+ConditionPathIsExecutable=/usr/local/FNode/FNode
 
 [Service]
 User=root
@@ -220,6 +1027,7 @@ WorkingDirectory=/usr/local/FNode/
 ExecStart=/usr/local/FNode/FNode server
 Restart=always
 RestartSec=10
+$(fnode_unit_memory_lines)
 
 [Install]
 WantedBy=multi-user.target
@@ -230,7 +1038,10 @@ EOF
         echo -e "${green}FNode ${last_version}${plain} 安装完成，已设置开机自启"
     fi
 
-    if [[ ! -f /etc/FNode/config.json ]]; then
+    if [[ "$noninteractive" == true ]]; then
+        write_panel_config
+        first_install=false
+    elif [[ ! -f /etc/FNode/config.json ]]; then
         cp config.json /etc/FNode/
         echo -e ""
         first_install=true
@@ -242,8 +1053,9 @@ EOF
         fi
         sleep 2
         check_status
+        local started=$?
         echo -e ""
-        if [[ $? == 0 ]]; then
+        if [[ $started == 0 ]]; then
             echo -e "${green}FNode 重启成功${plain}"
         else
             echo -e "${red}FNode 可能启动失败，请稍后使用 FNode log 查看日志信息，若无法启动，则可能更改了配置格式，请前往 wiki 查看：https://github.com/FNode-project/FNode/wiki${plain}"
@@ -263,13 +1075,19 @@ EOF
     if [[ ! -f /etc/FNode/custom_inbound.json ]]; then
         cp custom_inbound.json /etc/FNode/
     fi
-    curl -o /usr/bin/FNode -Ls https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/FNode.sh
+    if [[ -n "$cfg_sum" && "$(cksum < /etc/FNode/config.json 2>/dev/null)" != "$cfg_sum" ]]; then
+        cp -p "$cfg_snap" /etc/FNode/config.json
+        echo -e "${yellow}config.json 被改动，已恢复原内容 (config.json was changed during the update and has been restored)${plain}"
+    fi
+    [[ -n "$cfg_snap" ]] && rm -f "$cfg_snap"
+    curl -o /usr/bin/FNode -Ls "${FNODE_RAW}/FNode-script/FNode.sh"
     chmod +x /usr/bin/FNode
     if [ ! -L /usr/bin/fnode ]; then
         ln -s /usr/bin/FNode /usr/bin/fnode
         chmod +x /usr/bin/fnode
     fi
     setup_cleanlog_cron
+    small_vps_hints
     cd $cur_dir
     rm -f install.sh
     echo -e ""
@@ -279,23 +1097,30 @@ EOF
     echo "FNode start        - 启动 FNode"
     echo "FNode stop         - 停止 FNode"
     echo "FNode restart      - 重启 FNode"
-    echo "FNode status       - 查看 FNode 状态"
+    echo "FNode status       - 查看 FNode 状态 (含面板地址、令牌、节点标签)"
     echo "FNode enable       - 设置 FNode 开机自启"
     echo "FNode disable      - 取消 FNode 开机自启"
     echo "FNode log          - 查看 FNode 日志"
     echo "FNode x25519       - 生成 x25519 密钥"
     echo "FNode generate     - 生成 FNode 配置文件"
-    echo "FNode update       - 更新 FNode"
+    echo "FNode update       - 更新 FNode (交互式选择: 最新版/预发布版/指定版本)"
+    echo "FNode update pre   - 更新 FNode 至最新预发布预览版"
     echo "FNode update x.x.x - 更新 FNode 指定版本"
-    echo "FNode install      - 安装 FNode"
-    echo "FNode uninstall    - 卸载 FNode"
+    echo "FNode install      - 安装 FNode (可选参数: latest/pre/指定版本)"
+    echo "FNode uninstall    - 卸载 FNode (--yes 跳过确认)"
+    echo "FNode config show  - 查看生效配置与出站来源 (--node 标签 --summary)"
+    echo "FNode config status - 查看面板地址、令牌(部分)与节点标签"
     echo "FNode version      - 查看 FNode 版本"
     echo "------------------------------------------"
-    # 首次安装询问是否生成配置文件
-    if [[ $first_install == true ]]; then
+    if [[ "$noninteractive" == true ]]; then
+        start_service
+        return $?
+    fi
+    # 首次安装询问是否生成配置文件 (only with a terminal: piped stdin is the script itself)
+    if [[ $first_install == true && -t 0 ]]; then
         read -rp "检测到你为第一次安装FNode,是否自动直接生成配置文件？(y/n): " if_generate
         if [[ $if_generate == [Yy] ]]; then
-            curl -o ./initconfig.sh -Ls https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/initconfig.sh
+            curl -o ./initconfig.sh -Ls "${FNODE_RAW}/FNode-script/initconfig.sh"
             source initconfig.sh
             rm initconfig.sh -f
             generate_config_file
@@ -303,6 +1128,14 @@ EOF
     fi
 }
 
+if [[ "$action" == "uninstall" ]]; then
+    uninstall_FNode
+    exit 0
+fi
+
+had_config=false
+[[ -f /etc/FNode/config.json ]] && had_config=true
+
 echo -e "${green}开始安装${plain}"
 install_base
-install_FNode $1
+install_FNode "$arg_version"

@@ -31,6 +31,26 @@ type ApiConfig struct {
 	NodeType     string `json:"NodeType"`
 	Timeout      int    `json:"Timeout"`
 	RuleListPath string `json:"RuleListPath"`
+	// MachineID switches the entry to Xboard machine mode: FNode asks the
+	// panel for every node assigned to this machine and runs one node per
+	// entry, using the v2 server API. The machine token goes in MachineToken
+	// (or ApiKey); NodeID and NodeType are ignored.
+	MachineID    int    `json:"MachineID"`
+	MachineToken string `json:"MachineToken"`
+}
+
+// IsMachine reports whether this entry is an Xboard machine (per-server token).
+func (a *ApiConfig) IsMachine() bool {
+	return a.MachineID > 0
+}
+
+// Token returns the credential sent to the panel: the machine token in
+// machine mode (MachineToken, falling back to ApiKey), otherwise ApiKey.
+func (a *ApiConfig) Token() string {
+	if a.IsMachine() && a.MachineToken != "" {
+		return a.MachineToken
+	}
+	return a.Key
 }
 
 func (n *NodeConfig) UnmarshalJSON(data []byte) (err error) {
@@ -113,12 +133,20 @@ type Options struct {
 	DisableIPv6            bool            `json:"DisableIPv6"`
 	ConnectTimeout         int             `json:"ConnectTimeout"`
 	DeviceOnlineMinTraffic int64           `json:"DeviceOnlineMinTraffic"`
+	// TCPKeepAlive and TCPKeepAliveInterval (seconds) set the keepalive
+	// probes of every TCP inbound: first probe after TCPKeepAlive idle
+	// seconds, then every TCPKeepAliveInterval. 0 uses 30 and 15 (sing-box
+	// itself uses 300 and 75, too slow to keep a NAT mapping alive); a
+	// negative TCPKeepAlive turns keepalive off.
+	TCPKeepAlive         int `json:"TCPKeepAlive"`
+	TCPKeepAliveInterval int `json:"TCPKeepAliveInterval"`
 	ReportMinTraffic       int64           `json:"ReportMinTraffic"`
 	LimitConfig            LimitConfig     `json:"LimitConfig"`
 	RawOptions             json.RawMessage `json:"RawOptions"`
 	SingOptions            *SingOptions    `json:"SingOptions"`
-	CertConfig             *CertConfig     `json:"CertConfig"`
-	Masquerade             string          `json:"Masquerade"`
+	CertConfig             *CertConfig      `json:"CertConfig"`
+	Masquerade             string           `json:"Masquerade"`
+	Hysteria2Config        *Hysteria2Config `json:"Hysteria2Config,omitempty"`
 }
 
 func (o *Options) UnmarshalJSON(data []byte) error {

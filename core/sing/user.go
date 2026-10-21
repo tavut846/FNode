@@ -11,6 +11,7 @@ import (
 	"github.com/sagernet/sing-box/adapter"
 	"github.com/sagernet/sing-box/option"
 	F "github.com/sagernet/sing/common/format"
+	logrus "github.com/sirupsen/logrus"
 )
 
 func (b *Sing) AddUsers(p *core.AddUsersParams) (added int, err error) {
@@ -186,11 +187,16 @@ func (b *Sing) updateInboundUsers(tag string) error {
 	return errors.New("unsupported inbound type for dynamic users or inbound does not support UpdatableInbound")
 }
 
+// recreateInbound rebuilds an inbound that cannot change its users in place.
+// The caller holds b.users.mapLock. Every live connection of the inbound is
+// dropped, so it is logged.
 func (b *Sing) recreateInbound(tag string, info *panel.NodeInfo) error {
+	logrus.WithFields(logrus.Fields{"tag": tag, "type": info.Type, "reason": "users cannot be updated in place"}).
+		Info("Recreating inbound (live connections are dropped)")
 	in := b.box.Inbound()
 	_ = in.Remove(tag)
 	cfg := b.inboundConfig[tag]
-	c, err := b.getInboundOptions(tag, info, cfg)
+	c, err := b.buildInboundOptions(tag, info, cfg, true)
 	if err != nil {
 		return err
 	}
