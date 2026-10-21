@@ -280,6 +280,16 @@ Route changes made in the Xboard dashboard reach every FNode server without per-
 - **CLI**: `FNode config show [-c config.json] [--node <tag|file|part of tag>] [--summary] [--dir <dir>]` prints a per-node summary (outbound tag, type, source, contributing node) followed by the effective JSON.
 - **CLI**: `FNode config status [-c config.json] [--dir <dir>]` (`cmd/config_status.go`) prints, per `Nodes` entry, `Panel:` (ApiHost and `machine N, from dashboard` or `node N`), `Token:` (first and last 5 characters; tokens of 10 characters or fewer show only the first) and `Node:` (the running tags read from the effective files; machine-assigned nodes end in `--Panel`, a node entry's tag is shown alone). Node entries claim their tags before a machine entry on the same panel.
 
+### 4.6.0 Multiplex (smux) from the Panel
+
+Xboard's node form (VLESS, VMess, Trojan) has a multiplex block that the subscription also hands to clients: `multiplex.enabled`, `.padding`, `.brutal.{enabled,up_mbps,down_mbps}` and the client-only `.protocol`, `.max_connections`, `.min_streams`, `.max_streams`. A client that turns multiplex on talks smux to the server, so the server inbound must have multiplex on too, or the connection fails or hangs. FNode used to read multiplex only from the local `config.json` (`SingOptions.Multiplex`), so a dashboard setting did nothing. Now (`api/panel/multiplex.go`, `core/sing/multiplex.go`):
+- The panel's `multiplex` is parsed leniently (booleans and numbers as `0/1`, strings or numbers; `null`, `[]`, `{}` and non-objects mean "the panel did not decide") into `CommonNode.Multiplex`.
+- **The panel wins when it sends an `enabled` value** (true or false); padding and Brutal then come from the panel exactly (padding defaults to off when the panel omits it). When the panel sends none, the local `SingOptions.Multiplex` is the fallback, as before. `protocol`, `max_connections`, `min_streams` and `max_streams` are parsed but unused (client options).
+- It is applied to vless, vmess, trojan and shadowsocks inbounds, with or without Reality and with any flow (the server wraps the inbound the same way for XTLS Vision).
+- `multiplex` is inbound config (not a routing key), so a change in the dashboard rebuilds the inbound.
+- One info line per node build: `Multiplex is on` (`source` panel or local config, `padding`, `brutal`) or `Multiplex is off`.
+- Brutal needs up and down of at least 1 Mbps (otherwise sing-box refuses to create the inbound and the node would not start): without them FNode runs multiplex without Brutal and warns. With Brutal on it warns that TCP Brutal needs the `brutal` kernel module on the server (`lsmod | grep brutal`).
+
 ### 4.6.1 Inbound Stability & TCP Keepalive (idle clients that stop working)
 
 Symptom: after a long idle time the next use of an AnyTLS or Hysteria2 proxy fails until the client reconnects.

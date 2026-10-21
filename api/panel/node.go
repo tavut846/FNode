@@ -65,6 +65,10 @@ type CommonNode struct {
 	// CertConfig is the dashboard's per-node certificate setting. When set
 	// (mode not none) it replaces the local Options.CertConfig for TLS.
 	CertConfig *CertConfig `json:"cert_config"`
+
+	// Multiplex is the panel's multiplex block (vless, vmess, trojan); nil
+	// when the panel did not send one.
+	Multiplex *Multiplex `json:"multiplex"`
 }
 
 // CustomOutbound is one panel-defined outbound in xboard-node shape:

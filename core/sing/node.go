@@ -78,19 +78,11 @@ func (b *Sing) buildInboundOptions(tag string, info *panel.NodeInfo, c *conf.Opt
 		listen.TCPFastOpen = c.SingOptions.TCPFastOpen
 	}
 	applyTCPKeepAlive(&listen, c)
-	var multiplex *option.InboundMultiplexOptions
-	if c.SingOptions != nil && c.SingOptions.Multiplex != nil {
-		multiplexOption := option.InboundMultiplexOptions{
-			Enabled: c.SingOptions.Multiplex.Enabled,
-			Padding: c.SingOptions.Multiplex.Padding,
-			Brutal: &option.BrutalOptions{
-				Enabled:  c.SingOptions.Multiplex.Brutal.Enabled,
-				UpMbps:   c.SingOptions.Multiplex.Brutal.UpMbps,
-				DownMbps: c.SingOptions.Multiplex.Brutal.DownMbps,
-			},
-		}
-		multiplex = &multiplexOption
+	var localMultiplex *conf.MultiplexConfig
+	if c.SingOptions != nil {
+		localMultiplex = c.SingOptions.Multiplex
 	}
+	multiplex := resolveMultiplex(tag, info, localMultiplex)
 	var tls option.InboundTLSOptions
 	switch info.Security {
 	case panel.Tls:

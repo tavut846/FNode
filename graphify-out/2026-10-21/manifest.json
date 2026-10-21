@@ -240,9 +240,9 @@
     "semantic_hash": ""
   },
   "conf/sing.go": {
-    "mtime": 1792472469.0182927,
-    "seen": 1792473232.990435,
-    "ast_hash": "b0fd76c3be9b9bbb7dae86d4bcf13204",
+    "mtime": 1792564444.0619745,
+    "seen": 1792565156.83641,
+    "ast_hash": "9c4812aa962ebd762d0d2637ead63188",
     "semantic_hash": ""
   },
   "conf/watch.go": {
@@ -282,9 +282,9 @@
     "semantic_hash": ""
   },
   "core/sing/node.go": {
-    "mtime": 1792472629.7930613,
-    "seen": 1792473232.990471,
-    "ast_hash": "2bd905983b99fd8ee76c5ac766ba092b",
+    "mtime": 1792564444.0636263,
+    "seen": 1792565156.8364477,
+    "ast_hash": "f1aa75efeae8b1c86f1d9beecd01be3b",
     "semantic_hash": ""
   },
   "core/sing/sing.go": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1792472805.3066359,
-    "seen": 1792473232.9910493,
-    "ast_hash": "b25b29bf399059a6959e88be1336a28a",
+    "mtime": 1792564649.7578735,
+    "seen": 1792565156.837014,
+    "ast_hash": "e232af4d508b6b0590ac3e0c819d4107",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10731,6 +10731,24 @@
     "mtime": 1792472744.005956,
     "seen": 1792473232.9905248,
     "ast_hash": "7165a41776cd9211a387bd63910038d7",
+    "semantic_hash": ""
+  },
+  "conf/hysteria2_options_test.go": {
+    "mtime": 1792564601.327703,
+    "seen": 1792565156.8363986,
+    "ast_hash": "032767aeb231d716419c060cf7520ded",
+    "semantic_hash": ""
+  },
+  "core/sing/hysteria2_cc.go": {
+    "mtime": 1792564440.2112389,
+    "seen": 1792565156.836434,
+    "ast_hash": "289f29e9fde833945429f0c97e008149",
+    "semantic_hash": ""
+  },
+  "core/sing/hysteria2_cc_test.go": {
+    "mtime": 1792564589.2737904,
+    "seen": 1792565156.8364353,
+    "ast_hash": "8e96a197551d01c35e2588f45c00e0e4",
     "semantic_hash": ""
   }
 }
