@@ -5,6 +5,7 @@ import (
 	"os/signal"
 	"runtime"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -96,34 +97,49 @@ func serverHandle(_ *cobra.Command, _ []string) {
 		return
 	}
 	log.Info("Nodes started")
+
+	// reload restarts the core and the nodes. It runs for a config change and,
+	// with Cores[].NetworkRecovery "restart", when resets do not bring the
+	// network back; the lock keeps the two apart.
+	var reloadMu sync.Mutex
+	var reload func()
+	hookRestart := func(core vCore.Core) {
+		if r, ok := core.(vCore.NetworkRecoverer); ok {
+			// run in a goroutine: reload closes the core that called the hook
+			r.SetRestartHook(func() { go reload() })
+		}
+	}
+	reload = func() {
+		reloadMu.Lock()
+		defer reloadMu.Unlock()
+		nodes.Close()
+		if cerr := vc.Close(); cerr != nil {
+			log.WithField("err", cerr).Error("Restart node failed")
+			return
+		}
+		c.SetGeneratedDirs(config)
+		newCore, nerr := vCore.NewCore(c.CoresConfig)
+		if nerr != nil {
+			log.WithField("err", nerr).Error("New core failed")
+			return
+		}
+		vc = newCore
+		if serr := vc.Start(); serr != nil {
+			log.WithField("err", serr).Error("Start core failed")
+			return
+		}
+		hookRestart(vc)
+		log.Info("Core ", vc.Type(), " restarted")
+		if nserr := nodes.Start(c.NodeConfig, vc); nserr != nil {
+			log.WithField("err", nserr).Error("Run nodes failed")
+			return
+		}
+		log.Info("Nodes restarted")
+		runtime.GC()
+	}
+	hookRestart(vc)
 	if watch {
-		err = c.Watch(config, func() {
-			nodes.Close()
-			err = vc.Close()
-			if err != nil {
-				log.WithField("err", err).Error("Restart node failed")
-				return
-			}
-			c.SetGeneratedDirs(config)
-			vc, err = vCore.NewCore(c.CoresConfig)
-			if err != nil {
-				log.WithField("err", err).Error("New core failed")
-				return
-			}
-			err = vc.Start()
-			if err != nil {
-				log.WithField("err", err).Error("Start core failed")
-				return
-			}
-			log.Info("Core ", vc.Type(), " restarted")
-			err = nodes.Start(c.NodeConfig, vc)
-			if err != nil {
-				log.WithField("err", err).Error("Run nodes failed")
-				return
-			}
-			log.Info("Nodes restarted")
-			runtime.GC()
-		})
+		err = c.Watch(config, reload)
 		if err != nil {
 			log.WithField("err", err).Error("start watch failed")
 			return

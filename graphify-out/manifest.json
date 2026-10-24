@@ -66,9 +66,9 @@
     "semantic_hash": ""
   },
   "cmd/server.go": {
-    "mtime": 1792393891.6070516,
-    "seen": 1792397801.6607502,
-    "ast_hash": "fd95ab887f9cfa33b8ce03e2ca1d8290",
+    "mtime": 1792804311.1708462,
+    "seen": 1792805108.5354784,
+    "ast_hash": "e07f50c8a5e0d85be4ed5f23e83a243d",
     "semantic_hash": ""
   },
   "cmd/server_test.go": {
@@ -240,9 +240,9 @@
     "semantic_hash": ""
   },
   "conf/sing.go": {
-    "mtime": 1792564444.0619745,
-    "seen": 1792565156.83641,
-    "ast_hash": "9c4812aa962ebd762d0d2637ead63188",
+    "mtime": 1792804160.2482133,
+    "seen": 1792805108.535631,
+    "ast_hash": "59fc8e0a420ff62739c280d4169b420d",
     "semantic_hash": ""
   },
   "conf/watch.go": {
@@ -258,9 +258,9 @@
     "semantic_hash": ""
   },
   "core/interface.go": {
-    "mtime": 1792337399.2308178,
-    "seen": 1792338955.1352546,
-    "ast_hash": "f6588f09c1b84ecf229a5ccdac907757",
+    "mtime": 1792804160.253389,
+    "seen": 1792805108.5356503,
+    "ast_hash": "551453d8a0de3d4e08110bb3814fc365",
     "semantic_hash": ""
   },
   "core/imports/imports.go": {
@@ -288,9 +288,9 @@
     "semantic_hash": ""
   },
   "core/sing/sing.go": {
-    "mtime": 1792393891.8061857,
-    "seen": 1792397801.6609764,
-    "ast_hash": "fdf853e089f51f03f5558bfe84d9bbfa",
+    "mtime": 1792804280.4814172,
+    "seen": 1792805108.5357487,
+    "ast_hash": "22eb01ab0e73553d3641a55d2b0f9569",
     "semantic_hash": ""
   },
   "core/sing/user.go": {
@@ -10254,9 +10254,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_GUIDE.md": {
-    "mtime": 1792587950.7099116,
-    "seen": 1792588372.0980844,
-    "ast_hash": "d52d65043a9289d44d885028eb8c0f57",
+    "mtime": 1792804537.8588686,
+    "seen": 1792805108.5368798,
+    "ast_hash": "e63c688f56a80bf2caa4be7fa7c1627a",
     "semantic_hash": ""
   },
   "example/COMPONENTS.md": {
@@ -10446,9 +10446,9 @@
     "semantic_hash": ""
   },
   "core/sing/outbound_test.go": {
-    "mtime": 1792337556.096795,
-    "seen": 1792338955.1352682,
-    "ast_hash": "9fa9c968b895ce18c1f19d5e66e8d279",
+    "mtime": 1792804398.8794994,
+    "seen": 1792805108.535725,
+    "ast_hash": "0572255a9dbe93045baa8f807b398b52",
     "semantic_hash": ""
   },
   "node/ws.go": {
@@ -10773,6 +10773,18 @@
     "mtime": 1792587916.0333388,
     "seen": 1792588372.0963385,
     "ast_hash": "b8e4f2f0ce9cd17f48e383f9f100f3ae",
+    "semantic_hash": ""
+  },
+  "core/sing/netrecovery.go": {
+    "mtime": 1792804472.2201102,
+    "seen": 1792805108.5357077,
+    "ast_hash": "74f6c8ada34e63a6360eca23ba97a72a",
+    "semantic_hash": ""
+  },
+  "core/sing/netrecovery_test.go": {
+    "mtime": 1792804503.5819135,
+    "seen": 1792805108.535711,
+    "ast_hash": "ccfd4d22d6e1d3c040717f1923ab750b",
     "semantic_hash": ""
   }
 }

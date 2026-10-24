@@ -20,6 +20,12 @@ type SingConfig struct {
 	// <node>.panel.json debug files. Defaults to "generated" next to the
 	// main config file. It is never watched for reloads.
 	GeneratedDir string `json:"GeneratedDir"`
+	// NetworkRecovery says what FNode does when the VPS network changes (the
+	// provider moves the public IP) and outbound DNS lookups start failing:
+	// "reset" (default) resets sing-box's DNS sockets and cache, "restart"
+	// also restarts the core when resets do not help (at most once per 5
+	// minutes), "off" does nothing.
+	NetworkRecovery string `json:"NetworkRecovery"`
 }
 
 // DefaultGeneratedDir returns the generated-files directory for a config file.
