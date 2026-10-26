@@ -51,6 +51,12 @@ type Sing struct {
 	baseLogVerbosity          int
 	removeFloor               func()
 
+	// idle warning: one WARN when an inbound accepted no connection since it
+	// started (see inboundlog.go); idleWarnAfter 0 means the default.
+	idleMu        sync.Mutex
+	idleTimers    map[string]*time.Timer
+	idleWarnAfter time.Duration
+
 	// baseOutbounds is the static outbound set (sing_origin.json, local
 	// CustomOutbounds and builtin direct/block) the box was created with.
 	baseOutbounds []outboundEntry
@@ -310,6 +316,7 @@ func (b *Sing) SetRestartHook(f func()) {
 }
 
 func (b *Sing) Close() error {
+	b.disarmAllIdleWarnings()
 	if b.stopRecovery != nil {
 		b.stopRecovery()
 	}

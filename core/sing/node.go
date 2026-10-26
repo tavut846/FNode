@@ -601,6 +601,7 @@ func (b *Sing) AddNode(tag string, info *panel.NodeInfo, config *conf.Options) e
 	b.users.mapLock.Unlock()
 	c, err := b.getInboundOptions(tag, info, config)
 	if err != nil {
+		logInboundError(tag, info, config, "cannot be built", err)
 		return err
 	}
 	in := b.box.Inbound()
@@ -614,9 +615,11 @@ func (b *Sing) AddNode(tag string, info *panel.NodeInfo, config *conf.Options) e
 	)
 
 	if err != nil {
+		logInboundError(tag, info, config, "failed to start", err)
 		return fmt.Errorf("add inbound error: %s", err)
 	}
-	logrus.WithFields(logrus.Fields{"tag": tag, "type": c.Type, "port": info.Common.ServerPort}).Info("Inbound created")
+	logrus.WithFields(inboundFields(tag, info, config, c)).Info("Inbound created")
+	b.armIdleWarning(tag, c.Type, info.Common.ServerPort)
 	b.users.mapLock.Lock()
 	b.inboundOptions[tag] = c
 	b.users.mapLock.Unlock()
@@ -627,6 +630,7 @@ func (b *Sing) AddNode(tag string, info *panel.NodeInfo, config *conf.Options) e
 }
 
 func (b *Sing) DelNode(tag string) error {
+	b.disarmIdleWarning(tag)
 	b.users.mapLock.Lock()
 	delete(b.inboundInfo, tag)
 	delete(b.inboundUsers, tag)

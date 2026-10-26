@@ -47,28 +47,8 @@ func TestParseLogLine(t *testing.T) {
 	}
 }
 
-func TestProbeCounterSummary(t *testing.T) {
-	var p probeCounter
-	if p.drain(5*time.Minute) != "" {
-		t.Error("no probes, no summary")
-	}
-	for i := 0; i < 3; i++ {
-		p.add("inbound/vless[a]", "52.36.5.236")
-	}
-	p.add("inbound/vless[a]", "192.248.150.180")
-	s := p.drain(5 * time.Minute)
-	for _, want := range []string{"REALITY: rejected 4 probes in the last 5m", "inbound/vless[a] x4", "52.36.5.236 x3", "192.248.150.180 x1"} {
-		if !strings.Contains(s, want) {
-			t.Errorf("summary %q misses %q", s, want)
-		}
-	}
-	if p.drain(time.Minute) != "" {
-		t.Error("drain must reset the counter")
-	}
-}
-
 // End to end: a real sing-box logger writing to "stderr" while the capture is
-// installed. Probe lines become a counter, other lines reach the console.
+// installed. Probe lines become a rate-limited WARN, other lines reach the console.
 func TestLogCapture_EndToEnd(t *testing.T) {
 	var out bytes.Buffer
 	c, err := newLogCapture(&conf.SingLogConfig{Level: "info", Timestamp: true})
@@ -130,8 +110,13 @@ func TestLogCapture_EndToEnd(t *testing.T) {
 	if !strings.Contains(console, "something else") || strings.Contains(console, "below the level") {
 		t.Errorf("console:\n%s", console)
 	}
-	if !strings.Contains(summary.String(), "REALITY: rejected 2 probes in the last 60m") {
-		t.Errorf("the counter summary is logged at info on close:\n%s", summary.String())
+	// the first reject warns at once, the second is summed up on close
+	got := summary.String()
+	if strings.Count(got, "Reality rejected 1 connection(s)") != 2 || !strings.Contains(got, "52.36.5.236 x1") {
+		t.Errorf("the first reject is a WARN with its address:\n%s", got)
+	}
+	if !strings.Contains(got, "level=warning") || !strings.Contains(got, "Reality rejected 1 connection(s)") {
+		t.Errorf("rejects are logged at warn:\n%s", got)
 	}
 	mu.Lock()
 	defer mu.Unlock()

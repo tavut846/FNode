@@ -108,28 +108,6 @@ func isRealityProbe(l logLine) bool {
 	return strings.Contains(l.Message, "REALITY: processed invalid connection")
 }
 
-// probeCounter counts rejected REALITY connections between summaries.
-type probeCounter struct {
-	mu    sync.Mutex
-	total int
-	byTag map[string]int
-	byIP  map[string]int
-}
-
-func (p *probeCounter) add(tag, ip string) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if p.byTag == nil {
-		p.byTag = make(map[string]int)
-		p.byIP = make(map[string]int)
-	}
-	p.total++
-	p.byTag[tag]++
-	if ip != "" {
-		p.byIP[ip]++
-	}
-}
-
 func topN(m map[string]int, n int) string {
 	type kv struct {
 		k string
@@ -155,48 +133,21 @@ func topN(m map[string]int, n int) string {
 	return strings.Join(parts, ", ")
 }
 
-// drain returns the summary of the probes counted since the last drain and
-// resets the counter. It returns "" when there were none.
-func (p *probeCounter) drain(window time.Duration) string {
-	p.mu.Lock()
-	total, byTag, byIP := p.total, p.byTag, p.byIP
-	p.total, p.byTag, p.byIP = 0, nil, nil
-	p.mu.Unlock()
-	if total == 0 {
-		return ""
-	}
-	s := fmt.Sprintf("REALITY: rejected %d probes in the last %s", total, formatWindow(window))
-	if len(byTag) > 0 {
-		s += " (" + topN(byTag, 3)
-		if len(byIP) > 0 {
-			s += "; top sources: " + topN(byIP, 3)
-		}
-		s += ")"
-	}
-	return s
-}
-
-func formatWindow(d time.Duration) string {
-	if d >= time.Minute && d%time.Minute == 0 {
-		return fmt.Sprintf("%dm", int(d/time.Minute))
-	}
-	return d.String()
-}
-
 // logCapture sits between sing-box's logger and its destination. sing-box
 // writes its log to os.Stderr when the log output is "stderr"; the capture
 // swaps os.Stderr for a pipe while the box is created, reads the lines, and
 // forwards them to the configured destination (stderr, stdout or a file)
-// filtered by the configured level. REALITY probe rejections are turned into
-// debug lines plus a periodic counter.
+// filtered by the configured level. Rejected connections (REALITY probes,
+// flow mismatches, an unreachable dest) are counted per inbound and reason and
+// logged as one WARN per minute (rejectlog.go); the raw probe line is debug.
 type logCapture struct {
 	pr, pw      *os.File
 	console     io.Writer
 	consoleFile *os.File
 	stripColor  bool
 	consoleVerb int // lines above this verbosity are not printed; -1 prints nothing
-	probes      probeCounter
-	probeEvery  time.Duration
+	rejects     *rejectLimiter
+	probeEvery  time.Duration // how often suppressed rejects are summed up
 	// onLine receives every parsed line (after probe classification), set
 	// before the box starts.
 	onLine func(l logLine, probe bool)
@@ -235,7 +186,8 @@ func newLogCapture(lc *conf.SingLogConfig) (*logCapture, error) {
 		pr:          pr,
 		pw:          pw,
 		consoleVerb: levelToVerbosity(lc.Level),
-		probeEvery:  5 * time.Minute,
+		rejects:     newRejectLimiter(),
+		probeEvery:  15 * time.Second,
 		done:        make(chan struct{}),
 		stop:        make(chan struct{}),
 	}
@@ -315,13 +267,11 @@ func (c *logCapture) handle(raw string) {
 		return
 	}
 	probe := isRealityProbe(l)
+	if ri, ok := classifyReject(l); ok {
+		c.rejects.Observe(l.Tag, ri)
+	}
 	if probe {
-		ip := ""
-		if m := fromRe.FindStringSubmatch(l.Message); m != nil {
-			ip = strings.Trim(m[1], "[]")
-		}
-		c.probes.add(l.Tag, ip)
-		// Probe rejections are expected noise: debug only
+		// the WARN comes from the rejectLimiter; the raw line stays at debug
 		if log.IsLevelEnabled(log.DebugLevel) {
 			log.WithField(logship.SkipField, true).Debug(l.Tag + ": " + l.Message)
 		}
@@ -346,11 +296,7 @@ func (c *logCapture) probeLoop() {
 	}
 }
 
-func (c *logCapture) flushProbes() {
-	if s := c.probes.drain(c.probeEvery); s != "" {
-		log.Info(s)
-	}
-}
+func (c *logCapture) flushProbes() { c.rejects.Flush(false) }
 
 // Close stops the capture after sing-box has closed its logger.
 func (c *logCapture) Close() {
@@ -361,7 +307,7 @@ func (c *logCapture) Close() {
 			<-c.done
 		}
 		_ = c.pr.Close()
-		c.flushProbes()
+		c.rejects.Flush(true)
 		if c.consoleFile != nil {
 			_ = c.consoleFile.Close()
 		}
@@ -369,7 +315,7 @@ func (c *logCapture) Close() {
 }
 
 // shipToPanel feeds a parsed sing-box line to the panel log shippers. Probe
-// rejections ship as debug entries; the 5 minute counter ships at info.
+// rejections ship as debug entries; the rate-limited WARN ships at warn.
 func shipToPanel(l logLine, probe bool) {
 	level := logship.Level(min(l.Verbosity, int(logship.Debug)))
 	if probe {
