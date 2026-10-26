@@ -11,7 +11,7 @@ import (
 )
 
 // caddyScript returns the part of FNode-script/FNode.sh the Caddy wizard needs
-// (the https_port helpers and setup_caddy_reverse_proxy), CRLF stripped, with
+// (the https_port helpers and set_caddy_port), CRLF stripped, with
 // /etc/caddy and /etc/FNode redirected into dir.
 func caddyScript(t *testing.T, dir string) string {
 	t.Helper()
@@ -27,11 +27,11 @@ func caddyScript(t *testing.T, dir string) string {
 		t.Fatal("https_port helpers not found in FNode.sh")
 	}
 	helpers := src[hStart : hEnd+len(hEndMarker)]
-	fStart := strings.Index(src, "setup_caddy_reverse_proxy() {")
-	// ends where show_usage starts (the Caddyfile text inside has "}" lines at column 0)
+	fStart := strings.Index(src, "set_caddy_port() {")
+	// ends where show_usage starts
 	fEnd := strings.Index(src[fStart:], "\nshow_usage() {")
 	if fStart < 0 || fEnd < 0 {
-		t.Fatal("setup_caddy_reverse_proxy not found in FNode.sh")
+		t.Fatal("set_caddy_port not found in FNode.sh")
 	}
 	fn := src[fStart : fStart+fEnd]
 	out := "green=''; red=''; yellow=''; plain=''; release=debian\nbefore_show_menu() { :; }\n" + helpers + "\n" + fn
@@ -227,95 +227,5 @@ func TestCaddyPortConflict(t *testing.T) {
 		if got := strings.TrimSpace(out); got != want {
 			t.Errorf("port %s: %q, want %q", port, got, want)
 		}
-	}
-}
-
-// The whole wizard with stdin as the answers (no TTY, so the port is not asked).
-func TestCaddyWizard(t *testing.T) {
-	type tc struct {
-		name     string
-		existing string // existing Caddyfile ("" none)
-		env      []string
-		stdin    string
-		check    func(t *testing.T, caddyfile, out string)
-	}
-	answers := "a.example.com\ntoken123\n\n" // domain, token, decoy (default)
-	count := func(s, sub string) int { return strings.Count(s, sub) }
-	cases := []tc{
-		{"fresh install, default 8443", "", nil, answers, func(t *testing.T, f, out string) {
-			if !strings.HasPrefix(f, "{\n    https_port 8443\n}\n") || count(f, "https_port") != 1 || !strings.Contains(f, "a.example.com {") {
-				t.Errorf("caddyfile:\n%s", f)
-			}
-			if !strings.Contains(out, "Reality in the panel: Destination Site = a.example.com, port = 8443, Connection/Server port 443, flow xtls-rprx-vision, multiplex off") ||
-				!strings.Contains(out, "8443 是 Caddy, 443 是 FNode") {
-				t.Errorf("summary:\n%s", out)
-			}
-		}},
-		{"env 443 writes no global option", "", []string{"CADDY_HTTPS_PORT=443"}, answers, func(t *testing.T, f, out string) {
-			if strings.Contains(f, "https_port") || strings.HasPrefix(f, "{") {
-				t.Errorf("caddyfile:\n%s", f)
-			}
-			if strings.Contains(out, "Reality in the panel") {
-				t.Errorf("no Reality line for 443:\n%s", out)
-			}
-		}},
-		{"env port wins", "", []string{"CADDY_HTTPS_PORT=9443"}, answers, func(t *testing.T, f, out string) {
-			if !strings.Contains(f, "https_port 9443") || !strings.Contains(out, "port = 9443") {
-				t.Errorf("caddyfile:\n%s\n%s", f, out)
-			}
-		}},
-		{"existing 443 Caddyfile is kept on 443", "old.example.com {\n    respond ok\n}\n", nil, answers, func(t *testing.T, f, out string) {
-			if strings.Contains(f, "https_port") || !strings.Contains(out, "Caddy HTTPS 端口: 443") {
-				t.Errorf("must stay on 443:\n%s\n%s", f, out)
-			}
-		}},
-		{"existing https_port is kept", "{\n    https_port 9443\n}\nold.example.com {\n}\n", nil, answers, func(t *testing.T, f, out string) {
-			if !strings.HasPrefix(f, "{\n    https_port 9443\n}\n") || count(f, "https_port") != 1 {
-				t.Errorf("caddyfile:\n%s", f)
-			}
-		}},
-		{"append keeps one global block", "{\n    email a@b.c\n}\nold.example.com {\n    respond ok\n}\n", []string{"CADDY_HTTPS_PORT=8443"}, answers + "2\n", func(t *testing.T, f, out string) {
-			if count(f, "https_port") != 1 || !strings.HasPrefix(f, "{\n    https_port 8443\n    email a@b.c\n}\n") ||
-				!strings.Contains(f, "old.example.com {") || !strings.Contains(f, "a.example.com {") {
-				t.Errorf("caddyfile:\n%s", f)
-			}
-			if len(regexp.MustCompile(`(?m)^\{\s*$`).FindAllString(f, -1)) != 1 {
-				t.Errorf("exactly one global block expected:\n%s", f)
-			}
-		}},
-		{"append with an unsafe global block keeps it and says so", "{ debug }\nold.example.com {\n}\n", []string{"CADDY_HTTPS_PORT=8443"}, answers + "2\n", func(t *testing.T, f, out string) {
-			if !strings.HasPrefix(f, "{ debug }\n") || strings.Contains(f, "https_port") || !strings.Contains(out, "https_port 8443") || !strings.Contains(out, "Caddy HTTPS 端口: 443") {
-				t.Errorf("caddyfile:\n%s\n%s", f, out)
-			}
-		}},
-		{"invalid env port is refused", "", []string{"CADDY_HTTPS_PORT=99999"}, answers, func(t *testing.T, f, out string) {
-			if f != "" || !strings.Contains(out, "必须是 1-65535") {
-				t.Errorf("caddyfile %q\n%s", f, out)
-			}
-		}},
-	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			dir := t.TempDir()
-			if err := os.MkdirAll(filepath.Join(dir, "caddy"), 0o755); err != nil {
-				t.Fatal(err)
-			}
-			cf := filepath.Join(dir, "caddy", "Caddyfile")
-			if c.existing != "" {
-				if err := os.WriteFile(cf, []byte(c.existing), 0o644); err != nil {
-					t.Fatal(err)
-				}
-			}
-			bin := t.TempDir()
-			for _, name := range []string{"caddy", "systemctl", "service", "sleep"} {
-				if err := os.WriteFile(filepath.Join(bin, name), []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
-					t.Fatal(err)
-				}
-			}
-			env := append([]string{"PATH=" + filepath.ToSlash(bin) + string(os.PathListSeparator) + os.Getenv("PATH")}, c.env...)
-			out, _ := bashRun(t, caddyScript(t, dir)+"\nsetup_caddy_reverse_proxy 0", env, c.stdin)
-			got, _ := os.ReadFile(cf)
-			c.check(t, string(got), out)
-		})
 	}
 }

@@ -104,10 +104,6 @@ confirm_restart() {
 }
 
 before_show_menu() {
-    caddy_menu_note=""
-    if [[ -f /etc/caddy/Caddyfile ]]; then
-        caddy_menu_note=" (当前 Caddy HTTPS 端口: $(caddy_current_port /etc/caddy/Caddyfile | grep . || echo 443))"
-    fi
     echo && echo -n -e "${yellow}按回车返回主菜单: ${plain}" && read temp
     show_menu
 }
@@ -1281,10 +1277,20 @@ caddy_set_https_port() {
                         if (state == 1) {
                             if (depth == 1 && t ~ /^https_port[ \t]+[0-9]+$/) port_line = i
                             n = gsub(/\{/, "{", t); m = gsub(/\}/, "}", t); depth += n - m
-                            if (depth <= 0) break
+                            if (depth <= 0) { endi = i; break }
                         }
                     }
+                    # 443 restores the default: an https_port-only block goes away entirely
+                    drop = 0
+                    if (port == 443 && port_line && endi && strip(line[endi]) == "}") {
+                        others = 0
+                        for (i = start + 1; i < endi; i++) if (i != port_line && strip(line[i]) != "") others++
+                        if (!others) drop = 1
+                    }
                     for (i = 1; i <= NR; i++) {
+                        if (drop && i >= start && i <= endi) { skipblank = 1; continue }
+                        if (drop && skipblank && strip(line[i]) == "") continue
+                        skipblank = 0
                         if (i == port_line) {
                             if (port != 443) { sub(/https_port[ \t]+[0-9]+/, "https_port " port, line[i]); print line[i] }
                             continue
@@ -1315,10 +1321,28 @@ caddy_port_conflict() {
     ' | sort -u | tr '\n' ' '
 }
 
+# caddy_first_domain <Caddyfile>: the first site address (outside the global
+# block and snippets), without scheme or port; empty when there is none
+
+caddy_first_domain() {
+    [[ -f "$1" ]] || return 0
+    awk '
+        function strip(s) { sub(/#.*/, "", s); gsub(/^[ \t\r]+|[ \t\r]+$/, "", s); return s }
+        {
+            t = strip($0)
+            if (depth == 0 && t != "" && t != "{" && t ~ /\{$/ && t !~ /^\(/ && t !~ /^@/) {
+                sub(/[ \t]*\{$/, "", t); split(t, a, /[ \t,]+/)
+                d = a[1]; sub(/^[a-z]+:\/\//, "", d); sub(/:[0-9]+$/, "", d)
+                if (d != "") { print d; exit }
+            }
+            n = gsub(/\{/, "{", t); m = gsub(/\}/, "}", t); depth += n - m
+        }
+    ' "$1"
+}
+
 # ---- end caddy https_port helpers ----
 
 # 配置 Caddy 反向代理与证书申请 (支持多域名)
-# CADDY_HTTPS_PORT=<端口> 可在脚本中指定 Caddy 的 HTTPS 端口 (不提示)
 setup_caddy_reverse_proxy() {
     if ! command -v caddy &>/dev/null; then
         echo -e "${yellow}未检测到 Caddy，正在为您自动安装 Caddy...${plain}"
@@ -1387,48 +1411,6 @@ setup_caddy_reverse_proxy() {
     # 提取目标网站的 Host (如 simulate-news.316293.xyz)
     target_host=$(echo "$proxy_dest" | sed -e 's|^[^/]*//||' -e 's|/.*$||')
 
-    # Caddy 的 HTTPS 端口: Reality 自偷 (dest 指向自己的 Caddy 站点) 时 443 要留给 FNode
-    caddy_file="/etc/caddy/Caddyfile"
-    current_port=$(caddy_current_port "$caddy_file")
-    https_port=""
-    if [[ -n "${CADDY_HTTPS_PORT:-}" ]]; then
-        https_port="$CADDY_HTTPS_PORT"
-        if ! caddy_valid_port "$https_port"; then
-            echo -e "${red}CADDY_HTTPS_PORT 必须是 1-65535 之间的数字: ${https_port}${plain}"
-            if [[ $# == 0 ]]; then before_show_menu; fi
-            return 1
-        fi
-    elif [[ ! -t 0 ]]; then
-        # 非交互: 已有 Caddyfile 就保持它现在的端口 (没有 https_port 即 443)，不会改坏现有配置
-        if [[ -f "$caddy_file" ]]; then https_port="${current_port:-443}"; else https_port=8443; fi
-    else
-        default_port="${current_port:-8443}"
-        if [[ -f "$caddy_file" ]]; then
-            echo -e "当前 Caddy HTTPS 端口: ${green}${current_port:-443}${plain}"
-        fi
-        while true; do
-            read -rp "Caddy HTTPS 端口 (默认 ${default_port}；填 443 = Caddy 占用 443，不写全局选项): " https_port
-            https_port="${https_port:-$default_port}"
-            if ! caddy_valid_port "$https_port"; then
-                echo -e "${red}端口必须是 1-65535 之间的数字！${plain}"
-                continue
-            fi
-            conflict=$(caddy_port_conflict "$https_port")
-            if [[ -n "${conflict// /}" ]]; then
-                echo -e "${yellow}警告: 端口 ${https_port} 已被其他进程监听: ${conflict}${plain}"
-                read -rp "仍然继续使用该端口? [y/N]: " port_go
-                [[ "$port_go" == "y" || "$port_go" == "Y" ]] || continue
-            fi
-            break
-        done
-    fi
-    if [[ ! -t 0 || -n "${CADDY_HTTPS_PORT:-}" ]]; then
-        conflict=$(caddy_port_conflict "$https_port")
-        if [[ -n "${conflict// /}" ]]; then
-            echo -e "${yellow}警告: 端口 ${https_port} 已被其他进程监听: ${conflict}${plain}"
-        fi
-    fi
-
     mkdir -p /etc/caddy
     echo "CLOUDFLARE_API_TOKEN=${cf_token}" > /etc/caddy/caddy.env
     chmod 600 /etc/caddy/caddy.env
@@ -1466,25 +1448,12 @@ setup_caddy_reverse_proxy() {
         echo -e "2. 追加新域名到现有配置后"
         read -rp "请选择 [默认: 1]: " caddy_write_mode
         if [[ "$caddy_write_mode" == "2" ]]; then
-            cp -f /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak
             echo -e "\n${caddyfile_content}" >> /etc/caddy/Caddyfile
-            # Caddy 只接受一个全局选项块: 改写/插入现有的，绝不重复
-            if ! caddy_set_https_port /etc/caddy/Caddyfile "$https_port"; then
-                echo -e "${yellow}现有 Caddyfile 的全局选项块无法安全地自动修改，已保持原样 (新域名已追加，备份: /etc/caddy/Caddyfile.bak)。${plain}"
-                echo -e "${yellow}请手动在文件开头的全局块 { ... } 里加入一行: https_port ${https_port}${plain}"
-                https_port="${current_port:-443}"
-            fi
         else
-            { caddy_global_block "$https_port"; echo "${caddyfile_content}"; } > /etc/caddy/Caddyfile
+            echo "${caddyfile_content}" > /etc/caddy/Caddyfile
         fi
     else
-        { caddy_global_block "$https_port"; echo "${caddyfile_content}"; } > /etc/caddy/Caddyfile
-    fi
-
-    if command -v caddy &>/dev/null; then
-        if ! CLOUDFLARE_API_TOKEN="$cf_token" caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1; then
-            echo -e "${yellow}警告: caddy validate 未通过，请检查 /etc/caddy/Caddyfile (运行: caddy validate --config /etc/caddy/Caddyfile)${plain}"
-        fi
+        echo "${caddyfile_content}" > /etc/caddy/Caddyfile
     fi
 
     echo -e "${green}正在启动 Caddy 服务并申请证书...${plain}"
@@ -1505,18 +1474,114 @@ setup_caddy_reverse_proxy() {
         echo -e "    私钥路径: /root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${dom}/${dom}.key"
     done
     echo -e "伪装反代目标: ${proxy_dest}"
-    echo -e "Caddy HTTPS 端口: ${green}${https_port}${plain}"
-    if [[ "$https_port" != "443" ]]; then
-        echo -e "${green}Reality in the panel: Destination Site = ${valid_domains[0]}, port = ${https_port}, Connection/Server port 443, flow xtls-rprx-vision, multiplex off${plain}"
-        echo -e "${green}(${https_port} 是 Caddy, 443 是 FNode)。验证: curl -v https://${valid_domains[0]}:${https_port}/ (应返回带有效证书的伪装站点)${plain}"
-    else
-        echo -e "${yellow}Caddy 占用 443: 若同机 FNode 也要用 443 (Reality 自偷)，请重新运行向导并选择 8443。${plain}"
-    fi
     echo -e "${green}现在你可以运行 FNode 生成配置，并在各节点中选择 'file' 模式自动对接对应域名的证书！${plain}"
     echo -e "${green}========================================${plain}"
     if [[ $# == 0 ]]; then
         before_show_menu
     fi
+}
+
+# 修改 Caddy 的 HTTPS 端口 (默认 8443，把 443 留给 FNode，用于 Reality 自偷的 dest)
+# 用法: FNode caddy-port [端口]，也可用环境变量 CADDY_HTTPS_PORT
+set_caddy_port() {
+    local caddy_file="/etc/caddy/Caddyfile" arg_port="${2:-${CADDY_HTTPS_PORT:-}}"
+    if [[ ! -f "$caddy_file" ]] || ! command -v caddy &>/dev/null; then
+        echo -e "${red}未找到 Caddy 或 ${caddy_file}，请先运行 Caddy 向导 (菜单 18 / FNode caddy)。${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    local current new_port conflict go
+    current=$(caddy_current_port "$caddy_file")
+    current="${current:-443}"
+    echo -e "当前 Caddy HTTPS 端口: ${green}${current}${plain}"
+
+    new_port="$arg_port"
+    if [[ -z "$new_port" ]]; then
+        if [[ -t 0 ]]; then
+            read -rp "新的 Caddy HTTPS 端口 (默认 8443；443 = 恢复默认): " new_port
+        fi
+        new_port="${new_port:-8443}"
+    fi
+    if ! caddy_valid_port "$new_port"; then
+        echo -e "${red}端口必须是 1-65535 之间的数字: ${new_port}${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+    if [[ "$new_port" == "$current" ]]; then
+        echo -e "${green}Caddy 已经在使用端口 ${current}，无需修改。${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 0
+    fi
+
+    conflict=$(caddy_port_conflict "$new_port")
+    if [[ -n "${conflict// /}" ]]; then
+        echo -e "${yellow}警告: 端口 ${new_port} 已被其他进程监听: ${conflict}${plain}"
+        if [[ -t 0 ]]; then
+            read -rp "仍然继续? [y/N]: " go
+            if [[ "$go" != "y" && "$go" != "Y" ]]; then
+                if [[ $# == 0 ]]; then before_show_menu; fi
+                return 1
+            fi
+        fi
+    fi
+
+    if [[ "$(caddy_global_state "$caddy_file")" == "unsafe" ]]; then
+        echo -e "${yellow}Caddyfile 开头的全局选项块无法安全地自动修改，文件保持原样。请手动处理:${plain}"
+        echo -e "  在文件开头唯一的全局块 { ... } 里加入一行: https_port ${new_port}  (443 = 删除该行)"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    local backup
+    backup="${caddy_file}.bak.$(date +%Y%m%d%H%M%S)"
+    cp -f "$caddy_file" "$backup"
+    if ! caddy_set_https_port "$caddy_file" "$new_port"; then
+        cp -f "$backup" "$caddy_file"
+        echo -e "${red}修改 Caddyfile 失败，已恢复备份 ${backup}${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    local check_ok=0
+    if [[ -f /etc/caddy/caddy.env ]]; then
+        (set -a; . /etc/caddy/caddy.env; caddy validate --config "$caddy_file" --adapter caddyfile >/dev/null 2>&1) && check_ok=1
+    else
+        caddy validate --config "$caddy_file" --adapter caddyfile >/dev/null 2>&1 && check_ok=1
+    fi
+    if [[ $check_ok -ne 1 ]]; then
+        cp -f "$backup" "$caddy_file"
+        echo -e "${red}caddy validate 未通过，已恢复原 Caddyfile (备份: ${backup})。请检查后重试。${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    echo -e "${green}正在重启 Caddy...${plain}"
+    if [[ x"${release}" == x"alpine" ]]; then
+        service caddy restart
+    else
+        systemctl restart caddy
+    fi
+    sleep 3
+    if command -v ss &>/dev/null; then
+        ss -ltnp 2>/dev/null | grep -E ":${new_port}[[:space:]]" || echo -e "${yellow}暂未看到端口 ${new_port} 在监听，请查看: systemctl status caddy${plain}"
+    fi
+
+    local domain
+    domain=$(caddy_first_domain "$caddy_file")
+    echo -e "${green}========================================${plain}"
+    echo -e "Caddy HTTPS 端口: ${green}${new_port}${plain} (备份: ${backup})"
+    if [[ "$new_port" != "443" ]]; then
+        echo -e "${green}Reality in the panel: Destination Site = ${domain:-<域名>}, port = ${new_port}, Connection/Server port 443, flow xtls-rprx-vision, multiplex off. Caddy is on ${new_port}, FNode must be the one on 443.${plain}"
+        if [[ "$current" == "443" ]]; then
+            echo -e "${yellow}Caddy 之前在 443: 请确认现在 443 只被 FNode 占用 (ss -ltnp | grep ':443 ')，必要时重启 FNode。${plain}"
+        fi
+        echo -e "验证: curl -v https://${domain:-<域名>}:${new_port}/ (应返回带有效证书的伪装站点)"
+    else
+        echo -e "${yellow}已恢复默认: Caddy 占用 443，同机 FNode 不能再监听 443。${plain}"
+    fi
+    echo -e "${green}========================================${plain}"
+    if [[ $# == 0 ]]; then before_show_menu; fi
 }
 
 show_usage() {
@@ -1540,7 +1605,8 @@ show_usage() {
     echo "FNode uninstall    - 卸载 FNode (--yes 跳过确认)"
     echo "FNode config show  - 查看生效配置与出站来源 (--node 标签 --summary)"
     echo "FNode config status - 查看面板地址、令牌(部分)与节点标签"
-    echo "FNode caddy        - 安装/配置 Caddy (Cloudflare DNS 反代与证书；向导询问 Caddy HTTPS 端口，默认 8443，把 443 留给 FNode 的 Reality 自偷；脚本可用 CADDY_HTTPS_PORT=<端口> FNode caddy)"
+    echo "FNode caddy        - 安装/配置 Caddy (支持 Cloudflare DNS 反代与证书)"
+    echo "FNode caddy-port   - 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest，443 留给 FNode；可带端口参数: FNode caddy-port 8443)"
     echo "FNode version      - 查看 FNode 版本"
     echo "------------------------------------------"
 }
@@ -1575,13 +1641,14 @@ show_menu() {
   ${green}15.${plain} 升级 FNode 维护脚本
   ${green}16.${plain} 生成 FNode 配置文件
   ${green}17.${plain} 放行 VPS 的所有网络端口
-  ${green}18.${plain} 安装/配置 Caddy 反代与证书${caddy_menu_note}
+  ${green}18.${plain} 安装/配置 Caddy 反代与证书
   ${green}19.${plain} 配置 Hysteria 2 多端口/跳跃 NAT 转发
-  ${green}20.${plain} 退出脚本
+  ${green}20.${plain} 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest)
+  ${green}21.${plain} 退出脚本
  "
  #后续更新可加入上方字符串中
     show_status
-    echo && read -rp "请输入选择 [0-20]: " num
+    echo && read -rp "请输入选择 [0-21]: " num
 
     case "${num}" in
         0) config ;;
@@ -1604,8 +1671,9 @@ show_menu() {
         17) open_ports ;;
         18) setup_caddy_reverse_proxy ;;
         19) setup_hy2_port_hopping ;;
-        20) exit ;;
-        *) echo -e "${red}请输入正确的数字 [0-20]${plain}" ;;
+        20) set_caddy_port ;;
+        21) exit ;;
+        *) echo -e "${red}请输入正确的数字 [0-21]${plain}" ;;
     esac
 }
 
@@ -1636,6 +1704,7 @@ if [[ $# > 0 ]]; then
         "x25519") check_install 0 && generate_x25519_key 0 ;;
         "version") check_install 0 && show_FNode_version 0 ;;
         "caddy") setup_caddy_reverse_proxy 0 ;;
+        "caddy-port"|"caddy_port") set_caddy_port 0 "$2" ;;
         "install_caddy") install_caddy 0 ;;
         "porthop"|"port_hop"|"mport") setup_hy2_port_hopping ;;
         "update_shell") update_shell ;;
