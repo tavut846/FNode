@@ -51,6 +51,10 @@ type WSEvent struct {
 	// LogMode is the mode of custom_node.log_mode; NodeID 0 means the whole
 	// connection (the payload's node_id is null).
 	LogMode string
+	// LogShip is the optional "ship" of custom_node.log_mode (nil = unchanged)
+	// and LogRetainSeconds its "retain_seconds" (0 = unchanged).
+	LogShip          *bool
+	LogRetainSeconds int
 }
 
 type wsMessage struct {
@@ -85,6 +89,8 @@ func ParseWSMessage(data []byte) (string, *WSEvent, error) {
 		var p struct {
 			Mode   string `json:"mode"`
 			NodeID *int   `json:"node_id"`
+			Ship   *bool  `json:"ship"`
+			Retain int    `json:"retain_seconds"`
 		}
 		if isEmptyJSON(msg.Data) {
 			return msg.Event, nil, fmt.Errorf("custom_node.log_mode: empty payload")
@@ -96,6 +102,7 @@ func ParseWSMessage(data []byte) (string, *WSEvent, error) {
 			return msg.Event, nil, fmt.Errorf("custom_node.log_mode: unknown mode %q", p.Mode)
 		}
 		ev.LogMode = p.Mode
+		ev.LogShip, ev.LogRetainSeconds = p.Ship, p.Retain
 		if p.NodeID != nil {
 			ev.NodeID = *p.NodeID
 		}

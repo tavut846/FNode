@@ -73,6 +73,12 @@ const (
 	OffPollInterval = 60 * time.Second
 	// NotFoundBackoff is the retry interval when the plugin is missing (404).
 	NotFoundBackoff = 10 * time.Minute
+	// Standby: the panel does not store logs right now (ship=false) but may
+	// open the dashboard live view any moment. The shipper keeps the newest
+	// entries of the last StandbyRetain (or the panel's retain_seconds) in the
+	// ring, up to StandbyCapacity, and sends them when ship turns true.
+	StandbyRetain   = 300 * time.Second
+	StandbyCapacity = 5000
 )
 
 // Entry is one log entry in the panel's wire format.
@@ -95,6 +101,11 @@ type Response struct {
 	// HasNodeModes tells an empty NodeModes ("no overrides") from an old
 	// panel that does not send the field.
 	HasNodeModes bool
+	// Ship is the panel's "ship" field: false puts the shipper in standby
+	// (collect and trim, do not send). nil (an old panel) means ship.
+	Ship *bool
+	// RetainSeconds is how long standby keeps entries; 0 means unchanged.
+	RetainSeconds int
 }
 
 // Meta is sent with every log push besides the entries.
@@ -145,8 +156,12 @@ type Shipper struct {
 	sentDropped int
 	// errLogged avoids repeating the same push failure in the local log.
 	errLogged bool
+	// standby: entries are collected at the mode level and trimmed to retain,
+	// but not sent; the empty poll every interval still runs.
+	standby bool
+	retain  time.Duration
 
-	wake     chan struct{}
+	wake    chan struct{}
 	onChange func()
 }
 
@@ -164,6 +179,7 @@ func NewShipper(sender Sender) *Shipper {
 		missing:   make(map[int][]string),
 		overrides: make(map[int]Level),
 		interval:  10 * time.Second,
+		retain:    StandbyRetain,
 		wake:      make(chan struct{}, 1),
 	}
 }
@@ -217,6 +233,49 @@ func (s *Shipper) SetMode(nodeID int, mode Level) {
 	s.signal()
 }
 
+// SetShip applies "ship" (and retain_seconds, 0 = unchanged) from a WebSocket
+// event. Turning ship on wakes the flusher, which sends the backlog at once;
+// turning it off starts trimming to the retain window.
+func (s *Shipper) SetShip(ship bool, retainSeconds int) {
+	s.mu.Lock()
+	s.setShipLocked(ship, retainSeconds)
+	s.mu.Unlock()
+	s.signal()
+}
+
+func (s *Shipper) setShipLocked(ship bool, retainSeconds int) {
+	if retainSeconds > 0 {
+		s.retain = time.Duration(retainSeconds) * time.Second
+	}
+	s.standby = !ship
+	if s.standby {
+		s.trimStandbyLocked()
+	}
+}
+
+// Standby reports whether the shipper collects without sending.
+func (s *Shipper) Standby() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.standby
+}
+
+// trimStandbyLocked drops entries older than the retain window and, beyond
+// StandbyCapacity, the oldest ones.
+func (s *Shipper) trimStandbyLocked() {
+	cutoff := float64(s.now().Add(-s.retain).UnixNano()) / 1e9
+	i := 0
+	for i < len(s.buf) && s.buf[i].Time < cutoff {
+		i++
+	}
+	if over := len(s.buf) - i - StandbyCapacity; over > 0 {
+		i += over
+	}
+	if i > 0 {
+		s.buf = append(s.buf[:0], s.buf[i:]...)
+	}
+}
+
 func (s *Shipper) afterModeChangeLocked() {
 	if s.maxLevelLocked() == Off {
 		s.buf = nil
@@ -265,7 +324,12 @@ func (s *Shipper) Add(level Level, e Entry) {
 	}
 	e.Level = level.String()
 	e.Message = truncate(e.Message, MaxMessageSize)
-	if len(s.buf) >= s.capacity {
+	limit := s.capacity
+	if s.standby {
+		s.trimStandbyLocked()
+		limit = StandbyCapacity
+	}
+	if len(s.buf) >= limit {
 		copy(s.buf, s.buf[1:])
 		s.buf = s.buf[:len(s.buf)-1]
 		s.dropped++
@@ -395,7 +459,11 @@ func (s *Shipper) Flush(ctx context.Context) time.Duration {
 				}
 			}
 			s.buf = kept
-			batch = s.peekLocked()
+			if s.standby {
+				s.trimStandbyLocked()
+			} else {
+				batch = s.peekLocked()
+			}
 		}
 		s.mu.Unlock()
 
@@ -403,10 +471,16 @@ func (s *Shipper) Flush(ctx context.Context) time.Duration {
 			// Nothing to ship: still poll once at start and then every minute so
 			// a mode change made in the panel reaches an idle node too.
 			s.mu.Lock()
-			due := s.lastPoll.IsZero() || now.Sub(s.lastPoll) >= OffPollInterval || s.missingDirty
+			// in standby the empty poll runs every flush interval: the panel's
+			// status stays current and a change of "ship" is noticed
+			pollEvery := OffPollInterval
+			if s.standby {
+				pollEvery = s.interval
+			}
+			due := s.lastPoll.IsZero() || now.Sub(s.lastPoll) >= pollEvery || s.missingDirty
 			wait := s.intervalLocked()
 			if !due {
-				if untilPoll := OffPollInterval - now.Sub(s.lastPoll); untilPoll < wait {
+				if untilPoll := pollEvery - now.Sub(s.lastPoll); untilPoll < wait {
 					wait = untilPoll
 				}
 			}
@@ -469,7 +543,7 @@ func (s *Shipper) Flush(ctx context.Context) time.Duration {
 		before := s.maxLevelLocked()
 		s.applyResponseLocked(resp)
 		after := s.maxLevelLocked()
-		more := len(s.buf) > 0 && s.maxLevelLocked() != Off
+		more := len(s.buf) > 0 && s.maxLevelLocked() != Off && !s.standby
 		interval := s.intervalLocked()
 		s.mu.Unlock()
 		s.notify(before != after)
@@ -515,6 +589,8 @@ func (s *Shipper) applyResponseLocked(r Response) {
 			}
 		}
 	}
+	// an old panel sends no "ship": ship
+	s.setShipLocked(r.Ship == nil || *r.Ship, r.RetainSeconds)
 	s.afterModeChangeLocked()
 	if r.FlushInterval > 0 {
 		s.interval = time.Duration(r.FlushInterval) * time.Second

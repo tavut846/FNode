@@ -331,6 +331,9 @@ func (m *Machine) handleWSEvent(ev *panel.WSEvent) {
 	if ev.Type == panel.WSEventLogMode {
 		// node_id null: the whole machine; otherwise that node only
 		if mode, ok := logship.ParseMode(ev.LogMode); ok {
+			if ev.LogShip != nil {
+				m.shipper.SetShip(*ev.LogShip, ev.LogRetainSeconds)
+			}
 			m.shipper.SetMode(ev.NodeID, mode)
 		}
 		return
