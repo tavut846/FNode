@@ -78,6 +78,7 @@ FNode was derived from [V2bX](https://github.com/wyx2685/V2bX) and [V2bX-script]
 - Supports Cloudflare DNS-01 ACME challenges (`tls { dns cloudflare {env.CLOUDFLARE_API_TOKEN} }`).
 - Stores generated certificates in `/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/<domain>/`.
 - FNode seamlessly ingests Caddy certificates using `CertMode: "file"`.
+- The wizard (`FNode caddy`, menu 18) asks for the **Caddy HTTPS port** (default 8443; 443 writes no global option; `CADDY_HTTPS_PORT` sets it for scripts; an existing Caddyfile without TTY/env keeps its port) and writes it as the Caddyfile's single global block `{ https_port <port> }`, so Caddy leaves 443 to FNode for Reality self-steal (`dest` = the Caddy site). Append mode edits the existing global block instead of adding a second one. Helpers and tests: `FNode-script/FNode.sh` (`caddy_*`), `conf/caddy_port_test.go`. Walk-through: `FNode-script/LOGIC.md`.
 
 ### 2.6 End-to-End Communication Flow Logic
 For an exhaustive analysis with diagrams, payloads, and sequence charts, see [docs/COMMUNICATION_FLOW_LOGIC.md](docs/COMMUNICATION_FLOW_LOGIC.md). The system operates on 6 primary information flows:

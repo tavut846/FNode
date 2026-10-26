@@ -104,6 +104,10 @@ confirm_restart() {
 }
 
 before_show_menu() {
+    caddy_menu_note=""
+    if [[ -f /etc/caddy/Caddyfile ]]; then
+        caddy_menu_note=" (当前 Caddy HTTPS 端口: $(caddy_current_port /etc/caddy/Caddyfile | grep . || echo 443))"
+    fi
     echo && echo -n -e "${yellow}按回车返回主菜单: ${plain}" && read temp
     show_menu
 }
@@ -1201,7 +1205,120 @@ EOF
     echo -e "${green}Caddy 安装并配置服务完成！${plain}"
 }
 
+# ---- caddy https_port helpers (tested by conf/caddy_port_test.go; keep them free of side effects) ----
+
+# caddy_valid_port <p>: a number from 1 to 65535
+caddy_valid_port() {
+    [[ "$1" =~ ^[0-9]+$ ]] && [ "$1" -ge 1 ] && [ "$1" -le 65535 ]
+}
+
+# caddy_current_port <Caddyfile>: the https_port of its global block, empty when
+# it has none (Caddy then uses 443)
+caddy_current_port() {
+    [[ -f "$1" ]] || return 0
+    awk '
+        function strip(s) { sub(/#.*/, "", s); gsub(/^[ \t\r]+|[ \t\r]+$/, "", s); return s }
+        { t = strip($0) }
+        state == 0 && t == "" { next }
+        state == 0 { if (t != "{") exit; state = 1; depth = 1; next }
+        state == 1 {
+            if (depth == 1 && t ~ /^https_port[ \t]+[0-9]+$/) { split(t, a, /[ \t]+/); print a[2]; exit }
+            n = gsub(/\{/, "{", t); m = gsub(/\}/, "}", t); depth += n - m
+            if (depth <= 0) exit
+        }
+    ' "$1"
+}
+
+# caddy_global_state <Caddyfile>: "none" (no global block), "block" (a global
+# block that can be edited) or "unsafe" (one this script does not dare to edit)
+caddy_global_state() {
+    [[ -f "$1" ]] || { echo none; return 0; }
+    awk '
+        function strip(s) { sub(/#.*/, "", s); gsub(/^[ \t\r]+|[ \t\r]+$/, "", s); return s }
+        { t = strip($0) }
+        state == 0 && t == "" { next }
+        state == 0 {
+            if (t == "{") { state = 1; depth = 1; next }
+            if (substr(t, 1, 1) == "{") { print "unsafe"; found = 1; exit }
+            print "none"; found = 1; exit
+        }
+        state == 1 {
+            n = gsub(/\{/, "{", t); m = gsub(/\}/, "}", t); depth += n - m
+            if (depth <= 0) { print "block"; found = 1; exit }
+        }
+        END { if (!found) print (state == 1 ? "unsafe" : "none") }
+    ' "$1"
+}
+
+# caddy_global_block <port>: the global options block, nothing for 443
+caddy_global_block() {
+    [[ "$1" == "443" ]] && return 0
+    printf '{\n    https_port %s\n}\n\n' "$1"
+}
+
+# caddy_set_https_port <Caddyfile> <port>: make the file's global block say
+# https_port <port> (443 removes the option), without ever creating a second
+# global block. Returns 1 and leaves the file alone when the existing global
+# block cannot be edited safely.
+caddy_set_https_port() {
+    local file="$1" port="$2" state tmp
+    state=$(caddy_global_state "$file")
+    tmp=$(mktemp) || return 1
+    case "$state" in
+        none)
+            if [[ "$port" == "443" ]]; then rm -f "$tmp"; return 0; fi
+            { caddy_global_block "$port"; cat "$file" 2>/dev/null; } > "$tmp"
+            ;;
+        block)
+            awk -v port="$port" '
+                function strip(s) { sub(/#.*/, "", s); gsub(/^[ \t\r]+|[ \t\r]+$/, "", s); return s }
+                { line[NR] = $0 }
+                END {
+                    state = 0
+                    for (i = 1; i <= NR; i++) {
+                        t = strip(line[i])
+                        if (state == 0) { if (t == "") continue; start = i; state = 1; depth = 1; continue }
+                        if (state == 1) {
+                            if (depth == 1 && t ~ /^https_port[ \t]+[0-9]+$/) port_line = i
+                            n = gsub(/\{/, "{", t); m = gsub(/\}/, "}", t); depth += n - m
+                            if (depth <= 0) break
+                        }
+                    }
+                    for (i = 1; i <= NR; i++) {
+                        if (i == port_line) {
+                            if (port != 443) { sub(/https_port[ \t]+[0-9]+/, "https_port " port, line[i]); print line[i] }
+                            continue
+                        }
+                        print line[i]
+                        if (i == start && !port_line && port != 443) print "    https_port " port
+                    }
+                }
+            ' "$file" > "$tmp"
+            ;;
+        *)
+            rm -f "$tmp"
+            return 1
+            ;;
+    esac
+    cat "$tmp" > "$file"
+    rm -f "$tmp"
+}
+
+# caddy_port_conflict <port>: names of other programs listening on the port
+# (empty when it is free, used by caddy itself, or ss is not available)
+caddy_port_conflict() {
+    command -v ss &>/dev/null || return 0
+    ss -ltnpH 2>/dev/null | awk -v p=":$1" '
+        { n = split($4, a, ":"); if (":" a[n] != p) next }
+        $0 ~ /users:/ && $0 !~ /"caddy"/ { match($0, /\("[^"]+"/); print substr($0, RSTART + 2, RLENGTH - 3) }
+        $0 !~ /users:/ { print "unknown" }
+    ' | sort -u | tr '\n' ' '
+}
+
+# ---- end caddy https_port helpers ----
+
 # 配置 Caddy 反向代理与证书申请 (支持多域名)
+# CADDY_HTTPS_PORT=<端口> 可在脚本中指定 Caddy 的 HTTPS 端口 (不提示)
 setup_caddy_reverse_proxy() {
     if ! command -v caddy &>/dev/null; then
         echo -e "${yellow}未检测到 Caddy，正在为您自动安装 Caddy...${plain}"
@@ -1270,6 +1387,48 @@ setup_caddy_reverse_proxy() {
     # 提取目标网站的 Host (如 simulate-news.316293.xyz)
     target_host=$(echo "$proxy_dest" | sed -e 's|^[^/]*//||' -e 's|/.*$||')
 
+    # Caddy 的 HTTPS 端口: Reality 自偷 (dest 指向自己的 Caddy 站点) 时 443 要留给 FNode
+    caddy_file="/etc/caddy/Caddyfile"
+    current_port=$(caddy_current_port "$caddy_file")
+    https_port=""
+    if [[ -n "${CADDY_HTTPS_PORT:-}" ]]; then
+        https_port="$CADDY_HTTPS_PORT"
+        if ! caddy_valid_port "$https_port"; then
+            echo -e "${red}CADDY_HTTPS_PORT 必须是 1-65535 之间的数字: ${https_port}${plain}"
+            if [[ $# == 0 ]]; then before_show_menu; fi
+            return 1
+        fi
+    elif [[ ! -t 0 ]]; then
+        # 非交互: 已有 Caddyfile 就保持它现在的端口 (没有 https_port 即 443)，不会改坏现有配置
+        if [[ -f "$caddy_file" ]]; then https_port="${current_port:-443}"; else https_port=8443; fi
+    else
+        default_port="${current_port:-8443}"
+        if [[ -f "$caddy_file" ]]; then
+            echo -e "当前 Caddy HTTPS 端口: ${green}${current_port:-443}${plain}"
+        fi
+        while true; do
+            read -rp "Caddy HTTPS 端口 (默认 ${default_port}；填 443 = Caddy 占用 443，不写全局选项): " https_port
+            https_port="${https_port:-$default_port}"
+            if ! caddy_valid_port "$https_port"; then
+                echo -e "${red}端口必须是 1-65535 之间的数字！${plain}"
+                continue
+            fi
+            conflict=$(caddy_port_conflict "$https_port")
+            if [[ -n "${conflict// /}" ]]; then
+                echo -e "${yellow}警告: 端口 ${https_port} 已被其他进程监听: ${conflict}${plain}"
+                read -rp "仍然继续使用该端口? [y/N]: " port_go
+                [[ "$port_go" == "y" || "$port_go" == "Y" ]] || continue
+            fi
+            break
+        done
+    fi
+    if [[ ! -t 0 || -n "${CADDY_HTTPS_PORT:-}" ]]; then
+        conflict=$(caddy_port_conflict "$https_port")
+        if [[ -n "${conflict// /}" ]]; then
+            echo -e "${yellow}警告: 端口 ${https_port} 已被其他进程监听: ${conflict}${plain}"
+        fi
+    fi
+
     mkdir -p /etc/caddy
     echo "CLOUDFLARE_API_TOKEN=${cf_token}" > /etc/caddy/caddy.env
     chmod 600 /etc/caddy/caddy.env
@@ -1307,12 +1466,25 @@ setup_caddy_reverse_proxy() {
         echo -e "2. 追加新域名到现有配置后"
         read -rp "请选择 [默认: 1]: " caddy_write_mode
         if [[ "$caddy_write_mode" == "2" ]]; then
+            cp -f /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak
             echo -e "\n${caddyfile_content}" >> /etc/caddy/Caddyfile
+            # Caddy 只接受一个全局选项块: 改写/插入现有的，绝不重复
+            if ! caddy_set_https_port /etc/caddy/Caddyfile "$https_port"; then
+                echo -e "${yellow}现有 Caddyfile 的全局选项块无法安全地自动修改，已保持原样 (新域名已追加，备份: /etc/caddy/Caddyfile.bak)。${plain}"
+                echo -e "${yellow}请手动在文件开头的全局块 { ... } 里加入一行: https_port ${https_port}${plain}"
+                https_port="${current_port:-443}"
+            fi
         else
-            echo "${caddyfile_content}" > /etc/caddy/Caddyfile
+            { caddy_global_block "$https_port"; echo "${caddyfile_content}"; } > /etc/caddy/Caddyfile
         fi
     else
-        echo "${caddyfile_content}" > /etc/caddy/Caddyfile
+        { caddy_global_block "$https_port"; echo "${caddyfile_content}"; } > /etc/caddy/Caddyfile
+    fi
+
+    if command -v caddy &>/dev/null; then
+        if ! CLOUDFLARE_API_TOKEN="$cf_token" caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1; then
+            echo -e "${yellow}警告: caddy validate 未通过，请检查 /etc/caddy/Caddyfile (运行: caddy validate --config /etc/caddy/Caddyfile)${plain}"
+        fi
     fi
 
     echo -e "${green}正在启动 Caddy 服务并申请证书...${plain}"
@@ -1333,6 +1505,13 @@ setup_caddy_reverse_proxy() {
         echo -e "    私钥路径: /root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${dom}/${dom}.key"
     done
     echo -e "伪装反代目标: ${proxy_dest}"
+    echo -e "Caddy HTTPS 端口: ${green}${https_port}${plain}"
+    if [[ "$https_port" != "443" ]]; then
+        echo -e "${green}Reality in the panel: Destination Site = ${valid_domains[0]}, port = ${https_port}, Connection/Server port 443, flow xtls-rprx-vision, multiplex off${plain}"
+        echo -e "${green}(${https_port} 是 Caddy, 443 是 FNode)。验证: curl -v https://${valid_domains[0]}:${https_port}/ (应返回带有效证书的伪装站点)${plain}"
+    else
+        echo -e "${yellow}Caddy 占用 443: 若同机 FNode 也要用 443 (Reality 自偷)，请重新运行向导并选择 8443。${plain}"
+    fi
     echo -e "${green}现在你可以运行 FNode 生成配置，并在各节点中选择 'file' 模式自动对接对应域名的证书！${plain}"
     echo -e "${green}========================================${plain}"
     if [[ $# == 0 ]]; then
@@ -1361,7 +1540,7 @@ show_usage() {
     echo "FNode uninstall    - 卸载 FNode (--yes 跳过确认)"
     echo "FNode config show  - 查看生效配置与出站来源 (--node 标签 --summary)"
     echo "FNode config status - 查看面板地址、令牌(部分)与节点标签"
-    echo "FNode caddy        - 安装/配置 Caddy (支持 Cloudflare DNS 反代与证书)"
+    echo "FNode caddy        - 安装/配置 Caddy (Cloudflare DNS 反代与证书；向导询问 Caddy HTTPS 端口，默认 8443，把 443 留给 FNode 的 Reality 自偷；脚本可用 CADDY_HTTPS_PORT=<端口> FNode caddy)"
     echo "FNode version      - 查看 FNode 版本"
     echo "------------------------------------------"
 }
@@ -1396,7 +1575,7 @@ show_menu() {
   ${green}15.${plain} 升级 FNode 维护脚本
   ${green}16.${plain} 生成 FNode 配置文件
   ${green}17.${plain} 放行 VPS 的所有网络端口
-  ${green}18.${plain} 安装/配置 Caddy 反代与证书
+  ${green}18.${plain} 安装/配置 Caddy 反代与证书${caddy_menu_note}
   ${green}19.${plain} 配置 Hysteria 2 多端口/跳跃 NAT 转发
   ${green}20.${plain} 退出脚本
  "
