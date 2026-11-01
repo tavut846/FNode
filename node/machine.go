@@ -11,6 +11,7 @@ import (
 
 	"github.com/tavut846/FNode/api/panel"
 	"github.com/tavut846/FNode/common/logship"
+	"github.com/tavut846/FNode/common/selfupdate"
 	"github.com/tavut846/FNode/common/sysinfo"
 	"github.com/tavut846/FNode/conf"
 	vCore "github.com/tavut846/FNode/core"
@@ -336,6 +337,11 @@ func (m *Machine) handleWSEvent(ev *panel.WSEvent) {
 			}
 			m.shipper.SetMode(ev.NodeID, mode)
 		}
+		return
+	}
+	if ev.Type == panel.WSEventUpdate {
+		// downloads and restarts: never block the socket reader
+		go selfupdate.Run(ev.UpdateVersion, panel.Version)
 		return
 	}
 	if ev.Type == panel.WSEventSyncNodes {

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/tavut846/FNode/common/logship"
+	"github.com/tavut846/FNode/common/selfupdate"
 	"github.com/tavut846/FNode/conf"
 	vCore "github.com/tavut846/FNode/core"
 	"github.com/tavut846/FNode/limiter"
@@ -48,6 +49,7 @@ func serverHandle(_ *cobra.Command, _ []string) {
 		log.WithField("err", err).Error("Load config file failed")
 		return
 	}
+	selfupdate.Disabled = c.DisableRemoteUpdate
 	// info is the default: start-up, panel connection and reload messages
 	// are visible without the per-request noise of debug
 	switch strings.ToLower(strings.TrimSpace(c.LogConfig.Level)) {

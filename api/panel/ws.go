@@ -29,6 +29,8 @@ const (
 	WSEventSyncNodes = "sync.nodes"
 	// WSEventLogMode is pushed by the CustomNode plugin: {"mode","node_id"|null}.
 	WSEventLogMode = "custom_node.log_mode"
+	// WSEventUpdate asks the machine to update FNode: {"version":"<release tag>"}.
+	WSEventUpdate = "custom_node.update"
 )
 
 // WSEvent is a parsed data event.
@@ -55,6 +57,8 @@ type WSEvent struct {
 	// and LogRetainSeconds its "retain_seconds" (0 = unchanged).
 	LogShip          *bool
 	LogRetainSeconds int
+	// UpdateVersion is the release tag of custom_node.update.
+	UpdateVersion string
 }
 
 type wsMessage struct {
@@ -106,6 +110,18 @@ func ParseWSMessage(data []byte) (string, *WSEvent, error) {
 		if p.NodeID != nil {
 			ev.NodeID = *p.NodeID
 		}
+		return msg.Event, ev, nil
+	case WSEventUpdate:
+		var p struct {
+			Version string `json:"version"`
+		}
+		if isEmptyJSON(msg.Data) {
+			return msg.Event, nil, fmt.Errorf("custom_node.update: empty payload")
+		}
+		if err := json.Unmarshal(msg.Data, &p); err != nil {
+			return msg.Event, nil, fmt.Errorf("custom_node.update: decode payload: %w", err)
+		}
+		ev.UpdateVersion = strings.TrimSpace(p.Version)
 		return msg.Event, ev, nil
 	case WSEventSyncNodes:
 		var p struct {
