@@ -59,7 +59,7 @@ func (b *Sing) DelUsers(users []panel.UserInfo, tag string, _ *panel.NodeInfo) e
 	}
 
 	if currentUsers, ok := b.inboundUsers[tag]; ok {
-		var kept []panel.UserInfo
+		kept := make([]panel.UserInfo, 0, len(currentUsers))
 		for _, u := range currentUsers {
 			if _, rm := removeSet[u.Uuid]; !rm {
 				kept = append(kept, u)

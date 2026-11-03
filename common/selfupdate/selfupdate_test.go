@@ -152,3 +152,31 @@ func TestApplyDisabledAndBadTag(t *testing.T) {
 		t.Fatal("bad tag must refuse")
 	}
 }
+
+func TestCompare(t *testing.T) {
+	order := []string{"0.0.21", "0.0.22-pre", "0.0.22-pre-1", "0.0.22-pre-2", "0.0.22-pre-9", "0.0.22-pre-10", "v0.0.22", "0.0.23-pre", "0.0.23-pre-1", "0.0.23", "0.1.0"}
+	for i := range order {
+		for j := range order {
+			want := 0
+			if i < j {
+				want = -1
+			} else if i > j {
+				want = 1
+			}
+			if got := Compare(order[i], order[j]); got != want {
+				t.Errorf("Compare(%q, %q) = %d, want %d", order[i], order[j], got, want)
+			}
+		}
+	}
+	if Compare("v0.0.22", "0.0.22") != 0 {
+		t.Error("leading v must be ignored")
+	}
+	for _, tag := range []string{"0.0.22-pre-1", "0.0.22-pre-10", "0.0.22-pre"} {
+		if !ValidTag(tag) {
+			t.Errorf("%s must be valid", tag)
+		}
+	}
+	if Compare("0.0.22-pre-prev3", "0.0.22-pre-3") != 0 || Compare("0.0.22-pre-prev", "0.0.22-pre") != 0 {
+		t.Error("the old -prevN spelling reads as -N")
+	}
+}

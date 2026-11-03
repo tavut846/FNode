@@ -152,7 +152,7 @@ update() {
                 target_ver="pre"
                 ;;
             3)
-                read -rp "请输入指定版本号 (例如 0.0.21 或 0.0.22-pre): " custom_ver
+                read -rp "请输入指定版本号 (例如 0.0.21 或 0.0.22-pre-1): " custom_ver
                 if [[ -z "${custom_ver}" ]]; then
                     echo -e "${red}版本号不能为空${plain}"
                     before_show_menu
@@ -184,7 +184,7 @@ update() {
                     target_ver="pre"
                     ;;
                 3)
-                    read -rp "请输入指定版本号 (例如 0.0.21 或 0.0.22-pre): " custom_ver
+                    read -rp "请输入指定版本号 (例如 0.0.21 或 0.0.22-pre-1): " custom_ver
                     if [[ -z "${custom_ver}" ]]; then
                         echo -e "${red}版本号不能为空${plain}"
                         exit 1

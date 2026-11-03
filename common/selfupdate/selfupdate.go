@@ -19,6 +19,7 @@ import (
 	"regexp"
 	"runtime"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -48,6 +49,7 @@ var (
 	running atomic.Bool
 
 	// tagRe keeps the tag a single URL path segment: 0.0.22, v0.0.22, 0.0.22-pre, 0.0.22-pre-1.
+	preSuffixRe = regexp.MustCompile(`^pre(?:-prev)?-?([0-9]*)$`)
 	tagRe = regexp.MustCompile(`^v?[0-9]+(\.[0-9]+){1,3}(-[0-9A-Za-z][0-9A-Za-z.-]*)?$`)
 )
 
@@ -57,6 +59,75 @@ func ValidTag(tag string) bool { return len(tag) <= 64 && tagRe.MatchString(tag)
 // SameVersion compares two version strings ignoring a leading "v".
 func SameVersion(a, b string) bool {
 	return strings.TrimPrefix(strings.TrimSpace(a), "v") == strings.TrimPrefix(strings.TrimSpace(b), "v")
+}
+
+// Compare orders two release versions (leading "v" ignored): 0.0.22-pre (= pre-0)
+// < 0.0.22-pre-1 < 0.0.22-pre-10 < 0.0.22 < 0.0.23-pre-1; the number is compared
+// numerically and the old "-prevN" spelling is read as -N. Returns -1, 0 or 1.
+func Compare(a, b string) int {
+	ab, as := splitVersion(a)
+	bb, bs := splitVersion(b)
+	if c := compareNums(ab, bb); c != 0 {
+		return c
+	}
+	ar, an := preRank(as)
+	br, bn := preRank(bs)
+	switch {
+	case ar != br:
+		if ar < br {
+			return -1
+		}
+		return 1
+	case an != bn:
+		if an < bn {
+			return -1
+		}
+		return 1
+	}
+	if ar > 0 {
+		return 0
+	}
+	return strings.Compare(as, bs)
+}
+
+func splitVersion(v string) (base, suffix string) {
+	v = strings.TrimPrefix(strings.TrimPrefix(strings.TrimSpace(v), "v"), "V")
+	base, suffix, _ = strings.Cut(v, "-")
+	return
+}
+
+func compareNums(a, b string) int {
+	as, bs := strings.Split(a, "."), strings.Split(b, ".")
+	for i := 0; i < len(as) || i < len(bs); i++ {
+		var x, y int
+		if i < len(as) {
+			x, _ = strconv.Atoi(as[i])
+		}
+		if i < len(bs) {
+			y, _ = strconv.Atoi(bs[i])
+		}
+		if x != y {
+			if x < y {
+				return -1
+			}
+			return 1
+		}
+	}
+	return 0
+}
+
+// preRank ranks a suffix: none (a stable release) is highest; "pre-N" is the
+// N-th pre-release of its base (the old "pre" counts as 0, the old "pre-prevN"
+// as N); anything else sorts below them by its text.
+func preRank(suffix string) (rank, n int) {
+	if suffix == "" {
+		return 2, 0
+	}
+	if m := preSuffixRe.FindStringSubmatch(suffix); m != nil {
+		n, _ = strconv.Atoi(m[1])
+		return 1, n
+	}
+	return 0, 0
 }
 
 // AssetName is the release zip for a platform, matching .github/build/friendly-filenames.json.

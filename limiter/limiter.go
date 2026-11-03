@@ -219,13 +219,16 @@ func (l *Limiter) CheckLimit(taguuid string, ip string, isTcp bool, noSSUDP bool
 
 	limit := int64(determineSpeedLimit(nodeLimit, userLimit)) * 1000000 / 8 // If you need the Speed limit
 	if limit > 0 {
+		// The bucket of a user is created once and shared by all of the user's
+		// connections; only the first connection allocates one.
+		if v, ok := l.SpeedLimiter.Load(taguuid); ok {
+			return v.(*ratelimit.Bucket), false
+		}
 		Bucket = ratelimit.NewBucketWithQuantum(time.Second, limit, limit) // Byte/s
 		if v, ok := l.SpeedLimiter.LoadOrStore(taguuid, Bucket); ok {
 			return v.(*ratelimit.Bucket), false
-		} else {
-			l.SpeedLimiter.Store(taguuid, Bucket)
-			return Bucket, false
 		}
+		return Bucket, false
 	} else {
 		return nil, false
 	}

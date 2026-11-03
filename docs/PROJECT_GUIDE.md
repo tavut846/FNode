@@ -530,9 +530,9 @@ FNode uses GitHub Actions (`.github/workflows/release.yml`) for automated multi-
   - Automatically checks and verifies against existing git tags to prevent tag collisions, ensuring each commit creates a brand new GitHub Release instead of overwriting/replacing existing release assets.
 - **`master` / `main` / `stable` Branches**:
   - Increments the stable patch version and publishes a full GitHub Release marked as **Latest** (`make_latest: true`, `prerelease: false`).
-  - **Pre-Release Auto-Deletion**: Automatically detects, deletes, and cleans up obsolete pre-releases (e.g. `<version>-pre`) and remote git tags when an official version comes out, ensuring the GitHub releases list remains pristine.
+  - **Pre-Release Auto-Deletion**: Automatically detects, deletes, and cleans up obsolete pre-releases (e.g. `<version>-pre-<N>`, N = 1, 2, 3 ...) and remote git tags when an official version comes out, ensuring the GitHub releases list remains pristine.
 - **`dev` / `dev_new` Branches**:
-  - Automatically formats the tag in rolling pre-release form: `<upgraded_version>-pre` (e.g. `0.0.22-pre`).
+  - Automatically formats the tag in rolling pre-release form: `<upgraded_version>-pre-<N>` (e.g. `0.0.22-pre-1`, `0.0.22-pre-2`; N is the highest existing N for that version + 1, so each push is a new pre-release and the highest N is the newest; the old `0.0.22-pre` counts as 0 and the old `-pre-prevN` spelling is read as N, never produced. Tag regex `^v?[0-9]+\.[0-9]+\.[0-9]+-pre(-[0-9]+)?$`; order `0.0.22` < `0.0.23-pre` < `0.0.23-pre-1` < `0.0.23-pre-9` < `0.0.23-pre-10` < `0.0.23` < `0.0.24-pre-1`; `install.sh`, the cleanup and `selfupdate.Compare` all use it).
   - Publishes and continuously updates the GitHub Release marked as **Pre-release** (`prerelease: true`, `make_latest: false`), updating the git tag and overwriting release binaries on each push to `dev` without cluttering the releases page with multiple versions.
 - **Draft Releases Auto-Cleanup**:
   - The release workflow automatically sweeps and deletes all orphaned or stale draft releases before publishing new release artifacts.
