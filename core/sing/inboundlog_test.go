@@ -292,7 +292,7 @@ func TestReality_WrongKeyIsWarned(t *testing.T) {
 				"reality":{"enabled":true,"public_key":%q,"short_id":"0123456789abcdef"}}}],
 		"route":{"final":"proxy"}}`, socksPort, serverPort, wrongPub))
 	ctx := box.Context(context.Background(), include.InboundRegistry(), include.OutboundRegistry(),
-		include.EndpointRegistry(), include.DNSTransportRegistry(), include.ServiceRegistry())
+		include.EndpointRegistry(), include.DNSTransportRegistry(), include.ServiceRegistry(), include.CertificateProviderRegistry())
 	cb, err := box.New(box.Options{Context: ctx, Options: clientOpts})
 	if err != nil {
 		t.Skipf("client box unavailable: %v", err)

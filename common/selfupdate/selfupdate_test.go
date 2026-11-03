@@ -180,3 +180,53 @@ func TestCompare(t *testing.T) {
 		t.Error("the old -prevN spelling reads as -N")
 	}
 }
+
+func TestRollbackRestoresOldBinaryOnlyWhenPending(t *testing.T) {
+	dir := t.TempDir()
+	exe := filepath.Join(dir, "FNode")
+	oldExe, oldBase := exePath, releaseBase
+	t.Cleanup(func() { exePath, releaseBase = oldExe, oldBase })
+	exePath = func() (string, error) { return exe, nil }
+	os.WriteFile(exe, []byte("new"), 0o755)
+	os.WriteFile(exe+".old", []byte("old"), 0o755)
+
+	if Pending() {
+		t.Fatal("no marker yet")
+	}
+	os.WriteFile(exe+".updating", []byte("0.1.0\n"), 0o644)
+	if !Pending() {
+		t.Fatal("marker must be seen")
+	}
+	if err := Rollback("config migration failed: boom"); err != nil {
+		t.Fatal(err)
+	}
+	if b, _ := os.ReadFile(exe); string(b) != "old" {
+		t.Fatalf("old binary not restored: %q", b)
+	}
+	if Pending() {
+		t.Error("marker must be gone after a rollback")
+	}
+	if b, _ := os.ReadFile(exe + ".rollback-reason"); !strings.Contains(string(b), "boom") {
+		t.Errorf("reason not stored: %q", b)
+	}
+	ReportRollback()
+	if _, err := os.Stat(exe + ".rollback-reason"); err == nil {
+		t.Error("the reason is reported once, then removed")
+	}
+	if err := Rollback("again"); err == nil {
+		t.Error("without a previous binary a rollback must fail")
+	}
+}
+
+func TestConfirmClearsPending(t *testing.T) {
+	dir := t.TempDir()
+	exe := filepath.Join(dir, "FNode")
+	oldExe := exePath
+	t.Cleanup(func() { exePath = oldExe })
+	exePath = func() (string, error) { return exe, nil }
+	os.WriteFile(exe+".updating", []byte("x"), 0o644)
+	Confirm()
+	if Pending() {
+		t.Fatal("Confirm must clear the marker")
+	}
+}

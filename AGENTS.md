@@ -14,7 +14,7 @@ This document specifies mandatory rules for all AI agents (Antigravity, Gemini, 
 
 ## 2. Core Exclusivity
 
-- FNode exclusively uses the **sing-box** engine (`github.com/sagernet/sing-box` / `cedar2025/sing-box`).
+- FNode exclusively uses the **sing-box** engine (`github.com/sagernet/sing-box`, vendored and patched in `third_party/sing-box`).
 - **Do not** reintroduce legacy Xray or standalone Hysteria 1/2 dependencies or binaries.
 
 ---

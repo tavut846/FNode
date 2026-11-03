@@ -122,21 +122,21 @@
         "tag": "Reddit",
         "format": "binary",
         "url": "https://github.com/pandaaxi/homiefroxy-singrule/raw/refs/heads/release/singbox_rule_set/geosite-reddit.srs",
-        "download_detour": "direct"
+        "http_client": { "detour": "direct" }
       },
       {
         "type": "remote",
         "tag": "GeositeAI",
         "format": "binary",
         "url": "https://github.com/pandaaxi/homiefroxy-singrule/raw/refs/heads/release/singbox_rule_set/geosite-category-ai-!cn.srs",
-        "download_detour": "direct"
+        "http_client": { "detour": "direct" }
       },
       {
         "type": "remote",
         "tag": "Youtube",
         "format": "binary",
         "url": "https://github.com/pandaaxi/homiefroxy-singrule/raw/refs/heads/release/singbox_rule_set/geosite-youtube.srs",
-        "download_detour": "direct"
+        "http_client": { "detour": "direct" }
       }
     ]
   },

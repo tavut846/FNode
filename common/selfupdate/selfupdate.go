@@ -294,8 +294,71 @@ func Apply(ctx context.Context, tag string) (string, error) {
 		_ = os.Rename(old, exe)
 		return "", fmt.Errorf("put the new binary in place (old one restored): %w", err)
 	}
+	// the new binary clears this once its start-up checks (config migration) pass;
+	// while it exists a failing check puts the old binary back (Rollback)
+	if werr := os.WriteFile(pendingPath(exe), []byte(newVer+"\n"), 0o644); werr != nil {
+		log.Warnf("Update: could not write the pending marker, an automatic rollback is not possible: %v", werr)
+	}
 	log.Infof("Update: installed %s at %s (previous binary kept as %s)", newVer, exe, old)
 	return newVer, nil
+}
+
+func pendingPath(exe string) string  { return exe + ".updating" }
+func rollbackNote(exe string) string { return exe + ".rollback-reason" }
+
+// Pending reports whether this binary was installed by an update that has not
+// yet passed its start-up checks.
+func Pending() bool {
+	exe, err := exePath()
+	if err != nil {
+		return false
+	}
+	_, err = os.Stat(pendingPath(exe))
+	return err == nil
+}
+
+// Confirm marks the pending update as good: the old binary is no longer a
+// rollback target.
+func Confirm() {
+	if exe, err := exePath(); err == nil {
+		_ = os.Remove(pendingPath(exe))
+	}
+}
+
+// Rollback puts the previous binary (<exe>.old) back after the freshly updated
+// one failed a start-up check, and stores the reason for the next start to
+// report (ReportRollback). It does not restart; call Restart afterwards.
+func Rollback(reason string) error {
+	exe, err := exePath()
+	if err != nil {
+		return err
+	}
+	old := exe + ".old"
+	if _, err = os.Stat(old); err != nil {
+		return fmt.Errorf("no previous binary to roll back to: %w", err)
+	}
+	if err = os.Rename(old, exe); err != nil {
+		return fmt.Errorf("restore the previous binary: %w", err)
+	}
+	_ = os.Remove(pendingPath(exe))
+	_ = os.WriteFile(rollbackNote(exe), []byte(reason+"\n"), 0o644)
+	log.Errorf("Update rolled back to the previous FNode binary: %s", reason)
+	return nil
+}
+
+// ReportRollback logs (at error level, so the panel's log view gets it) why the
+// last update was rolled back, once.
+func ReportRollback() {
+	exe, err := exePath()
+	if err != nil {
+		return
+	}
+	b, err := os.ReadFile(rollbackNote(exe))
+	if err != nil {
+		return
+	}
+	_ = os.Remove(rollbackNote(exe))
+	log.Errorf("The last FNode update was rolled back: %s", strings.TrimSpace(string(b)))
 }
 
 func fileSHA256(path string) (string, error) {

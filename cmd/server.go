@@ -43,6 +43,9 @@ func init() {
 
 func serverHandle(_ *cobra.Command, _ []string) {
 	showVersion()
+	if !migrateConfig(config) {
+		return
+	}
 	c := conf.New()
 	err := c.LoadFromPath(config)
 	if err != nil {

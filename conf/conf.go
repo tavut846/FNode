@@ -17,6 +17,9 @@ type Conf struct {
 	// DisableRemoteUpdate refuses the panel's "update FNode" command
 	// (CustomNode plugin); updates by hand (FNode update) still work.
 	DisableRemoteUpdate bool `json:"DisableRemoteUpdate"`
+	// SchemaVersion is the config schema the file was migrated to (common/migrate
+	// sets it; absent = 1). Do not edit by hand.
+	SchemaVersion int `json:"SchemaVersion"`
 }
 
 func New() *Conf {
