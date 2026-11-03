@@ -53,12 +53,16 @@ func ParseLogsResponse(body []byte) (logship.Response, error) {
 			Accepted      int             `json:"accepted"`
 			FlushInterval int             `json:"flush_interval"`
 			NodeModes     json.RawMessage `json:"node_modes"`
+			// standby contract (CustomNode 1.13): both optional
+			Ship          *bool `json:"ship"`
+			RetainSeconds int   `json:"retain_seconds"`
 		} `json:"data"`
 	}
 	if err := json.Unmarshal(body, &out); err != nil {
 		return logship.Response{}, fmt.Errorf("decode log response: %w", err)
 	}
-	resp := logship.Response{LogMode: out.Data.LogMode, Accepted: out.Data.Accepted, FlushInterval: out.Data.FlushInterval}
+	resp := logship.Response{LogMode: out.Data.LogMode, Accepted: out.Data.Accepted, FlushInterval: out.Data.FlushInterval,
+		Ship: out.Data.Ship, RetainSeconds: out.Data.RetainSeconds}
 	if raw := out.Data.NodeModes; len(raw) > 0 && string(raw) != "null" {
 		// {"12":"debug"} — PHP sends [] for an empty map
 		modes := map[string]string{}

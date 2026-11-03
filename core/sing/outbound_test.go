@@ -95,15 +95,22 @@ const testOrigin = `{
 
 func newTestSing(t *testing.T, local []map[string]any) *Sing {
 	t.Helper()
+	return newTestSingWith(t, func(c *conf.SingConfig) { c.CustomOutbounds = local })
+}
+
+// newTestSingWith builds a core whose SingConfig the caller can adjust.
+func newTestSingWith(t *testing.T, adjust func(*conf.SingConfig)) *Sing {
+	t.Helper()
 	path := filepath.Join(t.TempDir(), "sing_origin.json")
 	if err := os.WriteFile(path, []byte(testOrigin), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	coreInst, err := New(&conf.CoreConfig{SingConfig: &conf.SingConfig{
-		OriginalPath:    path,
-		LogConfig:       conf.SingLogConfig{Level: "error"},
-		CustomOutbounds: local,
-	}})
+	sc := &conf.SingConfig{
+		OriginalPath: path,
+		LogConfig:    conf.SingLogConfig{Level: "error"},
+	}
+	adjust(sc)
+	coreInst, err := New(&conf.CoreConfig{SingConfig: sc})
 	if err != nil {
 		t.Fatalf("new core: %v", err)
 	}

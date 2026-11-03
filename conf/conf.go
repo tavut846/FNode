@@ -14,6 +14,9 @@ type Conf struct {
 	LogConfig   LogConfig    `json:"Log"`
 	CoresConfig []CoreConfig `json:"Cores"`
 	NodeConfig  []NodeConfig `json:"Nodes"`
+	// DisableRemoteUpdate refuses the panel's "update FNode" command
+	// (CustomNode plugin); updates by hand (FNode update) still work.
+	DisableRemoteUpdate bool `json:"DisableRemoteUpdate"`
 }
 
 func New() *Conf {

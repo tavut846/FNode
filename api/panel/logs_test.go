@@ -112,3 +112,30 @@ func TestParseWSMessage_LogMode(t *testing.T) {
 		t.Error("an empty payload must be rejected")
 	}
 }
+
+// CustomNode 1.13 standby fields are optional in the push response.
+func TestParseLogsResponse_Standby(t *testing.T) {
+	r, err := ParseLogsResponse([]byte(`{"data":{"log_mode":"info","flush_interval":10,"ship":false,"retain_seconds":300}}`))
+	if err != nil || r.Ship == nil || *r.Ship || r.RetainSeconds != 300 || r.LogMode != "info" {
+		t.Fatalf("standby: %+v %v", r, err)
+	}
+	r, err = ParseLogsResponse([]byte(`{"data":{"log_mode":"info","ship":true}}`))
+	if err != nil || r.Ship == nil || !*r.Ship {
+		t.Fatalf("ship: %+v %v", r, err)
+	}
+	r, err = ParseLogsResponse([]byte(`{"data":{"log_mode":"info"}}`))
+	if err != nil || r.Ship != nil || r.RetainSeconds != 0 {
+		t.Fatalf("an old panel sends neither field: %+v %v", r, err)
+	}
+}
+
+func TestParseWSMessage_LogModeShip(t *testing.T) {
+	_, ev, err := ParseWSMessage([]byte(`{"event":"custom_node.log_mode","data":{"mode":"info","node_id":null,"ship":false,"retain_seconds":120}}`))
+	if err != nil || ev.LogShip == nil || *ev.LogShip || ev.LogRetainSeconds != 120 || ev.LogMode != "info" {
+		t.Fatalf("standby event: %+v %v", ev, err)
+	}
+	_, ev, err = ParseWSMessage([]byte(`{"event":"custom_node.log_mode","data":{"mode":"info","node_id":12}}`))
+	if err != nil || ev.LogShip != nil || ev.LogRetainSeconds != 0 {
+		t.Fatalf("absent means unchanged: %+v %v", ev, err)
+	}
+}

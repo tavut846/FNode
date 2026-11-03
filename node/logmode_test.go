@@ -102,3 +102,39 @@ func TestController_LogsMapping(t *testing.T) {
 }
 
 func timeNow() time.Time { return time.Now() }
+
+// ship=false on the machine WebSocket puts the shipper in standby, ship=true
+// brings it back (and wakes the flusher); a per-node event leaves it alone.
+func TestMachine_LogModeShipEvents(t *testing.T) {
+	m, _, _ := newTestMachine(t)
+	m.shipper = logship.NewShipper(&recordSender{})
+
+	m.handleWSEvent(logModeEvent(t, `{"event":"custom_node.log_mode","data":{"mode":"info","node_id":null,"ship":false,"retain_seconds":60}}`))
+	if !m.shipper.Standby() || m.shipper.Mode() != logship.Info {
+		t.Fatalf("standby with the real mode kept: standby=%v mode=%v", m.shipper.Standby(), m.shipper.Mode())
+	}
+	m.handleWSEvent(logModeEvent(t, `{"event":"custom_node.log_mode","data":{"mode":"debug","node_id":12}}`))
+	if !m.shipper.Standby() {
+		t.Error("a per-node event carries no ship and must not change it")
+	}
+	m.handleWSEvent(logModeEvent(t, `{"event":"custom_node.log_mode","data":{"mode":"info","node_id":null,"ship":true}}`))
+	if m.shipper.Standby() {
+		t.Error("ship=true leaves standby")
+	}
+}
+
+func TestController_LogModeShipEvent(t *testing.T) {
+	apiClient, err := panel.New(&conf.ApiConfig{APIHost: "http://127.0.0.1:1", NodeID: 7, NodeType: "vless", Key: "k"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := &Controller{apiClient: apiClient, tag: "t", Options: &conf.Options{}, shipper: logship.NewShipper(&recordSender{})}
+	c.handleWSEvent(logModeEvent(t, `{"event":"custom_node.log_mode","data":{"mode":"info","node_id":null,"ship":false}}`))
+	if !c.shipper.Standby() {
+		t.Fatal("standby")
+	}
+	c.handleWSEvent(logModeEvent(t, `{"event":"custom_node.log_mode","data":{"mode":"info","node_id":null,"ship":true}}`))
+	if c.shipper.Standby() {
+		t.Fatal("ship")
+	}
+}

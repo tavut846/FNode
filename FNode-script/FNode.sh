@@ -1201,6 +1201,147 @@ EOF
     echo -e "${green}Caddy 安装并配置服务完成！${plain}"
 }
 
+# ---- caddy https_port helpers (tested by conf/caddy_port_test.go; keep them free of side effects) ----
+
+# caddy_valid_port <p>: a number from 1 to 65535
+caddy_valid_port() {
+    [[ "$1" =~ ^[0-9]+$ ]] && [ "$1" -ge 1 ] && [ "$1" -le 65535 ]
+}
+
+# caddy_current_port <Caddyfile>: the https_port of its global block, empty when
+# it has none (Caddy then uses 443)
+caddy_current_port() {
+    [[ -f "$1" ]] || return 0
+    awk '
+        function strip(s) { sub(/#.*/, "", s); gsub(/^[ \t\r]+|[ \t\r]+$/, "", s); return s }
+        { t = strip($0) }
+        state == 0 && t == "" { next }
+        state == 0 { if (t != "{") exit; state = 1; depth = 1; next }
+        state == 1 {
+            if (depth == 1 && t ~ /^https_port[ \t]+[0-9]+$/) { split(t, a, /[ \t]+/); print a[2]; exit }
+            n = gsub(/\{/, "{", t); m = gsub(/\}/, "}", t); depth += n - m
+            if (depth <= 0) exit
+        }
+    ' "$1"
+}
+
+# caddy_global_state <Caddyfile>: "none" (no global block), "block" (a global
+# block that can be edited) or "unsafe" (one this script does not dare to edit)
+caddy_global_state() {
+    [[ -f "$1" ]] || { echo none; return 0; }
+    awk '
+        function strip(s) { sub(/#.*/, "", s); gsub(/^[ \t\r]+|[ \t\r]+$/, "", s); return s }
+        { t = strip($0) }
+        state == 0 && t == "" { next }
+        state == 0 {
+            if (t == "{") { state = 1; depth = 1; next }
+            if (substr(t, 1, 1) == "{") { print "unsafe"; found = 1; exit }
+            print "none"; found = 1; exit
+        }
+        state == 1 {
+            n = gsub(/\{/, "{", t); m = gsub(/\}/, "}", t); depth += n - m
+            if (depth <= 0) { print "block"; found = 1; exit }
+        }
+        END { if (!found) print (state == 1 ? "unsafe" : "none") }
+    ' "$1"
+}
+
+# caddy_global_block <port>: the global options block, nothing for 443
+caddy_global_block() {
+    [[ "$1" == "443" ]] && return 0
+    printf '{\n    https_port %s\n}\n\n' "$1"
+}
+
+# caddy_set_https_port <Caddyfile> <port>: make the file's global block say
+# https_port <port> (443 removes the option), without ever creating a second
+# global block. Returns 1 and leaves the file alone when the existing global
+# block cannot be edited safely.
+caddy_set_https_port() {
+    local file="$1" port="$2" state tmp
+    state=$(caddy_global_state "$file")
+    tmp=$(mktemp) || return 1
+    case "$state" in
+        none)
+            if [[ "$port" == "443" ]]; then rm -f "$tmp"; return 0; fi
+            { caddy_global_block "$port"; cat "$file" 2>/dev/null; } > "$tmp"
+            ;;
+        block)
+            awk -v port="$port" '
+                function strip(s) { sub(/#.*/, "", s); gsub(/^[ \t\r]+|[ \t\r]+$/, "", s); return s }
+                { line[NR] = $0 }
+                END {
+                    state = 0
+                    for (i = 1; i <= NR; i++) {
+                        t = strip(line[i])
+                        if (state == 0) { if (t == "") continue; start = i; state = 1; depth = 1; continue }
+                        if (state == 1) {
+                            if (depth == 1 && t ~ /^https_port[ \t]+[0-9]+$/) port_line = i
+                            n = gsub(/\{/, "{", t); m = gsub(/\}/, "}", t); depth += n - m
+                            if (depth <= 0) { endi = i; break }
+                        }
+                    }
+                    # 443 restores the default: an https_port-only block goes away entirely
+                    drop = 0
+                    if (port == 443 && port_line && endi && strip(line[endi]) == "}") {
+                        others = 0
+                        for (i = start + 1; i < endi; i++) if (i != port_line && strip(line[i]) != "") others++
+                        if (!others) drop = 1
+                    }
+                    for (i = 1; i <= NR; i++) {
+                        if (drop && i >= start && i <= endi) { skipblank = 1; continue }
+                        if (drop && skipblank && strip(line[i]) == "") continue
+                        skipblank = 0
+                        if (i == port_line) {
+                            if (port != 443) { sub(/https_port[ \t]+[0-9]+/, "https_port " port, line[i]); print line[i] }
+                            continue
+                        }
+                        print line[i]
+                        if (i == start && !port_line && port != 443) print "    https_port " port
+                    }
+                }
+            ' "$file" > "$tmp"
+            ;;
+        *)
+            rm -f "$tmp"
+            return 1
+            ;;
+    esac
+    cat "$tmp" > "$file"
+    rm -f "$tmp"
+}
+
+# caddy_port_conflict <port>: names of other programs listening on the port
+# (empty when it is free, used by caddy itself, or ss is not available)
+caddy_port_conflict() {
+    command -v ss &>/dev/null || return 0
+    ss -ltnpH 2>/dev/null | awk -v p=":$1" '
+        { n = split($4, a, ":"); if (":" a[n] != p) next }
+        $0 ~ /users:/ && $0 !~ /"caddy"/ { match($0, /\("[^"]+"/); print substr($0, RSTART + 2, RLENGTH - 3) }
+        $0 !~ /users:/ { print "unknown" }
+    ' | sort -u | tr '\n' ' '
+}
+
+# caddy_first_domain <Caddyfile>: the first site address (outside the global
+# block and snippets), without scheme or port; empty when there is none
+
+caddy_first_domain() {
+    [[ -f "$1" ]] || return 0
+    awk '
+        function strip(s) { sub(/#.*/, "", s); gsub(/^[ \t\r]+|[ \t\r]+$/, "", s); return s }
+        {
+            t = strip($0)
+            if (depth == 0 && t != "" && t != "{" && t ~ /\{$/ && t !~ /^\(/ && t !~ /^@/) {
+                sub(/[ \t]*\{$/, "", t); split(t, a, /[ \t,]+/)
+                d = a[1]; sub(/^[a-z]+:\/\//, "", d); sub(/:[0-9]+$/, "", d)
+                if (d != "") { print d; exit }
+            }
+            n = gsub(/\{/, "{", t); m = gsub(/\}/, "}", t); depth += n - m
+        }
+    ' "$1"
+}
+
+# ---- end caddy https_port helpers ----
+
 # 配置 Caddy 反向代理与证书申请 (支持多域名)
 setup_caddy_reverse_proxy() {
     if ! command -v caddy &>/dev/null; then
@@ -1340,6 +1481,109 @@ setup_caddy_reverse_proxy() {
     fi
 }
 
+# 修改 Caddy 的 HTTPS 端口 (默认 8443，把 443 留给 FNode，用于 Reality 自偷的 dest)
+# 用法: FNode caddy-port [端口]，也可用环境变量 CADDY_HTTPS_PORT
+set_caddy_port() {
+    local caddy_file="/etc/caddy/Caddyfile" arg_port="${2:-${CADDY_HTTPS_PORT:-}}"
+    if [[ ! -f "$caddy_file" ]] || ! command -v caddy &>/dev/null; then
+        echo -e "${red}未找到 Caddy 或 ${caddy_file}，请先运行 Caddy 向导 (菜单 18 / FNode caddy)。${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    local current new_port conflict go
+    current=$(caddy_current_port "$caddy_file")
+    current="${current:-443}"
+    echo -e "当前 Caddy HTTPS 端口: ${green}${current}${plain}"
+
+    new_port="$arg_port"
+    if [[ -z "$new_port" ]]; then
+        if [[ -t 0 ]]; then
+            read -rp "新的 Caddy HTTPS 端口 (默认 8443；443 = 恢复默认): " new_port
+        fi
+        new_port="${new_port:-8443}"
+    fi
+    if ! caddy_valid_port "$new_port"; then
+        echo -e "${red}端口必须是 1-65535 之间的数字: ${new_port}${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+    if [[ "$new_port" == "$current" ]]; then
+        echo -e "${green}Caddy 已经在使用端口 ${current}，无需修改。${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 0
+    fi
+
+    conflict=$(caddy_port_conflict "$new_port")
+    if [[ -n "${conflict// /}" ]]; then
+        echo -e "${yellow}警告: 端口 ${new_port} 已被其他进程监听: ${conflict}${plain}"
+        if [[ -t 0 ]]; then
+            read -rp "仍然继续? [y/N]: " go
+            if [[ "$go" != "y" && "$go" != "Y" ]]; then
+                if [[ $# == 0 ]]; then before_show_menu; fi
+                return 1
+            fi
+        fi
+    fi
+
+    if [[ "$(caddy_global_state "$caddy_file")" == "unsafe" ]]; then
+        echo -e "${yellow}Caddyfile 开头的全局选项块无法安全地自动修改，文件保持原样。请手动处理:${plain}"
+        echo -e "  在文件开头唯一的全局块 { ... } 里加入一行: https_port ${new_port}  (443 = 删除该行)"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    local backup
+    backup="${caddy_file}.bak.$(date +%Y%m%d%H%M%S)"
+    cp -f "$caddy_file" "$backup"
+    if ! caddy_set_https_port "$caddy_file" "$new_port"; then
+        cp -f "$backup" "$caddy_file"
+        echo -e "${red}修改 Caddyfile 失败，已恢复备份 ${backup}${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    local check_ok=0
+    if [[ -f /etc/caddy/caddy.env ]]; then
+        (set -a; . /etc/caddy/caddy.env; caddy validate --config "$caddy_file" --adapter caddyfile >/dev/null 2>&1) && check_ok=1
+    else
+        caddy validate --config "$caddy_file" --adapter caddyfile >/dev/null 2>&1 && check_ok=1
+    fi
+    if [[ $check_ok -ne 1 ]]; then
+        cp -f "$backup" "$caddy_file"
+        echo -e "${red}caddy validate 未通过，已恢复原 Caddyfile (备份: ${backup})。请检查后重试。${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    echo -e "${green}正在重启 Caddy...${plain}"
+    if [[ x"${release}" == x"alpine" ]]; then
+        service caddy restart
+    else
+        systemctl restart caddy
+    fi
+    sleep 3
+    if command -v ss &>/dev/null; then
+        ss -ltnp 2>/dev/null | grep -E ":${new_port}[[:space:]]" || echo -e "${yellow}暂未看到端口 ${new_port} 在监听，请查看: systemctl status caddy${plain}"
+    fi
+
+    local domain
+    domain=$(caddy_first_domain "$caddy_file")
+    echo -e "${green}========================================${plain}"
+    echo -e "Caddy HTTPS 端口: ${green}${new_port}${plain} (备份: ${backup})"
+    if [[ "$new_port" != "443" ]]; then
+        echo -e "${green}Reality in the panel: Destination Site = ${domain:-<域名>}, port = ${new_port}, Connection/Server port 443, flow xtls-rprx-vision, multiplex off. Caddy is on ${new_port}, FNode must be the one on 443.${plain}"
+        if [[ "$current" == "443" ]]; then
+            echo -e "${yellow}Caddy 之前在 443: 请确认现在 443 只被 FNode 占用 (ss -ltnp | grep ':443 ')，必要时重启 FNode。${plain}"
+        fi
+        echo -e "验证: curl -v https://${domain:-<域名>}:${new_port}/ (应返回带有效证书的伪装站点)"
+    else
+        echo -e "${yellow}已恢复默认: Caddy 占用 443，同机 FNode 不能再监听 443。${plain}"
+    fi
+    echo -e "${green}========================================${plain}"
+    if [[ $# == 0 ]]; then before_show_menu; fi
+}
+
 show_usage() {
     echo "FNode 管理脚本使用方法: "
     echo "------------------------------------------"
@@ -1362,6 +1606,7 @@ show_usage() {
     echo "FNode config show  - 查看生效配置与出站来源 (--node 标签 --summary)"
     echo "FNode config status - 查看面板地址、令牌(部分)与节点标签"
     echo "FNode caddy        - 安装/配置 Caddy (支持 Cloudflare DNS 反代与证书)"
+    echo "FNode caddy-port   - 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest，443 留给 FNode；可带端口参数: FNode caddy-port 8443)"
     echo "FNode version      - 查看 FNode 版本"
     echo "------------------------------------------"
 }
@@ -1398,11 +1643,12 @@ show_menu() {
   ${green}17.${plain} 放行 VPS 的所有网络端口
   ${green}18.${plain} 安装/配置 Caddy 反代与证书
   ${green}19.${plain} 配置 Hysteria 2 多端口/跳跃 NAT 转发
-  ${green}20.${plain} 退出脚本
+  ${green}20.${plain} 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest)
+  ${green}21.${plain} 退出脚本
  "
  #后续更新可加入上方字符串中
     show_status
-    echo && read -rp "请输入选择 [0-20]: " num
+    echo && read -rp "请输入选择 [0-21]: " num
 
     case "${num}" in
         0) config ;;
@@ -1425,8 +1671,9 @@ show_menu() {
         17) open_ports ;;
         18) setup_caddy_reverse_proxy ;;
         19) setup_hy2_port_hopping ;;
-        20) exit ;;
-        *) echo -e "${red}请输入正确的数字 [0-20]${plain}" ;;
+        20) set_caddy_port ;;
+        21) exit ;;
+        *) echo -e "${red}请输入正确的数字 [0-21]${plain}" ;;
     esac
 }
 
@@ -1457,6 +1704,7 @@ if [[ $# > 0 ]]; then
         "x25519") check_install 0 && generate_x25519_key 0 ;;
         "version") check_install 0 && show_FNode_version 0 ;;
         "caddy") setup_caddy_reverse_proxy 0 ;;
+        "caddy-port"|"caddy_port") set_caddy_port 0 "$2" ;;
         "install_caddy") install_caddy 0 ;;
         "porthop"|"port_hop"|"mport") setup_hy2_port_hopping ;;
         "update_shell") update_shell ;;

@@ -149,5 +149,8 @@ func (c *Controller) applyLogMode(ev *panel.WSEvent) {
 	if !ok || c.shipper == nil {
 		return
 	}
+	if ev.LogShip != nil {
+		c.shipper.SetShip(*ev.LogShip, ev.LogRetainSeconds)
+	}
 	c.shipper.SetMode(ev.NodeID, mode)
 }

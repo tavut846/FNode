@@ -23,6 +23,12 @@ type Core interface {
 	Type() string
 }
 
+// NetworkRecoverer is implemented by cores that can ask the caller to restart
+// them when the network does not recover by itself (NetworkRecovery: restart).
+type NetworkRecoverer interface {
+	SetRestartHook(f func())
+}
+
 // RoutingUpdater is implemented by cores that can apply a routing-only config
 // change (panel routes and custom outbounds) without recreating the inbound.
 type RoutingUpdater interface {

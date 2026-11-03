@@ -46,8 +46,16 @@ type Sing struct {
 	routeFinal                string
 	endpointTags              []string
 	capture                   *logCapture
+	recovery                  *netRecovery
+	stopRecovery              context.CancelFunc
 	baseLogVerbosity          int
 	removeFloor               func()
+
+	// idle warning: one WARN when an inbound accepted no connection since it
+	// started (see inboundlog.go); idleWarnAfter 0 means the default.
+	idleMu        sync.Mutex
+	idleTimers    map[string]*time.Timer
+	idleWarnAfter time.Duration
 
 	// baseOutbounds is the static outbound set (sing_origin.json, local
 	// CustomOutbounds and builtin direct/block) the box was created with.
@@ -210,7 +218,15 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 		capture.Close()
 		return nil, err
 	}
-	capture.onLine = shipToPanel
+	mode, known := normalizeRecoveryMode(c.SingConfig.NetworkRecovery)
+	if !known {
+		logrus.WithField("value", c.SingConfig.NetworkRecovery).Warn("Unknown NetworkRecovery, using \"reset\" (valid: reset, restart, off)")
+	}
+	recovery := newNetRecovery(mode, b.Router().ResetNetwork)
+	capture.onLine = func(l logLine, probe bool) {
+		shipToPanel(l, probe)
+		recovery.ObserveLine(l)
+	}
 	capture.start()
 	hs := &HookServer{
 		counter: sync.Map{},
@@ -240,6 +256,7 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 		routeFinal:                options.Route.Final,
 		endpointTags:              endpointTags,
 		capture:                   capture,
+		recovery:                  recovery,
 		baseOutbounds:             baseOutbounds,
 		appliedOutbounds:          appliedOutbounds,
 		lastRaw:                   lastRaw,
@@ -278,10 +295,31 @@ func (b *Sing) UpdateRouterRules() error {
 }
 
 func (b *Sing) Start() error {
-	return b.box.Start()
+	if err := b.box.Start(); err != nil {
+		return err
+	}
+	if b.recovery != nil && b.recovery.mode != recoveryOff {
+		ctx, cancel := context.WithCancel(b.ctx)
+		b.stopRecovery = cancel
+		go b.recovery.watch(ctx, defaultRouteFingerprint)
+		logrus.WithField("mode", b.recovery.mode).Info("Network recovery is on (resets the DNS sockets when the network address changes or lookups fail in bulk)")
+	}
+	return nil
+}
+
+// SetRestartHook sets the function NetworkRecovery "restart" calls to restart
+// the core (the same path as a config reload).
+func (b *Sing) SetRestartHook(f func()) {
+	if b.recovery != nil {
+		b.recovery.SetRestartHook(f)
+	}
 }
 
 func (b *Sing) Close() error {
+	b.disarmAllIdleWarnings()
+	if b.stopRecovery != nil {
+		b.stopRecovery()
+	}
 	if b.removeFloor != nil {
 		b.removeFloor()
 	}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"sync/atomic"
 
 	"github.com/tavut846/FNode/common/format"
 	"github.com/tavut846/FNode/common/rate"
@@ -21,6 +22,26 @@ var _ adapter.ConnectionTracker = (*HookServer)(nil)
 
 type HookServer struct {
 	counter sync.Map //map[string]*counter.TrafficCounter
+	// accepted counts the connections that reached the router per inbound tag
+	// (map[string]*atomic.Int64); a Reality probe that fails the handshake never
+	// gets here.
+	accepted sync.Map
+}
+
+func (h *HookServer) markAccepted(tag string) {
+	c, ok := h.accepted.Load(tag)
+	if !ok {
+		c, _ = h.accepted.LoadOrStore(tag, new(atomic.Int64))
+	}
+	c.(*atomic.Int64).Add(1)
+}
+
+// Accepted returns how many connections inbound tag has handed to the router.
+func (h *HookServer) Accepted(tag string) int64 {
+	if c, ok := h.accepted.Load(tag); ok {
+		return c.(*atomic.Int64).Load()
+	}
+	return 0
 }
 
 func (h *HookServer) ModeList() []string {
@@ -28,6 +49,7 @@ func (h *HookServer) ModeList() []string {
 }
 
 func (h *HookServer) RoutedConnection(_ context.Context, conn net.Conn, m adapter.InboundContext, _ adapter.Rule, _ adapter.Outbound) net.Conn {
+	h.markAccepted(m.Inbound)
 	l, err := limiter.GetLimiter(m.Inbound)
 	if err != nil {
 		log.Warn("get limiter for ", m.Inbound, " error: ", err)
@@ -77,6 +99,7 @@ func (h *HookServer) RoutedConnection(_ context.Context, conn net.Conn, m adapte
 }
 
 func (h *HookServer) RoutedPacketConnection(_ context.Context, conn N.PacketConn, m adapter.InboundContext, _ adapter.Rule, _ adapter.Outbound) N.PacketConn {
+	h.markAccepted(m.Inbound)
 	l, err := limiter.GetLimiter(m.Inbound)
 	if err != nil {
 		log.Warn("get limiter for ", m.Inbound, " error: ", err)
