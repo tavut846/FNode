@@ -560,7 +560,7 @@ The release zip no longer contains `geoip.dat`/`geosite.dat` (28 MB uncompressed
 
 ### 6.4 Automated CI/CD & Version Tagging Strategy
 
-FNode uses GitHub Actions (`.github/workflows/release.yml`) for automated multi-platform builds and releases:
+FNode uses GitHub Actions (`.github/workflows/release.yml`) for automated multi-platform builds and releases. Targets are Linux (amd64, 386, arm5/6/7, arm64, riscv64, mips*, ppc64*, s390x) and Windows (amd64, 386); darwin, FreeBSD and Android were removed because sing-tun's darwin code does not compile against the gVisor version in `go.mod` (`header.IsExtensionHeader` undefined). Asset names are unchanged:
 - **Continuous Commit Releases**:
   - Each new commit build automatically fetches all existing tags (`git fetch --tags --force`) and increments the patch version (+1, e.g. `0.0.13` -> `0.0.14` -> `0.0.15`).
   - Automatically checks and verifies against existing git tags to prevent tag collisions, ensuring each commit creates a brand new GitHub Release instead of overwriting/replacing existing release assets.

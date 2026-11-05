@@ -186,11 +186,10 @@ jobs:
     needs: [version, test]
     strategy:
       matrix:
-        goos: [linux, windows, freebsd, darwin]
+        # Linux and Windows only: darwin/freebsd/android were dropped (sing-tun's darwin
+        # code does not build against the gVisor version in go.mod: header.IsExtensionHeader)
+        goos: [linux, windows]
         goarch: [amd64, 386]
-        exclude:
-          - goarch: 386
-            goos: darwin
         include:
           # Linux Specifics
           - goos: linux
@@ -226,18 +225,6 @@ jobs:
             goarch: ppc64le
           - goos: linux
             goarch: s390x
-          # MacOS ARM64
-          - goos: darwin
-            goarch: arm64
-          # Android ARM64
-          - goos: android
-            goarch: arm64
-          # FreeBSD Specials
-          - goos: freebsd
-            goarch: arm64
-          - goos: freebsd
-            goarch: arm
-            goarm: 7
       fail-fast: false
 
     runs-on: ubuntu-latest
