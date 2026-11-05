@@ -16,6 +16,14 @@ type SingConfig struct {
 	AutoDetectInterface *bool             `json:"AutoDetectInterface"` // automatically track default network interface and gateway changes (defaults to true)
 	CustomOutbounds     []map[string]any  `json:"CustomOutbounds"`
 	CustomRouteRules    []CustomRouteRule `json:"CustomRouteRules"`
+	// IgnorePanelOutbounds drops every custom outbound the panel syncs to this
+	// machine (and the route rules that use them), so a landing node cannot
+	// loop through an outbound that points back at itself. The top-level
+	// config.json key of the same name sets it for all cores
+	// (FNode ignore-panel-outbounds on|off).
+	IgnorePanelOutbounds bool `json:"IgnorePanelOutbounds"`
+	// IgnorePanelOutboundTags drops only the panel outbounds with these tags.
+	IgnorePanelOutboundTags []string `json:"IgnorePanelOutboundTags"`
 	// GeneratedDir receives the generated <node>.effective.json and
 	// <node>.panel.json debug files. Defaults to "generated" next to the
 	// main config file. It is never watched for reloads.
@@ -40,8 +48,23 @@ func DefaultGeneratedDir(configPath string) string {
 // default for configPath.
 func (p *Conf) SetGeneratedDirs(configPath string) {
 	for i := range p.CoresConfig {
-		if sc := p.CoresConfig[i].SingConfig; sc != nil && sc.GeneratedDir == "" {
+		sc := p.CoresConfig[i].SingConfig
+		if sc == nil {
+			continue
+		}
+		if sc.GeneratedDir == "" {
 			sc.GeneratedDir = DefaultGeneratedDir(configPath)
+		}
+		// machine-wide switches from the top level of config.json
+		sc.IgnorePanelOutbounds = sc.IgnorePanelOutbounds || p.IgnorePanelOutbounds
+		for _, tag := range p.IgnorePanelOutboundTags {
+			has := false
+			for _, have := range sc.IgnorePanelOutboundTags {
+				has = has || have == tag
+			}
+			if !has {
+				sc.IgnorePanelOutboundTags = append(sc.IgnorePanelOutboundTags, tag)
+			}
 		}
 	}
 }

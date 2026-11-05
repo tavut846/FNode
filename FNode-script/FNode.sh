@@ -1119,38 +1119,173 @@ setup_hy2_port_hopping() {
     esac
 }
 
+# ---- caddy install helpers (tested by conf/caddy_install_test.go) ----
+
+# caddy_has_cf [binary]: the binary exists and was built with the Cloudflare DNS
+# module (a standard Caddy cannot parse `dns cloudflare` in a Caddyfile)
+caddy_has_cf() {
+    local bin="${1:-caddy}"
+    command -v "$bin" >/dev/null 2>&1 || return 1
+    "$bin" list-modules 2>/dev/null | grep -q '^dns\.providers\.cloudflare$'
+}
+
+# caddy_mask: stdin -> stdout with the Cloudflare token (when known) hidden
+caddy_mask() {
+    local tok=""
+    [[ -f /etc/caddy/caddy.env ]] && tok=$(grep -E '^CLOUDFLARE_API_TOKEN=' /etc/caddy/caddy.env 2>/dev/null | cut -d '=' -f2-)
+    tok="${cf_token:-$tok}"
+    if [[ -n "$tok" ]]; then
+        TOK="$tok" awk '{ t = ENVIRON["TOK"]; while ((i = index($0, t)) > 0) $0 = substr($0, 1, i - 1) "***" substr($0, i + length(t)); print }'
+    else
+        cat
+    fi
+}
+
+# caddy_try_download <dest> <url>: one source, with retries (HTTP/1.1 avoids the
+# "connection reset" seen on some paths); the file must run and carry the module
+caddy_try_download() {
+    local dest="$1" url="$2"
+    rm -f "$dest"
+    echo -e "${yellow}caddyserver.com 正在服务器端为您编译带 Cloudflare 模块的 Caddy，开头 10-60 秒可能没有数据，请耐心等待 (最长 5 分钟)...${plain}"
+    curl -4 -fL --retry 5 --retry-all-errors --retry-delay 3 --connect-timeout 15 -m 300 -sS -o "$dest" "$url" || return 1
+    # a real build is ~40 MB; anything under 10 MB is an error page or a cut download
+    [[ "$(wc -c < "$dest" 2>/dev/null | tr -d ' ')" -gt 10000000 ]] || return 1
+    chmod +x "$dest"
+    caddy_has_cf "$dest"
+}
+
+# caddy_fetch_cf <dest>: get a Caddy build with dns.providers.cloudflare into
+# <dest>, from (in order) CADDY_CF_BIN / CADDY_CF_URL, the official download API
+# (twice, the second with a cache-buster), and xcaddy / go when installed.
+caddy_fetch_cf() {
+    local dest="$1" arch="${caddy_arch:-amd64}" api="https://caddyserver.com/api/download"
+    if [[ -n "${CADDY_CF_BIN:-}" ]]; then
+        if [[ -f "$CADDY_CF_BIN" ]] && cp -f "$CADDY_CF_BIN" "$dest" && chmod +x "$dest" && caddy_has_cf "$dest"; then return 0; fi
+        echo -e "${red}CADDY_CF_BIN=${CADDY_CF_BIN} 不是带 Cloudflare 模块的 Caddy。${plain}"
+    fi
+    if [[ -n "${CADDY_CF_URL:-}" ]]; then
+        echo -e "尝试 CADDY_CF_URL ..."
+        caddy_try_download "$dest" "$CADDY_CF_URL" && return 0
+        echo -e "${red}CADDY_CF_URL 下载失败或不含 Cloudflare 模块。${plain}"
+    fi
+    echo -e "尝试官方下载接口 ..."
+    caddy_try_download "$dest" "${api}?os=linux&arch=${arch}&p=github.com%2Fcaddy-dns%2Fcloudflare" && return 0
+    echo -e "${yellow}第一次失败，换一个请求再试 ...${plain}"
+    sleep 3
+    caddy_try_download "$dest" "${api}?os=linux&arch=${arch}&p=github.com%2Fcaddy-dns%2Fcloudflare&idempotency=${RANDOM}${RANDOM}" && return 0
+    if command -v xcaddy >/dev/null 2>&1 || command -v go >/dev/null 2>&1; then
+        echo -e "尝试用 xcaddy 本地编译 (需要几分钟) ..."
+        local xc="xcaddy"
+        if ! command -v xcaddy >/dev/null 2>&1; then
+            GOBIN=/tmp/fnode-xcaddy go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest >/dev/null 2>&1 && xc=/tmp/fnode-xcaddy/xcaddy
+        fi
+        "$xc" build --with github.com/caddy-dns/cloudflare --output "$dest" >/dev/null 2>&1 && chmod +x "$dest" && caddy_has_cf "$dest" && return 0
+    fi
+    # last resort: ask for a URL or a local path when run from a terminal
+    if [[ -t 0 && -z "${CADDY_CF_ASKED:-}" ]]; then
+        CADDY_CF_ASKED=1
+        read -rp "自动获取失败。请输入带 Cloudflare 模块的 Caddy 的下载链接或本地路径 [回车放弃]: " src
+        if [[ "$src" == http* ]]; then
+            caddy_try_download "$dest" "$src" && return 0
+        elif [[ -n "$src" && -f "$src" ]]; then
+            cp -f "$src" "$dest" && chmod +x "$dest" && caddy_has_cf "$dest" && return 0
+        fi
+    fi
+    return 1
+}
+
+# caddy_fix_unit: drop `--environ` from the systemd unit's ExecStart (it prints
+# every environment variable, the Cloudflare token included, into the journal)
+caddy_fix_unit() {
+    local unit=/etc/systemd/system/caddy.service
+    [[ -f "$unit" ]] || return 0
+    grep -q -- 'caddy run --environ' "$unit" || return 0
+    sed -i 's/caddy run --environ /caddy run /' "$unit"
+    systemctl daemon-reload >/dev/null 2>&1
+    echo -e "${yellow}已从 caddy.service 去掉 --environ。旧日志 (journalctl -u caddy) 可能含有 Cloudflare API Token：请在 Cloudflare 重新生成 Token，并执行 journalctl --rotate && journalctl --vacuum-time=1s 清理。${plain}"
+}
+
+# caddy_validate: caddy validate on /etc/caddy/Caddyfile with the saved token in
+# the environment; prints Caddy's (masked) error on failure
+caddy_validate() {
+    local out rc k v
+    out=$(
+        if [[ -f /etc/caddy/caddy.env ]]; then
+            while IFS='=' read -r k v; do [[ "$k" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] && export "$k=$v"; done < /etc/caddy/caddy.env
+        fi
+        caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile 2>&1
+    )
+    rc=$?
+    if [[ $rc -ne 0 ]]; then
+        echo "$out" | caddy_mask
+    fi
+    return $rc
+}
+
+# caddy_restart_checked: restart the service and make sure it is running; on
+# failure show the masked last journal lines. Returns non-zero when it is not.
+caddy_restart_checked() {
+    if [[ x"${release}" == x"alpine" ]]; then
+        service caddy restart >/dev/null 2>&1
+        sleep 2
+        service caddy status >/dev/null 2>&1 && return 0
+        echo -e "${red}Caddy 服务未运行 (service caddy status)。${plain}"
+        return 1
+    fi
+    systemctl restart caddy >/dev/null 2>&1
+    sleep 2
+    if systemctl is-active --quiet caddy; then return 0; fi
+    echo -e "${red}Caddy 服务未能启动 (systemctl is-active caddy 不是 active)。最近日志:${plain}"
+    journalctl -u caddy -n 30 --no-pager 2>&1 | caddy_mask
+    return 1
+}
+
+# caddy_ensure: Caddy with the Cloudflare module is installed, else (re)install it.
+# A Caddy without the module is replaced (the old binary is kept as caddy.bak-*).
+caddy_ensure() {
+    if caddy_has_cf caddy; then
+        caddy_fix_unit
+        return 0
+    fi
+    if command -v caddy >/dev/null 2>&1; then
+        echo -e "${yellow}已安装的 Caddy 不含 dns.providers.cloudflare 模块 (标准版)，需要换成带 Cloudflare 模块的版本。${plain}"
+    else
+        echo -e "${yellow}未检测到 Caddy，正在为您自动安装 Caddy...${plain}"
+    fi
+    install_caddy || return 1
+    caddy_has_cf caddy
+}
+
 # 安装 Caddy (集成 Cloudflare DNS 模块)
 install_caddy() {
     echo -e "${green}开始安装 Caddy (包含 Cloudflare DNS 模块)...${plain}"
-    caddy_arch="amd64"
-    if [[ $arch == "arm64-v8a" || $arch == "arm64" || $(uname -m) == "aarch64" ]]; then
-        caddy_arch="arm64"
-    elif [[ $arch == "s390x" ]]; then
-        caddy_arch="s390x"
-    else
-        caddy_arch="amd64"
-    fi
+    case "$(uname -m)" in
+        x86_64|amd64) caddy_arch="amd64" ;;
+        aarch64|arm64) caddy_arch="arm64" ;;
+        s390x) caddy_arch="s390x" ;;
+        *) caddy_arch="amd64" ;;
+    esac
 
     mkdir -p /etc/caddy
-    echo -e "正在从官方获取集成 Cloudflare DNS 模块的 Caddy 二进制文件..."
-    curl -o /usr/bin/caddy -L "https://caddyserver.com/api/download?os=linux&arch=${caddy_arch}&p=github.com%2Fcaddy-dns%2Fcloudflare"
-    if [[ $? -ne 0 || ! -s /usr/bin/caddy ]]; then
-        echo -e "${red}下载带 Cloudflare 模块的 Caddy 失败，尝试标准 Caddy 安装...${plain}"
-        if [[ x"${release}" == x"debian" || x"${release}" == x"ubuntu" ]]; then
-            apt update -y >/dev/null 2>&1
-            apt install -y debian-keyring debian-archive-keyring apt-transport-https curl >/dev/null 2>&1
-            curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg --yes >/dev/null 2>&1
-            curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list >/dev/null 2>&1
-            apt update -y >/dev/null 2>&1
-            apt install -y caddy >/dev/null 2>&1
-        elif [[ x"${release}" == x"centos" ]]; then
-            yum install -y yum-plugin-copr >/dev/null 2>&1
-            yum copr enable -y @caddy/caddy >/dev/null 2>&1
-            yum install -y caddy >/dev/null 2>&1
-        fi
-    else
-        chmod +x /usr/bin/caddy
+    local tmpbin
+    tmpbin=$(mktemp /tmp/caddy-cf.XXXXXX) || return 1
+    if ! caddy_fetch_cf "$tmpbin"; then
+        rm -f "$tmpbin"
+        echo -e "${red}无法获得带 Cloudflare DNS 模块的 Caddy，已停止 (不会回退到标准版，标准版无法申请 DNS 证书)。${plain}"
+        echo -e "可以: 1) 稍后重试  2) CADDY_CF_URL=<下载链接> FNode install_caddy  3) CADDY_CF_BIN=<本地文件，例如用 scp 拷到服务器> FNode install_caddy"
+        return 1
     fi
+    # replace the binary: stop the service first, keep the old binary
+    if [[ x"${release}" == x"alpine" ]]; then
+        service caddy stop >/dev/null 2>&1
+    else
+        systemctl stop caddy >/dev/null 2>&1
+    fi
+    if [[ -f /usr/bin/caddy ]]; then
+        cp -f /usr/bin/caddy "/usr/bin/caddy.bak-$(date +%Y%m%d-%H%M%S)"
+    fi
+    install -m 755 "$tmpbin" /usr/bin/caddy
+    rm -f "$tmpbin"
 
     if [[ x"${release}" == x"alpine" ]]; then
         cat <<EOF > /etc/init.d/caddy
@@ -1184,7 +1319,7 @@ Type=notify
 User=root
 Group=root
 EnvironmentFile=-/etc/caddy/caddy.env
-ExecStart=/usr/bin/caddy run --environ --config /etc/caddy/Caddyfile
+ExecStart=/usr/bin/caddy run --config /etc/caddy/Caddyfile
 ExecReload=/usr/bin/caddy reload --config /etc/caddy/Caddyfile --force
 TimeoutStopSec=5s
 LimitNOFILE=1048576
@@ -1198,8 +1333,10 @@ EOF
         systemctl daemon-reload
         systemctl enable caddy >/dev/null 2>&1
     fi
-    echo -e "${green}Caddy 安装并配置服务完成！${plain}"
+    echo -e "${green}Caddy (含 Cloudflare DNS 模块) 安装完成，服务单元已写入 (尚未启动，配置向导会校验后启动)。${plain}"
 }
+
+# ---- end caddy install helpers ----
 
 # ---- caddy https_port helpers (tested by conf/caddy_port_test.go; keep them free of side effects) ----
 
@@ -1344,9 +1481,10 @@ caddy_first_domain() {
 
 # 配置 Caddy 反向代理与证书申请 (支持多域名)
 setup_caddy_reverse_proxy() {
-    if ! command -v caddy &>/dev/null; then
-        echo -e "${yellow}未检测到 Caddy，正在为您自动安装 Caddy...${plain}"
-        install_caddy
+    if ! caddy_ensure; then
+        echo -e "${red}Caddy (含 Cloudflare DNS 模块) 不可用，配置已中止。${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
     fi
 
     echo -e "${yellow}===== Caddy 反向代理与 Cloudflare DNS 证书配置向导 =====${plain}"
@@ -1442,13 +1580,17 @@ setup_caddy_reverse_proxy() {
 "
     done
 
+    caddy_backup=""
     if [[ -f "/etc/caddy/Caddyfile" ]]; then
-        echo -e "${yellow}检测到已存在 /etc/caddy/Caddyfile 配置文件：${plain}"
+        caddy_backup="/etc/caddy/Caddyfile.bak-$(date +%Y%m%d-%H%M%S)"
+        cp -f /etc/caddy/Caddyfile "$caddy_backup"
+        echo -e "${yellow}检测到已存在 /etc/caddy/Caddyfile 配置文件 (已备份: ${caddy_backup})：${plain}"
         echo -e "1. 覆盖旧配置 (推荐)"
         echo -e "2. 追加新域名到现有配置后"
         read -rp "请选择 [默认: 1]: " caddy_write_mode
         if [[ "$caddy_write_mode" == "2" ]]; then
-            echo -e "\n${caddyfile_content}" >> /etc/caddy/Caddyfile
+            echo -e "
+${caddyfile_content}" >> /etc/caddy/Caddyfile
         else
             echo "${caddyfile_content}" > /etc/caddy/Caddyfile
         fi
@@ -1456,13 +1598,19 @@ setup_caddy_reverse_proxy() {
         echo "${caddyfile_content}" > /etc/caddy/Caddyfile
     fi
 
+    # validate before starting; a bad Caddyfile is rolled back, never reported as success
+    if ! caddy_validate; then
+        echo -e "${red}Caddyfile 校验失败 (caddy validate)，已恢复原配置，未启动 Caddy。${plain}"
+        if [[ -n "$caddy_backup" ]]; then cp -f "$caddy_backup" /etc/caddy/Caddyfile; else rm -f /etc/caddy/Caddyfile; fi
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
     echo -e "${green}正在启动 Caddy 服务并申请证书...${plain}"
-    if [[ x"${release}" == x"alpine" ]]; then
-        service caddy restart
-    else
-        systemctl restart caddy
-        sleep 2
-        systemctl status caddy --no-pager
+    if ! caddy_restart_checked; then
+        echo -e "${red}Caddy 启动失败，配置未完成。Caddyfile: /etc/caddy/Caddyfile${caddy_backup:+ (旧配置备份: ${caddy_backup})}${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
     fi
 
     echo -e "${green}========================================${plain}"
@@ -1584,6 +1732,62 @@ set_caddy_port() {
     if [[ $# == 0 ]]; then before_show_menu; fi
 }
 
+# ---- ignore-panel-outbounds (tested by conf/ignore_panel_outbounds_test.go) ----
+
+# ignore_panel_outbounds_set <on|off> <config.json>: set the top-level
+# "IgnorePanelOutbounds" key in place (comments stay), backup first
+ignore_panel_outbounds_set() {
+    local val="false" f="$2" bak
+    [[ "$1" == "on" ]] && val="true"
+    bak="${f}.bak-$(date +%Y%m%d-%H%M%S)"
+    cp -f "$f" "$bak" || return 1
+    if grep -q '"IgnorePanelOutbounds"' "$f"; then
+        sed -i -E "s/(\"IgnorePanelOutbounds\"[[:space:]]*:[[:space:]]*)(true|false)/\1${val}/" "$f"
+    else
+        awk -v v="$val" '!done && index($0, "{") { sub(/[{]/, "{\n  \"IgnorePanelOutbounds\": " v ","); done = 1 } { print }' "$f" > "${f}.tmp" && mv "${f}.tmp" "$f"
+    fi
+    IGNORE_PANEL_BACKUP="$bak"
+}
+
+# ---- end ignore-panel-outbounds ----
+
+# FNode ignore-panel-outbounds on|off|status: emergency switch for a landing node
+# whose dashboard-synced outbounds point back at itself (works from SSH)
+ignore_panel_outbounds() {
+    local f=/etc/FNode/config.json mode="$2"
+    if [[ ! -f "$f" ]]; then
+        echo -e "${red}未找到 ${f}${plain}"
+        return 1
+    fi
+    case "$mode" in
+        on|off)
+            ignore_panel_outbounds_set "$mode" "$f" || { echo -e "${red}写入失败${plain}"; return 1; }
+            if [[ -x /usr/local/FNode/FNode ]] && ! /usr/local/FNode/FNode config status -c "$f" >/dev/null 2>&1; then
+                cp -f "$IGNORE_PANEL_BACKUP" "$f"
+                echo -e "${red}修改后的 config.json 无法解析，已恢复 (${IGNORE_PANEL_BACKUP})。请手动编辑 ${f}，在最外层加入 \"IgnorePanelOutbounds\": true${plain}"
+                return 1
+            fi
+            if [[ "$mode" == "on" ]]; then
+                echo -e "${green}已开启 IgnorePanelOutbounds：本机将忽略面板同步的所有自定义出站及其路由 (备份: ${IGNORE_PANEL_BACKUP})${plain}"
+            else
+                echo -e "${green}已关闭 IgnorePanelOutbounds：恢复使用面板同步的自定义出站 (备份: ${IGNORE_PANEL_BACKUP})${plain}"
+            fi
+            restart 0
+            ;;
+        status|"")
+            if grep -Eq '"IgnorePanelOutbounds"[[:space:]]*:[[:space:]]*true' "$f"; then
+                echo -e "IgnorePanelOutbounds: ${red}on${plain} (面板自定义出站被忽略)"
+            else
+                echo -e "IgnorePanelOutbounds: ${green}off${plain}"
+            fi
+            ;;
+        *)
+            echo "用法: FNode ignore-panel-outbounds on|off|status"
+            return 1
+            ;;
+    esac
+}
+
 show_usage() {
     echo "FNode 管理脚本使用方法: "
     echo "------------------------------------------"
@@ -1607,6 +1811,7 @@ show_usage() {
     echo "FNode config status - 查看面板地址、令牌(部分)与节点标签"
     echo "FNode caddy        - 安装/配置 Caddy (支持 Cloudflare DNS 反代与证书)"
     echo "FNode caddy-port   - 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest，443 留给 FNode；可带端口参数: FNode caddy-port 8443)"
+    echo "FNode ignore-panel-outbounds on|off|status - 落地机自救: 忽略面板同步的自定义出站 (改 config.json 并重启)"
     echo "FNode version      - 查看 FNode 版本"
     echo "------------------------------------------"
 }
@@ -1703,9 +1908,10 @@ if [[ $# > 0 ]]; then
         "uninstall") check_install 0 && uninstall 0 "${@:2}" ;;
         "x25519") check_install 0 && generate_x25519_key 0 ;;
         "version") check_install 0 && show_FNode_version 0 ;;
-        "caddy") setup_caddy_reverse_proxy 0 ;;
+        "caddy") setup_caddy_reverse_proxy 0 || exit 1 ;;
         "caddy-port"|"caddy_port") set_caddy_port 0 "$2" ;;
-        "install_caddy") install_caddy 0 ;;
+        "ignore-panel-outbounds"|"ignore_panel_outbounds") ignore_panel_outbounds 0 "$2" || exit 1 ;;
+        "install_caddy") install_caddy 0 || exit 1 ;;
         "porthop"|"port_hop"|"mport") setup_hy2_port_hopping ;;
         "update_shell") update_shell ;;
         *) show_usage

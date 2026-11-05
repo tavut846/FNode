@@ -17,6 +17,10 @@ type Conf struct {
 	// DisableRemoteUpdate refuses the panel's "update FNode" command
 	// (CustomNode plugin); updates by hand (FNode update) still work.
 	DisableRemoteUpdate bool `json:"DisableRemoteUpdate"`
+	// IgnorePanelOutbounds / IgnorePanelOutboundTags: see SingConfig. Emergency
+	// switch for a landing node: `FNode ignore-panel-outbounds on`.
+	IgnorePanelOutbounds    bool     `json:"IgnorePanelOutbounds"`
+	IgnorePanelOutboundTags []string `json:"IgnorePanelOutboundTags"`
 	// SchemaVersion is the config schema the file was migrated to (common/migrate
 	// sets it; absent = 1). Do not edit by hand.
 	SchemaVersion int `json:"SchemaVersion"`

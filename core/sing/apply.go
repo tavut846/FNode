@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/sagernet/sing-box/option"
 	"github.com/sagernet/sing/common/json"
@@ -35,12 +36,40 @@ type panelState struct {
 	outbounds   []outboundEntry
 	nodes       []nodeRouting
 	disableIPv6 bool
+	// ignored are panel outbound tags dropped by IgnorePanelOutbounds(Tags)
+	ignored map[string]bool
+}
+
+func (b *Sing) singConfig() *conf.SingConfig {
+	if b.coreConfig == nil {
+		return nil
+	}
+	return b.coreConfig.SingConfig
+}
+
+// ownPorts lists the listen ports of this FNode's nodes.
+func (b *Sing) ownPorts() map[int]bool {
+	ports := map[int]bool{}
+	b.users.mapLock.RLock()
+	defer b.users.mapLock.RUnlock()
+	for _, info := range b.inboundInfo {
+		if info != nil && info.Common != nil && info.Common.ServerPort > 0 {
+			ports[info.Common.ServerPort] = true
+		}
+	}
+	return ports
 }
 
 // collectPanelState gathers panel outbounds and routes from all nodes, sorted
 // by node tag so the result is deterministic.
 func (b *Sing) collectPanelState() panelState {
-	var st panelState
+	st := panelState{ignored: map[string]bool{}}
+	var ignoreAll bool
+	var ignoreTags, ignored []string
+	if sc := b.singConfig(); sc != nil {
+		ignoreAll, ignoreTags = sc.IgnorePanelOutbounds, sc.IgnorePanelOutboundTags
+	}
+	defer func() { logIgnored(ignoreAll, ignoreTags, ignored) }()
 	if b.coreConfig != nil && b.coreConfig.SingConfig != nil && b.coreConfig.SingConfig.DisableIPv6 {
 		st.disableIPv6 = true
 	}
@@ -80,6 +109,11 @@ func (b *Sing) collectPanelState() panelState {
 		nr.rawRoutes = info.Common.CustomRoutes
 		st.nodes = append(st.nodes, nr)
 		for _, co := range info.Common.CustomOutbounds {
+			if ignoredPanelOutbound(ignoreAll, ignoreTags, strings.TrimSpace(co.Tag)) {
+				ignored = append(ignored, strings.TrimSpace(co.Tag))
+				st.ignored[strings.TrimSpace(co.Tag)] = true
+				continue
+			}
 			raw, err := ConvertPanelOutbound(co)
 			if err != nil {
 				log.WithFields(log.Fields{"tag": tags[i], "err": err}).Warn("Skip invalid panel outbound")
@@ -92,6 +126,25 @@ func (b *Sing) collectPanelState() panelState {
 			}
 			st.outbounds = append(st.outbounds, e)
 		}
+	}
+	// an outbound that detours through an ignored one cannot work either
+	for grew := len(st.ignored) > 0; grew; {
+		grew = false
+		kept := st.outbounds[:0:0]
+		for _, e := range st.outbounds {
+			dep := false
+			for _, d := range outboundDeps(e.Raw) {
+				dep = dep || st.ignored[d]
+			}
+			if dep {
+				st.ignored[e.Tag] = true
+				ignored = append(ignored, e.Tag)
+				grew = true
+				continue
+			}
+			kept = append(kept, e)
+		}
+		st.outbounds = kept
 	}
 	return st
 }
@@ -152,6 +205,16 @@ func ruleInbounds(rule map[string]any) []string {
 		return out
 	}
 	return nil
+}
+
+func removeString(list []string, s string) []string {
+	out := list[:0:0]
+	for _, v := range list {
+		if v != s {
+			out = append(out, v)
+		}
+	}
+	return out
 }
 
 func containsString(list []string, s string) bool {
@@ -249,6 +312,10 @@ func (b *Sing) applyPanelState(prune bool) error {
 	for _, w := range warnings {
 		log.Warn(w)
 	}
+	desired, guardWarnings, droppedLoop := dropUnsafeOutbounds(desired, selfGuard{addrs: localAddrs(), ports: b.ownPorts()})
+	for _, w := range guardWarnings {
+		log.Warn(w)
+	}
 	b.reconcileOutbounds(desired, prune)
 
 	// The effective set is what is actually running: desired entries that
@@ -284,7 +351,15 @@ func (b *Sing) applyPanelState(prune bool) error {
 		customRules = b.coreConfig.SingConfig.CustomRouteRules
 	}
 	rawRules := compileScopedRules(st.disableIPv6, customRules, st.nodes)
+	for tag := range droppedLoop {
+		delete(known, tag)
+	}
 	rawRules, ruleWarnings, missing := filterRulesMissing(rawRules, known)
+	for tag := range st.ignored {
+		for node, tags := range missing {
+			missing[node] = removeString(tags, tag)
+		}
+	}
 	for _, w := range ruleWarnings {
 		log.Warn(w)
 	}
