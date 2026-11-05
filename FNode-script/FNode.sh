@@ -1734,17 +1734,37 @@ set_caddy_port() {
 
 # ---- ignore-panel-outbounds (tested by conf/ignore_panel_outbounds_test.go) ----
 
+# ignore_panel_outbounds_read <config.json>: the first value written for the
+# key (true, false or whatever else is there), empty when the key is absent
+ignore_panel_outbounds_read() {
+    grep -Eo '"IgnorePanelOutbounds"[[:space:]]*:[[:space:]]*[^],}[:space:]]+' "$1" 2>/dev/null | head -n 1 | sed -E 's/^.*:[[:space:]]*//; s/"//g'
+}
+
 # ignore_panel_outbounds_set <on|off> <config.json>: set the top-level
-# "IgnorePanelOutbounds" key in place (comments stay), backup first
+# "IgnorePanelOutbounds" key in place (comments stay), backup first.
+# IGNORE_PANEL_BACKUP is set to the backup path, or empty when nothing needed
+# changing ("off" while the key is absent)
 ignore_panel_outbounds_set() {
     local val="false" f="$2" bak
     [[ "$1" == "on" ]] && val="true"
-    bak="${f}.bak-$(date +%Y%m%d-%H%M%S)"
-    cp -f "$f" "$bak" || return 1
+    IGNORE_PANEL_BACKUP=""
     if grep -q '"IgnorePanelOutbounds"' "$f"; then
-        sed -i -E "s/(\"IgnorePanelOutbounds\"[[:space:]]*:[[:space:]]*)(true|false)/\1${val}/" "$f"
+        bak="${f}.bak-$(date +%Y%m%d-%H%M%S)"
+        cp -f "$f" "$bak" || return 1
+        # any current value form (true, false, "true", 1, ...) becomes the new one
+        sed -i -E "s/(\"IgnorePanelOutbounds\"[[:space:]]*:[[:space:]]*)[^],}[:space:]]+/\1${val}/" "$f" || { cp -f "$bak" "$f"; return 1; }
+    elif [[ "$val" == "true" ]]; then
+        bak="${f}.bak-$(date +%Y%m%d-%H%M%S)"
+        cp -f "$f" "$bak" || return 1
+        # insert after the first "{" that is not on a comment line
+        if ! awk -v v="$val" '!done && $0 !~ /^[[:space:]]*(\/\/|#|\/\*|\*)/ && index($0, "{") { sub(/[{]/, "{\n  \"IgnorePanelOutbounds\": " v ","); done = 1 } { print } END { exit !done }' "$f" > "${f}.tmp"; then
+            rm -f "${f}.tmp"
+            return 1
+        fi
+        # write through the original file so its mode (the config holds tokens) stays
+        cat "${f}.tmp" > "$f" && rm -f "${f}.tmp" || return 1
     else
-        awk -v v="$val" '!done && index($0, "{") { sub(/[{]/, "{\n  \"IgnorePanelOutbounds\": " v ","); done = 1 } { print }' "$f" > "${f}.tmp" && mv "${f}.tmp" "$f"
+        return 0
     fi
     IGNORE_PANEL_BACKUP="$bak"
 }
@@ -1753,39 +1773,112 @@ ignore_panel_outbounds_set() {
 
 # FNode ignore-panel-outbounds on|off|status: emergency switch for a landing node
 # whose dashboard-synced outbounds point back at itself (works from SSH)
-ignore_panel_outbounds() {
-    local f=/etc/FNode/config.json mode="$2"
+#
+# The binary is asked what it will really use (FNode config ignore-panel-outbounds):
+# a binary without that command is too old for the option, and the command
+# then says so instead of claiming success.
+ignore_panel_outbounds_binary_state() {
+    [[ -x /usr/local/FNode/FNode ]] || return 1
+    /usr/local/FNode/FNode config ignore-panel-outbounds -c "$1" 2>/dev/null
+}
+
+ignore_panel_outbounds_hint() {
+    if [[ x"${release}" == x"alpine" ]] || ! command -v journalctl &>/dev/null; then
+        echo "FNode log"
+    else
+        echo "journalctl -u FNode -e   (只看相关行: journalctl -u FNode -e | grep -i ignoring)"
+    fi
+}
+
+# ignore_panel_outbounds_run <on|off|status>: 0 = done and verified
+ignore_panel_outbounds_run() {
+    local mode="$1" f="${FNODE_CONFIG:-/etc/FNode/config.json}" want pre post fileval rc
     if [[ ! -f "$f" ]]; then
         echo -e "${red}未找到 ${f}${plain}"
         return 1
     fi
+    fileval=$(ignore_panel_outbounds_read "$f")
     case "$mode" in
-        on|off)
-            ignore_panel_outbounds_set "$mode" "$f" || { echo -e "${red}写入失败${plain}"; return 1; }
-            if [[ -x /usr/local/FNode/FNode ]] && ! /usr/local/FNode/FNode config status -c "$f" >/dev/null 2>&1; then
-                cp -f "$IGNORE_PANEL_BACKUP" "$f"
-                echo -e "${red}修改后的 config.json 无法解析，已恢复 (${IGNORE_PANEL_BACKUP})。请手动编辑 ${f}，在最外层加入 \"IgnorePanelOutbounds\": true${plain}"
+        status|"")
+            post=$(ignore_panel_outbounds_binary_state "$f")
+            echo -e "config.json (${f}): IgnorePanelOutbounds = ${fileval:-未设置 (默认 off)}"
+            if [[ -z "$post" ]]; then
+                echo -e "${yellow}已安装的 FNode 不支持此选项或配置无法解析 (版本: $(/usr/local/FNode/FNode version --short 2>/dev/null || echo 未知))，请先运行: FNode update${plain}"
                 return 1
             fi
-            if [[ "$mode" == "on" ]]; then
-                echo -e "${green}已开启 IgnorePanelOutbounds：本机将忽略面板同步的所有自定义出站及其路由 (备份: ${IGNORE_PANEL_BACKUP})${plain}"
-            else
-                echo -e "${green}已关闭 IgnorePanelOutbounds：恢复使用面板同步的自定义出站 (备份: ${IGNORE_PANEL_BACKUP})${plain}"
+            case "$post" in
+                on) echo -e "FNode 将使用: ${red}on${plain} (面板同步的自定义出站及其路由被忽略)" ;;
+                off) echo -e "FNode 将使用: ${green}off${plain}" ;;
+                *) echo -e "FNode 将使用: ${yellow}${post}${plain}" ;;
+            esac
+            ;;
+        on|off)
+            want="$mode"
+            pre=$(ignore_panel_outbounds_binary_state "$f")
+            ignore_panel_outbounds_set "$mode" "$f" || { echo -e "${red}写入 ${f} 失败 (未找到顶层 { 或无权限)，请手动在最外层加入 \"IgnorePanelOutbounds\": true${plain}"; return 1; }
+            if [[ -z "$pre" ]]; then
+                # no output before the edit: binary lacks the command (too old) or the config never parsed
+                echo -e "${yellow}已写入 ${f} 的 IgnorePanelOutbounds = ${mode} (备份: ${IGNORE_PANEL_BACKUP:-无})，但无法确认生效:${plain}"
+                echo -e "${red}已安装的 FNode 过旧(不认识此选项)，或当前 config.json 本身无法解析 (版本: $(/usr/local/FNode/FNode version --short 2>/dev/null || echo 未知))。请先运行 FNode update，再重试。未重启 FNode。${plain}"
+                return 1
+            fi
+            post=$(ignore_panel_outbounds_binary_state "$f")
+            if [[ -z "$post" ]] || { [[ "$want" == "on" ]] && [[ "$post" != "on" ]]; } || { [[ "$want" == "off" ]] && [[ "$post" == "on" ]]; }; then
+                [[ -n "$IGNORE_PANEL_BACKUP" ]] && cp -f "$IGNORE_PANEL_BACKUP" "$f"
+                echo -e "${red}写入后 FNode 读到的状态是 \"${post:-无法解析}\"，与期望的 ${want} 不符，已恢复原配置 (${IGNORE_PANEL_BACKUP:-无需恢复})。请手动检查 ${f} 中的 IgnorePanelOutbounds 写法。${plain}"
+                return 1
             fi
             restart 0
-            ;;
-        status|"")
-            if grep -Eq '"IgnorePanelOutbounds"[[:space:]]*:[[:space:]]*true' "$f"; then
-                echo -e "IgnorePanelOutbounds: ${red}on${plain} (面板自定义出站被忽略)"
+            check_status
+            rc=$?
+            echo -e "${green}========================================${plain}"
+            echo -e "IgnorePanelOutbounds: ${post} (config.json: $(ignore_panel_outbounds_read "$f"); 备份: ${IGNORE_PANEL_BACKUP:-无变化})"
+            if [[ $rc -eq 0 ]]; then
+                echo -e "FNode 已重启并运行中: ${green}active${plain}"
             else
-                echo -e "IgnorePanelOutbounds: ${green}off${plain}"
+                echo -e "FNode ${red}未在运行${plain}，请查看日志"
             fi
+            echo -e "日志: $(ignore_panel_outbounds_hint)"
+            echo -e "${green}========================================${plain}"
+            [[ $rc -eq 0 ]] || return 1
             ;;
         *)
             echo "用法: FNode ignore-panel-outbounds on|off|status"
             return 1
             ;;
     esac
+}
+
+# $1 = 0 when called from the command line (no menu afterwards), $2 = mode
+ignore_panel_outbounds() {
+    local rc
+    ignore_panel_outbounds_run "$2"
+    rc=$?
+    if [[ "$1" != "0" ]]; then
+        before_show_menu
+    fi
+    return $rc
+}
+
+# menu entry: on / off / status sub-choices
+ignore_panel_outbounds_menu() {
+    echo -e "
+  ${green}落地机自救: 忽略面板同步的自定义出站 (Ignore panel outbounds)${plain}
+  ${green}1.${plain} 开启 on  (忽略面板的所有自定义出站及其路由，并重启 FNode)
+  ${green}2.${plain} 关闭 off (恢复使用面板的自定义出站，并重启 FNode)
+  ${green}3.${plain} 查看状态 status
+  ${green}0.${plain} 返回
+"
+    local c
+    read -rp "请输入选择 [0-3]: " c
+    case "$c" in
+        1) ignore_panel_outbounds_run on ;;
+        2) ignore_panel_outbounds_run off ;;
+        3) ignore_panel_outbounds_run status ;;
+        0) ;;
+        *) echo -e "${red}请输入正确的数字 [0-3]${plain}" ;;
+    esac
+    before_show_menu
 }
 
 show_usage() {
@@ -1849,11 +1942,12 @@ show_menu() {
   ${green}18.${plain} 安装/配置 Caddy 反代与证书
   ${green}19.${plain} 配置 Hysteria 2 多端口/跳跃 NAT 转发
   ${green}20.${plain} 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest)
-  ${green}21.${plain} 退出脚本
+  ${green}21.${plain} 落地机自救: 忽略面板自定义出站 (开启/关闭/状态)
+  ${green}22.${plain} 退出脚本
  "
  #后续更新可加入上方字符串中
     show_status
-    echo && read -rp "请输入选择 [0-21]: " num
+    echo && read -rp "请输入选择 [0-22]: " num
 
     case "${num}" in
         0) config ;;
@@ -1877,8 +1971,9 @@ show_menu() {
         18) setup_caddy_reverse_proxy ;;
         19) setup_hy2_port_hopping ;;
         20) set_caddy_port ;;
-        21) exit ;;
-        *) echo -e "${red}请输入正确的数字 [0-21]${plain}" ;;
+        21) check_install && ignore_panel_outbounds_menu ;;
+        22) exit ;;
+        *) echo -e "${red}请输入正确的数字 [0-22]${plain}" ;;
     esac
 }
 
@@ -1910,7 +2005,7 @@ if [[ $# > 0 ]]; then
         "version") check_install 0 && show_FNode_version 0 ;;
         "caddy") setup_caddy_reverse_proxy 0 || exit 1 ;;
         "caddy-port"|"caddy_port") set_caddy_port 0 "$2" ;;
-        "ignore-panel-outbounds"|"ignore_panel_outbounds") ignore_panel_outbounds 0 "$2" || exit 1 ;;
+        "ignore-panel-outbounds"|"ignore_panel_outbounds") check_install 0 && { ignore_panel_outbounds 0 "$2" || exit 1; } ;;
         "install_caddy") install_caddy 0 || exit 1 ;;
         "porthop"|"port_hop"|"mport") setup_hy2_port_hopping ;;
         "update_shell") update_shell ;;
