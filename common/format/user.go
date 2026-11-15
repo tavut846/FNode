@@ -1,18 +1,17 @@
 package format
 
 import (
-	"fmt"
 	"strings"
 )
 
 // UserTag returns "tag|uuid" (used for limiter maps and identifiers).
 func UserTag(tag string, uuid string) string {
-	return fmt.Sprintf("%s|%s", tag, uuid)
+	return tag + "|" + uuid
 }
 
 // UserEmail returns "email: tag|uuid" matching the V2bX format for rich debugging logs.
 func UserEmail(tag string, uuid string) string {
-	return fmt.Sprintf("email: %s|%s", tag, uuid)
+	return "email: " + tag + "|" + uuid
 }
 
 // ExtractUUID extracts the raw UUID/token from a user string which may be formatted as

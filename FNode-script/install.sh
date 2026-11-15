@@ -537,7 +537,7 @@ resolve_version() {
 }
 
 # resolve_explicit VERSION ARCH: the release tag for a version the user typed
-# (0.0.22-pre, v0.0.22); tries the tag with and without a leading "v".
+# (0.0.22-pre-1, v0.0.22); tries the tag with and without a leading "v".
 resolve_explicit() {
     local v="$1" asset="FNode-linux-$2.zip" cand
     for cand in "$v" "${v#v}" "v${v#v}"; do
@@ -881,7 +881,7 @@ install_FNode() {
                     target_type="pre"
                     ;;
                 3)
-                    read -rp "请输入指定版本号 (例如 0.0.21 或 0.0.22-pre): " custom_ver
+                    read -rp "请输入指定版本号 (例如 0.0.21 或 0.0.22-pre-1): " custom_ver
                     target_type="${custom_ver}"
                     ;;
                 1|"")
@@ -907,7 +907,7 @@ install_FNode() {
         last_version=$(resolve_version "$kind" "$arch")
         if [[ -z "$last_version" ]]; then
             echo -e "${red}检测 FNode 版本失败 (could not find a ${kind} release with FNode-linux-${arch}.zip). Nothing was changed.${plain}"
-            echo -e "可以直接指定版本重试 (retry with an explicit version): ${green}FNode update 0.0.22-pre${plain}; 版本列表 / versions: ${FNODE_GH_WEB}/releases"
+            echo -e "可以直接指定版本重试 (retry with an explicit version): ${green}FNode update 0.0.22-pre-1${plain}; 版本列表 / versions: ${FNODE_GH_WEB}/releases"
             exit 1
         fi
         echo -e "检测到 FNode 最新版本：${green}${last_version}${plain}，开始安装"

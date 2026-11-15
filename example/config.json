@@ -1,4 +1,5 @@
 {
+  "IgnorePanelOutbounds": false,
   "Log": {
     "Level": "info",
     "Output": ""

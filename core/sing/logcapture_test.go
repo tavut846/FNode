@@ -75,6 +75,10 @@ func TestLogCapture_EndToEnd(t *testing.T) {
 		t.Fatal("os.Stderr must be restored")
 	}
 	c.start()
+	// sing-box 1.14.2 buffers log entries until the factory is started (box.Start does it)
+	if err = factory.Start(); err != nil {
+		t.Fatal(err)
+	}
 
 	prevLevel := logrus.GetLevel()
 	logrus.SetLevel(logrus.InfoLevel)

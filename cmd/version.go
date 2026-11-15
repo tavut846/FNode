@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -75,20 +76,46 @@ func NextUnusedPatchVersion(latestTag string, existingTags []string) string {
 	return next
 }
 
-// FormatDevTag formats a pre-release version tag in the form <targetVersion>-pre.
-// If an optional commitNum > 0 is provided, it formats as <targetVersion>-pre-<commitNum>.
-func FormatDevTag(targetVersion string, commitNum ...int) string {
-	targetVersion = strings.TrimPrefix(strings.TrimSpace(targetVersion), "v")
-	if len(commitNum) > 0 && commitNum[0] > 0 {
-		return fmt.Sprintf("%s-pre-%d", targetVersion, commitNum[0])
+// PreSuffix starts the pre-release suffix: <X.Y.Z>-pre-<N>, N = 1, 2, 3 ... is the
+// sub-version of the pre-releases of one base version (the highest N is the newest).
+// The older tags "-pre" (no number, counts as 0) and "-pre-prevN" are still parsed
+// but never produced.
+const PreSuffix = "-pre"
+
+var preTagRe = regexp.MustCompile(`^v?(\d+\.\d+\.\d+)-pre(?:-prev)?-?(\d*)$`)
+
+// NextPreNumber returns the N for the next <base>-pre-<N> tag: one more than the
+// highest N among existingTags with the same base (a "-pre" tag counts as 0).
+func NextPreNumber(base string, existingTags []string) int {
+	base = strings.TrimPrefix(strings.TrimSpace(base), "v")
+	maxN := 0
+	for _, t := range existingTags {
+		m := preTagRe.FindStringSubmatch(strings.TrimSpace(t))
+		if m == nil || m[1] != base {
+			continue
+		}
+		if n, err := strconv.Atoi(m[2]); err == nil && n > maxN {
+			maxN = n
+		}
 	}
-	return fmt.Sprintf("%s-pre", targetVersion)
+	return maxN + 1
+}
+
+// FormatDevTag formats a pre-release version tag in the form <targetVersion>-pre-<n>.
+// n < 1 is treated as 1.
+func FormatDevTag(targetVersion string, n int) string {
+	targetVersion = strings.TrimPrefix(strings.TrimSpace(targetVersion), "v")
+	if n < 1 {
+		n = 1
+	}
+	return fmt.Sprintf("%s%s-%d", targetVersion, PreSuffix, n)
 }
 
 // ResolveReleaseMetadata determines the release tag, pre-release state, and latest state based on the ref and git context.
 // Master/main/stable builds increment the patch version to create a new Latest Release.
-// Dev/dev_new builds create and update a rolling pre-release tag (<targetVersion>-pre).
-func ResolveReleaseMetadata(refName string, latestStableTag string, commitsSince int) (tagName string, isPreRelease bool, isLatest bool) {
+// Dev/dev_new builds create the next pre-release tag <targetVersion>-pre-<N>; existingTags (all
+// repository tags) decide N.
+func ResolveReleaseMetadata(refName string, latestStableTag string, commitsSince int, existingTags ...string) (tagName string, isPreRelease bool, isLatest bool) {
 	ref := strings.TrimSpace(refName)
 	cleanRef := strings.TrimPrefix(ref, "refs/heads/")
 	cleanRef = strings.TrimPrefix(cleanRef, "refs/tags/")
@@ -100,7 +127,7 @@ func ResolveReleaseMetadata(refName string, latestStableTag string, commitsSince
 
 	if cleanRef == "dev" || cleanRef == "dev_new" || strings.HasPrefix(cleanRef, "dev/") {
 		target := NextPatchVersion(latestStableTag)
-		tagName = FormatDevTag(target)
+		tagName = FormatDevTag(target, NextPreNumber(target, existingTags))
 		return tagName, true, false
 	}
 

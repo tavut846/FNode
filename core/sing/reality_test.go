@@ -83,7 +83,7 @@ func socks5Dial(proxy, target string) (net.Conn, error) {
 func startBox(t *testing.T, opts option.Options) *box.Box {
 	t.Helper()
 	ctx := box.Context(context.Background(), include.InboundRegistry(), include.OutboundRegistry(),
-		include.EndpointRegistry(), include.DNSTransportRegistry(), include.ServiceRegistry())
+		include.EndpointRegistry(), include.DNSTransportRegistry(), include.ServiceRegistry(), include.CertificateProviderRegistry())
 	b, err := box.New(box.Options{Context: ctx, Options: opts})
 	if err != nil {
 		if strings.Contains(err.Error(), "uTLS") || strings.Contains(err.Error(), "utls") {
@@ -101,7 +101,7 @@ func startBox(t *testing.T, opts option.Options) *box.Box {
 func unmarshalOptions(t *testing.T, raw string) option.Options {
 	t.Helper()
 	ctx := box.Context(context.Background(), include.InboundRegistry(), include.OutboundRegistry(),
-		include.EndpointRegistry(), include.DNSTransportRegistry(), include.ServiceRegistry())
+		include.EndpointRegistry(), include.DNSTransportRegistry(), include.ServiceRegistry(), include.CertificateProviderRegistry())
 	o, err := json.UnmarshalExtendedContext[option.Options](ctx, []byte(raw))
 	if err != nil {
 		t.Fatalf("options: %v\n%s", err, raw)
@@ -196,7 +196,7 @@ func TestReality_VlessLoopback(t *testing.T) {
 						"reality":{"enabled":true,"public_key":%q,"short_id":%q}}}],
 				"route":{"final":"proxy"}}`, socksPort, serverPort, tc.flow, pub, tc.clientID))
 			ctx := box.Context(context.Background(), include.InboundRegistry(), include.OutboundRegistry(),
-				include.EndpointRegistry(), include.DNSTransportRegistry(), include.ServiceRegistry())
+				include.EndpointRegistry(), include.DNSTransportRegistry(), include.ServiceRegistry(), include.CertificateProviderRegistry())
 			cb, err := box.New(box.Options{Context: ctx, Options: clientOpts})
 			if err != nil {
 				if strings.Contains(err.Error(), "utls") {
@@ -266,7 +266,7 @@ func TestReality_WrongCredentialsRejected(t *testing.T) {
 				"reality":{"enabled":true,"public_key":%q,"short_id":"0123456789abcdef"}}}],
 		"route":{"final":"proxy"}}`, socksPort, serverPort, wrongPub))
 	ctx := box.Context(context.Background(), include.InboundRegistry(), include.OutboundRegistry(),
-		include.EndpointRegistry(), include.DNSTransportRegistry(), include.ServiceRegistry())
+		include.EndpointRegistry(), include.DNSTransportRegistry(), include.ServiceRegistry(), include.CertificateProviderRegistry())
 	cb, err := box.New(box.Options{Context: ctx, Options: clientOpts})
 	if err != nil {
 		t.Skipf("client box unavailable: %v", err)

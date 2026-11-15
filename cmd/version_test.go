@@ -64,25 +64,36 @@ func TestNextUnusedPatchVersion(t *testing.T) {
 
 func TestFormatDevTag(t *testing.T) {
 	tests := []struct {
-		name      string
-		version   string
-		commitNum []int
-		expected  string
+		name     string
+		version  string
+		n        int
+		expected string
 	}{
-		{"Rolling dev tag without commit", "0.0.2", nil, "0.0.2-pre"},
-		{"Rolling dev tag with v prefix", "v0.0.2", nil, "0.0.2-pre"},
-		{"Numbered dev tag with commit", "0.0.13", []int{9}, "0.0.13-pre-9"},
-		{"Zero commit returns rolling dev tag", "0.0.13", []int{0}, "0.0.13-pre"},
-		{"Negative commit returns rolling dev tag", "0.0.13", []int{-2}, "0.0.13-pre"},
+		{"First pre-release", "0.0.2", 1, "0.0.2-pre-1"},
+		{"v prefix is dropped", "v0.0.2", 3, "0.0.2-pre-3"},
+		{"Two digit number", "0.0.13", 10, "0.0.13-pre-10"},
+		{"Zero is treated as 1", "0.0.13", 0, "0.0.13-pre-1"},
+		{"Negative is treated as 1", "0.0.13", -2, "0.0.13-pre-1"},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := FormatDevTag(tt.version, tt.commitNum...)
-			if result != tt.expected {
-				t.Errorf("FormatDevTag(%q, %v) = %q, expected %q", tt.version, tt.commitNum, result, tt.expected)
+			if got := FormatDevTag(tt.version, tt.n); got != tt.expected {
+				t.Errorf("FormatDevTag(%q, %d) = %q, expected %q", tt.version, tt.n, got, tt.expected)
 			}
 		})
+	}
+}
+
+func TestNextPreNumber(t *testing.T) {
+	tags := []string{"0.0.22", "v0.0.23-pre", "0.0.23-pre-2", "0.0.23-pre-10", "0.0.23-pre-prev3", "0.0.24-pre-7", "junk"}
+	cases := map[string]int{"0.0.23": 11, "v0.0.23": 11, "0.0.24": 8, "0.0.25": 1, "0.0.22": 1}
+	for base, want := range cases {
+		if got := NextPreNumber(base, tags); got != want {
+			t.Errorf("NextPreNumber(%q) = %d, want %d", base, got, want)
+		}
+	}
+	if got := NextPreNumber("0.0.23", []string{"0.0.23-pre"}); got != 1 {
+		t.Errorf("legacy -pre counts as 0, got next %d", got)
 	}
 }
 
@@ -128,7 +139,7 @@ func TestResolveReleaseMetadata(t *testing.T) {
 			refName:         "dev",
 			latestStableTag: "0.0.1",
 			commitsSince:    1,
-			expectedTag:     "0.0.2-pre",
+			expectedTag:     "0.0.2-pre-1",
 			expectedPre:     true,
 			expectedLatest:  false,
 		},
@@ -137,7 +148,7 @@ func TestResolveReleaseMetadata(t *testing.T) {
 			refName:         "refs/heads/dev_new",
 			latestStableTag: "0.0.12",
 			commitsSince:    9,
-			expectedTag:     "0.0.13-pre",
+			expectedTag:     "0.0.13-pre-1",
 			expectedPre:     true,
 			expectedLatest:  false,
 		},

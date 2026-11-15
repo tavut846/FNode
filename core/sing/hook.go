@@ -15,6 +15,7 @@ import (
 	"github.com/tavut846/FNode/common/counter"
 	"github.com/sagernet/sing-box/adapter"
 	"github.com/sagernet/sing-box/log"
+	"github.com/sagernet/sing-tun"
 	N "github.com/sagernet/sing/common/network"
 )
 
@@ -96,6 +97,12 @@ func (h *HookServer) RoutedConnection(_ context.Context, conn net.Conn, m adapte
 	}
 	conn = counter.NewConnCounter(conn, t.GetCounter(userUUID))
 	return conn
+}
+
+// RoutedFlow is the TUN fast path of sing-box 1.14.x; FNode has no TUN inbound,
+// and a nil tracker means "do not track this flow".
+func (h *HookServer) RoutedFlow(_ context.Context, _ adapter.InboundContext, _ adapter.Rule, _ adapter.Outbound) tun.FlowTracker {
+	return nil
 }
 
 func (h *HookServer) RoutedPacketConnection(_ context.Context, conn N.PacketConn, m adapter.InboundContext, _ adapter.Rule, _ adapter.Outbound) N.PacketConn {

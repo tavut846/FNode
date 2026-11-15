@@ -82,7 +82,7 @@ func init() {
 
 func New(c *conf.CoreConfig) (vCore.Core, error) {
 	ctx := context.Background()
-	ctx = box.Context(ctx, include.InboundRegistry(), include.OutboundRegistry(), include.EndpointRegistry(), include.DNSTransportRegistry(), include.ServiceRegistry())
+	ctx = box.Context(ctx, include.InboundRegistry(), include.OutboundRegistry(), include.EndpointRegistry(), include.DNSTransportRegistry(), include.ServiceRegistry(), include.CertificateProviderRegistry())
 	var originRules []option.Rule
 	var originRuleSets []option.RuleSet
 	options, err := loadOrigin(ctx, c.SingConfig.OriginalPath)
