@@ -131,8 +131,9 @@ func TestIgnorePanelOutbounds_ScriptWiring(t *testing.T) {
 	for _, want := range []string{
 		`"ignore-panel-outbounds"|"ignore_panel_outbounds") check_install 0 && { ignore_panel_outbounds 0 "$2"`,
 		`21) check_install && ignore_panel_outbounds_menu ;;`,
-		`22) exit ;;`,
-		`请输入选择 [0-22]`,
+		`22) sni_split_menu ;;`,
+		`23) exit ;;`,
+		`请输入选择 [0-23]`,
 		`config ignore-panel-outbounds -c`,
 	} {
 		if !strings.Contains(src, want) {
@@ -140,7 +141,7 @@ func TestIgnorePanelOutbounds_ScriptWiring(t *testing.T) {
 		}
 	}
 	// every menu number has a case and the exit is the last one
-	for _, n := range []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"} {
+	for _, n := range []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"} {
 		if !strings.Contains(src, "${green}"+n+".${plain}") || !strings.Contains(src, "        "+n+") ") {
 			t.Errorf("menu entry or case %s missing", n)
 		}

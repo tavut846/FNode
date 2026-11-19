@@ -1891,6 +1891,452 @@ ignore_panel_outbounds_menu() {
     before_show_menu
 }
 
+# ---- sni-split helpers (tested by conf/sni_split_test.go; keep them free of side effects) ----
+
+# sni_valid_domain <d>: a host name with at least one dot, optionally "*." in front
+sni_valid_domain() {
+    [[ "$1" =~ ^(\*\.)?[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)+$ ]]
+}
+
+# sni_normalize_list <list>: split on commas/spaces, lowercase, drop empties and
+# duplicates, one name per line
+sni_normalize_list() {
+    printf '%s\n' "$1" | tr ', \t' '\n\n\n' | tr 'A-Z' 'a-z' | awk 'NF && !seen[$0]++'
+}
+
+# sni_split_conf <sni list> <anytls port> <default port> <ipv6: 0|1>: the stream
+# block that routes 443 by SNI. Names in the list go to the AnyTLS port, every
+# other (or missing) name to the default port.
+sni_split_conf() {
+    local d
+    echo "# Managed by FNode (FNode sni-split). Do not edit by hand; run: FNode sni-split"
+    echo "stream {"
+    echo "    map \$ssl_preread_server_name \$fnode_sni_backend {"
+    echo "        hostnames;"
+    while read -r d; do
+        [[ -n "$d" ]] && echo "        $d 127.0.0.1:$2;"
+    done < <(sni_normalize_list "$1")
+    echo "        default 127.0.0.1:$3;"
+    echo "    }"
+    echo "    server {"
+    echo "        listen 443;"
+    [[ "$4" == "1" ]] && echo "        listen [::]:443;"
+    echo "        ssl_preread on;"
+    echo "        proxy_connect_timeout 10s;"
+    echo "        proxy_pass \$fnode_sni_backend;"
+    echo "    }"
+    echo "}"
+}
+
+# sni_split_parse <file>: snis=, anytls_port=, default_port= of a file written by
+# sni_split_conf (nothing when the file does not exist)
+sni_split_parse() {
+    [[ -f "$1" ]] || return 0
+    awk '
+        /ssl_preread_server_name/ { inmap = 1; next }
+        inmap && /^[ \t]*}/ { inmap = 0 }
+        inmap && $2 ~ /^127\.0\.0\.1:[0-9]+;$/ {
+            p = $2; sub(/^127\.0\.0\.1:/, "", p); sub(/;$/, "", p)
+            if ($1 == "default") def = p
+            else { snis = snis (snis == "" ? "" : ",") $1; ap = p }
+        }
+        END { print "snis=" snis; print "anytls_port=" ap; print "default_port=" def }
+    ' "$1"
+}
+
+# sni_split_has_include <nginx.conf> <file>: the config already includes <file>
+sni_split_has_include() {
+    [[ -f "$1" ]] && grep -Fq "include $2;" "$1"
+}
+
+# sni_split_with_include <nginx.conf> <file>: the config text with exactly one
+# top-level include line for <file> (added at the end when missing)
+sni_split_with_include() {
+    cat "$1"
+    if ! sni_split_has_include "$1" "$2"; then
+        [[ -n "$(tail -c1 "$1")" ]] && echo
+        echo "# FNode sni-split"
+        echo "include $2;"
+    fi
+}
+
+# sni_split_without_include <nginx.conf> <file>: the config text without our include
+sni_split_without_include() {
+    grep -vF -e "include $2;" -e "# FNode sni-split" "$1"
+}
+
+# ---- end sni-split helpers ----
+
+SNI_SPLIT_INC="/etc/nginx/fnode-stream.conf"
+SNI_NGINX_CONF="/etc/nginx/nginx.conf"
+
+# sni_port_holders <port>: names of the processes listening on a TCP port
+sni_port_holders() {
+    command -v ss &>/dev/null || return 0
+    ss -ltnpH 2>/dev/null | awk -v p=":$1" '
+        { n = split($4, a, ":"); if (":" a[n] != p) next }
+        $0 ~ /users:/ { match($0, /\("[^"]+"/); print substr($0, RSTART + 2, RLENGTH - 3) }
+        $0 !~ /users:/ { print "unknown" }
+    ' | sort -u | tr '\n' ' '
+}
+
+sni_nginx_active() {
+    if [[ x"${release}" == x"alpine" ]]; then
+        service nginx status 2>/dev/null | grep -q started
+    else
+        systemctl is-active --quiet nginx
+    fi
+}
+
+# nginx must be able to load the stream module: install nginx and its stream package
+sni_ensure_nginx() {
+    case "${release}" in
+        debian|ubuntu)
+            if ! command -v nginx &>/dev/null; then
+                echo -e "${green}安装 nginx 与 stream 模块...${plain}"
+                apt-get update -y >/dev/null 2>&1
+                DEBIAN_FRONTEND=noninteractive apt-get install -y nginx libnginx-mod-stream || return 1
+            elif ! dpkg -s libnginx-mod-stream >/dev/null 2>&1; then
+                echo -e "${green}安装 libnginx-mod-stream...${plain}"
+                DEBIAN_FRONTEND=noninteractive apt-get install -y libnginx-mod-stream || return 1
+            fi
+            ;;
+        centos)
+            if ! command -v nginx &>/dev/null; then
+                echo -e "${green}安装 nginx 与 stream 模块...${plain}"
+                yum install -y nginx nginx-mod-stream || yum install -y nginx || return 1
+            elif ! rpm -q nginx-mod-stream >/dev/null 2>&1; then
+                yum install -y nginx-mod-stream >/dev/null 2>&1 || true
+            fi
+            ;;
+        alpine)
+            if ! command -v nginx &>/dev/null; then
+                echo -e "${green}安装 nginx 与 stream 模块...${plain}"
+                apk add nginx nginx-mod-stream || return 1
+            elif ! apk info -e nginx-mod-stream >/dev/null 2>&1; then
+                apk add nginx-mod-stream || return 1
+            fi
+            ;;
+        *)
+            command -v nginx &>/dev/null || { echo -e "${red}此系统请手动安装带 stream 模块的 nginx。${plain}"; return 1; }
+            ;;
+    esac
+    command -v nginx &>/dev/null
+}
+
+# nginx's own default site must not fight another service for port 80
+sni_free_default_site() {
+    local held
+    held=$(sni_port_holders 80)
+    held="${held//nginx/}"
+    [[ -n "${held// /}" ]] || return 0
+    if [[ -e /etc/nginx/sites-enabled/default ]]; then
+        rm -f /etc/nginx/sites-enabled/default
+        echo -e "${yellow}端口 80 已被 ${held}占用: 已停用 nginx 默认站点 (删除 /etc/nginx/sites-enabled/default 链接，原文件 sites-available/default 保留)。${plain}"
+    fi
+    if [[ -f /etc/nginx/conf.d/default.conf ]]; then
+        mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.disabled-by-fnode
+        echo -e "${yellow}端口 80 已被 ${held}占用: 已停用 /etc/nginx/conf.d/default.conf (改名为 default.conf.disabled-by-fnode)。${plain}"
+    fi
+    if grep -Eq '^[[:space:]]*listen[[:space:]]+(\[::\]:)?80[[:space:]]*(default_server)?;' "$SNI_NGINX_CONF" 2>/dev/null; then
+        echo -e "${yellow}nginx.conf 自带的 http server 监听 80，可能与 ${held}冲突；如 nginx -t 或启动失败，请注释掉其中 server { ... } 段。${plain}"
+    fi
+}
+
+sni_nginx_apply() {
+    if [[ x"${release}" == x"alpine" ]]; then
+        rc-update add nginx default >/dev/null 2>&1
+        service nginx restart
+    else
+        systemctl enable nginx >/dev/null 2>&1
+        if systemctl is-active --quiet nginx; then
+            systemctl reload nginx || systemctl restart nginx
+        else
+            systemctl start nginx
+        fi
+    fi
+}
+
+# the blanket rule people add to send 443 to the AnyTLS port: it would bypass nginx
+sni_remove_redirect() {
+    local port="$1" yes="$2" rule ans
+    command -v iptables &>/dev/null || return 0
+    while read -r rule; do
+        [[ -n "$rule" ]] || continue
+        echo -e "${yellow}发现 iptables 规则会把 443 直接转到 ${port}，绕过 SNI 分流 (网站和 Reality 都会被打断):${plain}"
+        echo "  iptables -t nat ${rule}"
+        ans="y"
+        if [[ "$yes" != "1" && -t 0 ]]; then
+            read -rp "删除该规则? [Y/n]: " ans
+            ans="${ans:-y}"
+        fi
+        if [[ "$ans" == "y" || "$ans" == "Y" ]]; then
+            # shellcheck disable=SC2086
+            if iptables -t nat ${rule/#-A /-D } 2>/dev/null; then
+                echo -e "${green}已删除。若要恢复: iptables -t nat ${rule}${plain}"
+                if command -v netfilter-persistent &>/dev/null; then netfilter-persistent save >/dev/null 2>&1; fi
+                echo -e "${yellow}如规则写在开机脚本/iptables-persistent/rc.local 中，请同时从那里删除，否则重启后会回来。${plain}"
+            else
+                echo -e "${red}删除失败，请手动执行: iptables -t nat ${rule/#-A /-D }${plain}"
+            fi
+        else
+            echo -e "${yellow}保留了该规则: 443 的流量不会经过 nginx。${plain}"
+        fi
+    done < <(iptables -t nat -S PREROUTING 2>/dev/null | grep -E -- "--dport 443 .*-j REDIRECT --to-ports ${port}\$")
+}
+
+sni_split_status() {
+    local info snis anytls def
+    echo -e "${green}443 SNI 分流状态${plain}"
+    if [[ ! -f "$SNI_SPLIT_INC" ]] || ! sni_split_has_include "$SNI_NGINX_CONF" "$SNI_SPLIT_INC"; then
+        echo -e "未启用 (没有 ${SNI_SPLIT_INC} 或 nginx.conf 没有 include)。启用: FNode sni-split"
+        return 0
+    fi
+    info=$(sni_split_parse "$SNI_SPLIT_INC")
+    snis=$(echo "$info" | sed -n 's/^snis=//p')
+    anytls=$(echo "$info" | sed -n 's/^anytls_port=//p')
+    def=$(echo "$info" | sed -n 's/^default_port=//p')
+    echo -e "  ${snis//,/ } -> 127.0.0.1:${anytls}  (AnyTLS)"
+    echo -e "  其他/无 SNI -> 127.0.0.1:${def}"
+    if sni_nginx_active; then
+        echo -e "  nginx: ${green}运行中${plain}"
+    else
+        echo -e "  nginx: ${red}未运行${plain}  (systemctl status nginx)"
+    fi
+    echo -e "  443 监听: $(sni_port_holders 443)"
+    echo -e "  ${anytls} 监听: $(sni_port_holders "$anytls")  ${def} 监听: $(sni_port_holders "$def")"
+}
+
+# FNode sni-split off: remove our include and file, keep nginx installed
+sni_split_off() {
+    local ts conf_bak out
+    ts=$(date +%Y%m%d-%H%M%S)
+    if [[ ! -f "$SNI_SPLIT_INC" ]] && ! sni_split_has_include "$SNI_NGINX_CONF" "$SNI_SPLIT_INC"; then
+        echo -e "${green}SNI 分流本来就没有启用。${plain}"
+        return 0
+    fi
+    conf_bak="${SNI_NGINX_CONF}.bak-${ts}"
+    cp -f "$SNI_NGINX_CONF" "$conf_bak" || return 1
+    sni_split_without_include "$SNI_NGINX_CONF" "$SNI_SPLIT_INC" > "${SNI_NGINX_CONF}.tmp" && cat "${SNI_NGINX_CONF}.tmp" > "$SNI_NGINX_CONF"
+    rm -f "${SNI_NGINX_CONF}.tmp"
+    [[ -f "$SNI_SPLIT_INC" ]] && mv -f "$SNI_SPLIT_INC" "${SNI_SPLIT_INC}.off-${ts}"
+    if ! out=$(nginx -t 2>&1); then
+        cp -f "$conf_bak" "$SNI_NGINX_CONF"
+        [[ -f "${SNI_SPLIT_INC}.off-${ts}" ]] && mv -f "${SNI_SPLIT_INC}.off-${ts}" "$SNI_SPLIT_INC"
+        echo -e "${red}nginx -t 未通过，已恢复原配置:${plain}\n${out}"
+        return 1
+    fi
+    sni_nginx_apply
+    echo -e "${green}已关闭 443 SNI 分流 (备份: ${conf_bak}, ${SNI_SPLIT_INC}.off-${ts})。nginx 仍保持安装并在运行；不再需要可执行: systemctl disable --now nginx${plain}"
+    echo -e "${yellow}443 现在没有人监听。把 FNode 节点的 Server port 改回 443，或用 FNode 的 Reality 节点占用 443。${plain}"
+}
+
+# FNode sni-split on [--sni a,b] [--anytls-port 8444] [--reality[-port] 8445 | --no-reality] [--yes]
+sni_split_on() {
+    local sni_list="${SNI_SPLIT_SNI:-}" anytls_port="${SNI_SPLIT_ANYTLS_PORT:-}" reality="" reality_port="${SNI_SPLIT_REALITY_PORT:-}" yes=0
+    local caddy_file="/etc/caddy/Caddyfile" caddy_port="" default_port d ans holders ts out
+    local inc_bak="" conf_bak="" had_inc=0 site
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --sni) sni_list="${2:-}"; shift; [[ $# -gt 0 ]] && shift ;;
+            --anytls-port) anytls_port="${2:-}"; shift; [[ $# -gt 0 ]] && shift ;;
+            --reality-port) reality=1; reality_port="${2:-}"; shift; [[ $# -gt 0 ]] && shift ;;
+            --reality) reality=1; shift ;;
+            --no-reality) reality=0; shift ;;
+            --yes|-y) yes=1; shift ;;
+            *) echo -e "${red}未知参数: $1${plain}"; echo "用法: FNode sni-split [on|off|status] [--sni a.example.com,b.example.com] [--anytls-port 8444] [--reality[-port] 8445 | --no-reality] [--yes]"; return 1 ;;
+        esac
+    done
+
+    # ---- inputs ----
+    if [[ -z "$sni_list" ]]; then
+        if [[ -t 0 ]]; then
+            read -rp "AnyTLS 客户端使用的 SNI 域名 (可多个，逗号分隔，例如 jp-j35c-n.888833.best): " sni_list
+        fi
+    fi
+    if [[ -z "$(sni_normalize_list "$sni_list")" ]]; then
+        echo -e "${red}需要至少一个 AnyTLS SNI 域名 (--sni 或环境变量 SNI_SPLIT_SNI)。${plain}"
+        return 1
+    fi
+    while read -r d; do
+        if ! sni_valid_domain "$d"; then
+            echo -e "${red}SNI 域名不合法: ${d}${plain}"
+            return 1
+        fi
+    done < <(sni_normalize_list "$sni_list")
+    if [[ -z "$anytls_port" ]]; then
+        anytls_port=8444
+        if [[ -t 0 ]]; then
+            read -rp "AnyTLS 节点在本机真正监听的端口 [默认 8444]: " ans
+            anytls_port="${ans:-8444}"
+        fi
+    fi
+    if [[ -z "$reality" ]]; then
+        reality=0
+        if [[ -t 0 ]]; then
+            read -rp "这台 VPS 上还有 Reality 节点要共用 443 吗? [y/N]: " ans
+            [[ "$ans" == "y" || "$ans" == "Y" ]] && reality=1
+        fi
+    fi
+    if [[ "$reality" == "1" && -z "$reality_port" ]]; then
+        reality_port=8445
+        if [[ -t 0 ]]; then
+            read -rp "Reality 节点的真实监听端口 (面板 Server port) [默认 8445]: " ans
+            reality_port="${ans:-8445}"
+        fi
+    fi
+    caddy_port=$(caddy_current_port "$caddy_file")
+    for d in "$anytls_port" ${reality_port:+"$reality_port"}; do
+        if ! caddy_valid_port "$d" || [[ "$d" == "443" ]]; then
+            echo -e "${red}端口必须是 1-65535 且不能是 443: ${d}${plain}"
+            return 1
+        fi
+    done
+    if [[ -f "$caddy_file" ]]; then
+        if [[ -z "$caddy_port" || "$caddy_port" == "443" ]]; then
+            echo -e "${red}Caddy 还在使用 443 (Caddyfile 没有 https_port)。nginx 要占用 443，请先: FNode caddy-port 8443${plain}"
+            return 1
+        fi
+    else
+        caddy_port=8443
+        echo -e "${yellow}没有找到 ${caddy_file}: 假定网站 (Caddy) 将运行在 8443。先用菜单 18 配置 Caddy，否则访问网站会连接失败。${plain}"
+    fi
+    if [[ "$reality" == "1" ]]; then
+        default_port="$reality_port"
+    else
+        default_port="$caddy_port"
+    fi
+    if [[ "$anytls_port" == "$default_port" || ( "$reality" == "1" && "$reality_port" == "$caddy_port" ) || "$anytls_port" == "$caddy_port" ]]; then
+        echo -e "${red}端口冲突: AnyTLS ${anytls_port} / Reality ${reality_port:--} / Caddy ${caddy_port} 必须互不相同。${plain}"
+        return 1
+    fi
+
+    # ---- who holds 443 (nothing is touched before this is clear) ----
+    holders=$(sni_port_holders 443)
+    holders="${holders% }"
+    if [[ -n "$holders" ]]; then
+        if [[ "$holders" == "nginx" ]] && sni_split_has_include "$SNI_NGINX_CONF" "$SNI_SPLIT_INC"; then
+            :   # our own nginx: reconfigure it
+        elif [[ "$holders" == *nginx* ]]; then
+            echo -e "${red}443 已被 nginx 占用 (不是本脚本配置的)。请把你自己的 nginx 配置改成 stream + ssl_preread，或先停用它。未做任何修改。${plain}"
+            return 1
+        elif [[ "${holders,,}" == *fnode* ]]; then
+            echo -e "${red}443 现在由 FNode 自己监听 (某个节点的 Server port = 443，通常是 Reality 或 AnyTLS)。${plain}"
+            echo -e "请先在面板把该节点的 Server port 改成: Reality -> ${reality_port:-8445}，AnyTLS -> ${anytls_port} (Connection port 保持 443)，等 FNode 重新监听后再运行本命令。未做任何修改。"
+            return 1
+        elif [[ "${holders,,}" == *caddy* ]]; then
+            echo -e "${red}443 现在由 Caddy 监听。请先: FNode caddy-port 8443，再重试。未做任何修改。${plain}"
+            return 1
+        else
+            echo -e "${red}443 已被其他进程占用: ${holders} (例如 1Panel/openresty、apache、x-ui)。请先停掉或改到别的端口再重试。未做任何修改。${plain}"
+            return 1
+        fi
+    fi
+
+    # ---- nginx ----
+    sni_ensure_nginx || { echo -e "${red}无法安装 nginx / stream 模块，已停止。${plain}"; return 1; }
+    sni_free_default_site
+
+    ts=$(date +%Y%m%d-%H%M%S)
+    conf_bak="${SNI_NGINX_CONF}.bak-${ts}"
+    cp -f "$SNI_NGINX_CONF" "$conf_bak" || return 1
+    if [[ -f "$SNI_SPLIT_INC" ]]; then
+        had_inc=1
+        inc_bak="${SNI_SPLIT_INC}.bak-${ts}"
+        cp -f "$SNI_SPLIT_INC" "$inc_bak"
+    fi
+    sni_split_conf "$sni_list" "$anytls_port" "$default_port" "$(check_ipv6_support)" > "$SNI_SPLIT_INC"
+    sni_split_with_include "$SNI_NGINX_CONF" "$SNI_SPLIT_INC" > "${SNI_NGINX_CONF}.tmp" && cat "${SNI_NGINX_CONF}.tmp" > "$SNI_NGINX_CONF"
+    rm -f "${SNI_NGINX_CONF}.tmp"
+    if ! out=$(nginx -t 2>&1); then
+        cp -f "$conf_bak" "$SNI_NGINX_CONF"
+        if [[ $had_inc == 1 ]]; then cp -f "$inc_bak" "$SNI_SPLIT_INC"; else rm -f "$SNI_SPLIT_INC"; fi
+        echo -e "${red}nginx -t 未通过，已恢复原配置:${plain}\n${out}"
+        if [[ "$out" == *'unknown directive "stream"'* ]]; then
+            echo -e "${yellow}nginx 没有加载 stream 模块: Debian/Ubuntu 需要 libnginx-mod-stream，CentOS 需要 nginx-mod-stream，Alpine 需要 nginx-mod-stream。${plain}"
+        fi
+        return 1
+    fi
+    if ! sni_nginx_apply; then
+        cp -f "$conf_bak" "$SNI_NGINX_CONF"
+        if [[ $had_inc == 1 ]]; then cp -f "$inc_bak" "$SNI_SPLIT_INC"; else rm -f "$SNI_SPLIT_INC"; fi
+        echo -e "${red}nginx 启动/重载失败，已恢复原配置。查看: systemctl status nginx / journalctl -u nginx -e${plain}"
+        return 1
+    fi
+    sleep 1
+    sni_remove_redirect "$anytls_port" "$yes"
+
+    # ---- summary ----
+    site=$(caddy_first_domain "$caddy_file")
+    echo -e "${green}========================================${plain}"
+    echo -e "${green}443 SNI 分流已启用 (nginx stream + ssl_preread)${plain}"
+    echo -e "路由表 (公网 443):"
+    while read -r d; do
+        echo -e "  SNI ${green}${d}${plain} -> 127.0.0.1:${anytls_port}  (AnyTLS)"
+    done < <(sni_normalize_list "$sni_list")
+    if [[ "$reality" == "1" ]]; then
+        echo -e "  其他/无 SNI -> 127.0.0.1:${default_port}  (Reality 节点；非 Reality 访客由 Reality 转到 dest -> Caddy ${caddy_port}，仍看到正常网站)"
+    else
+        echo -e "  其他/无 SNI -> 127.0.0.1:${default_port}  (Caddy 网站)"
+    fi
+    echo -e "面板设置:"
+    echo -e "  AnyTLS 节点: 连接端口(Connection port) ${green}443${plain}，服务端口(Server port) ${green}${anytls_port}${plain}；客户端 SNI = ${sni_list}"
+    if [[ "$reality" == "1" ]]; then
+        echo -e "  Reality 节点: 连接端口 ${green}443${plain}，服务端口 ${green}${reality_port}${plain}；dest = ${site:-<域名>}:${caddy_port}"
+    else
+        echo -e "  Reality 节点 (如有): 不要和 443 共用，除非重新运行: FNode sni-split --reality"
+    fi
+    echo -e "验证:"
+    echo -e "  ss -ltnp | grep -E ':(443|${anytls_port}|${default_port})\\b'"
+    echo -e "  openssl s_client -connect 127.0.0.1:443 -servername $(sni_normalize_list "$sni_list" | head -n 1) </dev/null 2>/dev/null | openssl x509 -noout -subject -issuer   # AnyTLS 证书"
+    echo -e "  curl -svk --connect-to ${site:-<网站域名>}:443:127.0.0.1:443 https://${site:-<网站域名>}/ -o /dev/null   # 网站"
+    echo -e "${yellow}注意: 经 nginx 转发后，FNode 看到的 AnyTLS 客户端地址都是 127.0.0.1 (按 IP 的限制/在线 IP 统计会失效)；sing-box 的 AnyTLS 不支持 PROXY protocol。${plain}"
+    echo -e "备份: ${conf_bak}${inc_bak:+, ${inc_bak}}。关闭: FNode sni-split off"
+    echo -e "${green}========================================${plain}"
+}
+
+# sni_split_run [on|off|status] [flags]; default on
+sni_split_run() {
+    local mode="on"
+    if [[ $# -gt 0 && "$1" != -* ]]; then mode="$1"; shift; fi
+    case "$mode" in
+        on|setup) sni_split_on "$@" ;;
+        off|uninstall) sni_split_off ;;
+        status) sni_split_status ;;
+        *) echo "用法: FNode sni-split [on|off|status] [--sni a.example.com] [--anytls-port 8444] [--reality[-port] 8445 | --no-reality] [--yes]"; return 1 ;;
+    esac
+}
+
+# $1 = 0 when called from the command line (no menu afterwards), rest = sni_split_run args
+sni_split() {
+    local nonint="$1" rc
+    shift
+    sni_split_run "$@"
+    rc=$?
+    if [[ "$nonint" != "0" ]]; then before_show_menu; fi
+    return $rc
+}
+
+sni_split_menu() {
+    echo -e "
+  ${green}443 SNI 分流 (nginx stream): 同一台 VPS 上 网站 + Reality + AnyTLS(443→8444) 共用 443${plain}
+  ${green}1.${plain} 配置 / 更新分流
+  ${green}2.${plain} 关闭分流
+  ${green}3.${plain} 查看状态
+  ${green}0.${plain} 返回
+"
+    local c
+    read -rp "请输入选择 [0-3]: " c
+    case "$c" in
+        1) sni_split_run on ;;
+        2) sni_split_run off ;;
+        3) sni_split_run status ;;
+        0) ;;
+        *) echo -e "${red}请输入正确的数字 [0-3]${plain}" ;;
+    esac
+    before_show_menu
+}
+
 show_usage() {
     echo "FNode 管理脚本使用方法: "
     echo "------------------------------------------"
@@ -1915,6 +2361,7 @@ show_usage() {
     echo "FNode caddy        - 安装/配置 Caddy (支持 Cloudflare DNS 反代与证书)"
     echo "FNode caddy-port   - 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest，443 留给 FNode；可带端口参数: FNode caddy-port 8443)"
     echo "FNode ignore-panel-outbounds on|off|status - 落地机自救: 忽略面板同步的自定义出站 (改 config.json 并重启)"
+    echo "FNode sni-split [on|off|status] - 443 SNI 分流 (nginx stream): AnyTLS 公网 443→本机 8444，网站(Caddy 8443)/Reality 共用 443 (--sni 域名 --anytls-port 8444 --reality 8445 --yes)"
     echo "FNode version      - 查看 FNode 版本"
     echo "------------------------------------------"
 }
@@ -1953,11 +2400,12 @@ show_menu() {
   ${green}19.${plain} 配置 Hysteria 2 多端口/跳跃 NAT 转发
   ${green}20.${plain} 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest)
   ${green}21.${plain} 落地机自救: 忽略面板自定义出站 (开启/关闭/状态)
-  ${green}22.${plain} 退出脚本
+  ${green}22.${plain} 配置 443 SNI 分流 (AnyTLS 443→8444，与网站/Reality 共用 443)
+  ${green}23.${plain} 退出脚本
  "
  #后续更新可加入上方字符串中
     show_status
-    echo && read -rp "请输入选择 [0-22]: " num
+    echo && read -rp "请输入选择 [0-23]: " num
 
     case "${num}" in
         0) config ;;
@@ -1982,8 +2430,9 @@ show_menu() {
         19) setup_hy2_port_hopping ;;
         20) set_caddy_port ;;
         21) check_install && ignore_panel_outbounds_menu ;;
-        22) exit ;;
-        *) echo -e "${red}请输入正确的数字 [0-22]${plain}" ;;
+        22) sni_split_menu ;;
+        23) exit ;;
+        *) echo -e "${red}请输入正确的数字 [0-23]${plain}" ;;
     esac
 }
 
@@ -2016,6 +2465,7 @@ if [[ $# > 0 ]]; then
         "caddy") setup_caddy_reverse_proxy 0 || exit 1 ;;
         "caddy-port"|"caddy_port") set_caddy_port 0 "$2" ;;
         "ignore-panel-outbounds"|"ignore_panel_outbounds") check_install 0 && { ignore_panel_outbounds 0 "$2" || exit 1; } ;;
+        "sni-split"|"sni_split") sni_split 0 "${@:2}" || exit 1 ;;
         "install_caddy") install_caddy 0 || exit 1 ;;
         "porthop"|"port_hop"|"mport") setup_hy2_port_hopping ;;
         "update_shell") update_shell ;;
