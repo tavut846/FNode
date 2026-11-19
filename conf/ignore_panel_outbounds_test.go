@@ -130,8 +130,8 @@ func TestIgnorePanelOutbounds_ScriptWiring(t *testing.T) {
 	src := string(bytes.ReplaceAll(raw, []byte("\r\n"), []byte("\n")))
 	for _, want := range []string{
 		`"ignore-panel-outbounds"|"ignore_panel_outbounds") check_install 0 && { ignore_panel_outbounds 0 "$2"`,
-		`21) check_install && ignore_panel_outbounds_menu ;;`,
-		`22) sni_split_menu ;;`,
+		`22) check_install && ignore_panel_outbounds_menu ;;`,
+		`21) sni_split_menu ;;`,
 		`23) exit ;;`,
 		`请输入选择 [0-23]`,
 		`config ignore-panel-outbounds -c`,

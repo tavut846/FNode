@@ -126,7 +126,7 @@ func TestSniSplit_ScriptWiring(t *testing.T) {
 	src := string(bytes.ReplaceAll(raw, []byte("\r\n"), []byte("\n")))
 	for _, want := range []string{
 		`"sni-split"|"sni_split") sni_split 0 "${@:2}" || exit 1 ;;`,
-		`22) sni_split_menu ;;`,
+		`21) sni_split_menu ;;`,
 		"FNode sni-split [on|off|status]",
 		"sni_remove_redirect",
 		"nginx -t",

@@ -2377,7 +2377,7 @@ show_menu() {
 --- https://github.com/tavut846/FNode ---
   ${green}0.${plain} 修改配置
   ${green}1.${plain} 安装 FNode
-  ${green}2.${plain} 更新 FNode (稳定版/预发布版/指定版本)
+  ${green}2.${plain} 更新 FNode
   ${green}3.${plain} 卸载 FNode
 ————————————————
   ${green}4.${plain} 启动 FNode
@@ -2390,17 +2390,17 @@ show_menu() {
   ${green}10.${plain} 设置 FNode 开机自启
   ${green}11.${plain} 取消 FNode 开机自启
 ————————————————
-  ${green}12.${plain} 一键安装 bbr (最新内核)
-  ${green}13.${plain} 查看 FNode 版本
-  ${green}14.${plain} 生成 X25519 密钥
-  ${green}15.${plain} 升级 FNode 维护脚本
-  ${green}16.${plain} 生成 FNode 配置文件
-  ${green}17.${plain} 放行 VPS 的所有网络端口
+  ${green}12.${plain} 查看 FNode 版本
+  ${green}13.${plain} 生成 X25519 密钥
+  ${green}14.${plain} 升级 FNode 维护脚本
+  ${green}15.${plain} 生成 FNode 配置文件
+  ${green}16.${plain} 放行 VPS 的所有网络端口
+  ${green}17.${plain} 一键安装 bbr (最新内核)
   ${green}18.${plain} 安装/配置 Caddy 反代与证书
-  ${green}19.${plain} 配置 Hysteria 2 多端口/跳跃 NAT 转发
-  ${green}20.${plain} 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest)
-  ${green}21.${plain} 落地机自救: 忽略面板自定义出站 (开启/关闭/状态)
-  ${green}22.${plain} 配置 443 SNI 分流 (AnyTLS 443→8444，与网站/Reality 共用 443)
+  ${green}19.${plain} 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest)
+  ${green}20.${plain} 配置 Hysteria 2 多端口/跳跃 NAT 转发
+  ${green}21.${plain} 配置 443 SNI 分流 (AnyTLS 443→8444，与网站/Reality 共用 443)
+  ${green}22.${plain} 落地机自救: 忽略面板自定义出站
   ${green}23.${plain} 退出脚本
  "
  #后续更新可加入上方字符串中
@@ -2420,17 +2420,17 @@ show_menu() {
         9) check_install && clean_log ;;
         10) check_install && enable ;;
         11) check_install && disable ;;
-        12) install_bbr ;;
-        13) check_install && show_FNode_version ;;
-        14) check_install && generate_x25519_key ;;
-        15) update_shell ;;
-        16) generate_config_file ;;
-        17) open_ports ;;
+        12) check_install && show_FNode_version ;;
+        13) check_install && generate_x25519_key ;;
+        14) update_shell ;;
+        15) generate_config_file ;;
+        16) open_ports ;;
+        17) install_bbr ;;
         18) setup_caddy_reverse_proxy ;;
-        19) setup_hy2_port_hopping ;;
-        20) set_caddy_port ;;
-        21) check_install && ignore_panel_outbounds_menu ;;
-        22) sni_split_menu ;;
+        19) set_caddy_port ;;
+        20) setup_hy2_port_hopping ;;
+        21) sni_split_menu ;;
+        22) check_install && ignore_panel_outbounds_menu ;;
         23) exit ;;
         *) echo -e "${red}请输入正确的数字 [0-23]${plain}" ;;
     esac
