@@ -1281,10 +1281,20 @@ install_caddy() {
     else
         systemctl stop caddy >/dev/null 2>&1
     fi
+    local caddy_bak=""
     if [[ -f /usr/bin/caddy ]]; then
-        cp -f /usr/bin/caddy "/usr/bin/caddy.bak-$(date +%Y%m%d-%H%M%S)"
+        caddy_bak="/usr/bin/caddy.bak-$(date +%Y%m%d-%H%M%S)"
+        cp -f /usr/bin/caddy "$caddy_bak"
     fi
-    install -m 755 "$tmpbin" /usr/bin/caddy
+    # "command install" is coreutils install: this script defines its own install() function
+    if ! command install -m 755 "$tmpbin" /usr/bin/caddy; then
+        echo -e "${red}无法写入 /usr/bin/caddy，安装已中止 (下载的文件保留在 ${tmpbin})。${plain}"
+        if [[ -n "$caddy_bak" ]]; then
+            cp -f "$caddy_bak" /usr/bin/caddy 2>/dev/null
+            if [[ x"${release}" == x"alpine" ]]; then service caddy start >/dev/null 2>&1; else systemctl start caddy >/dev/null 2>&1; fi
+        fi
+        return 1
+    fi
     rm -f "$tmpbin"
 
     if [[ x"${release}" == x"alpine" ]]; then
