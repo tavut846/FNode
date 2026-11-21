@@ -143,3 +143,31 @@ func TestCaddyValidate_PassesTokenFromEnvFile(t *testing.T) {
 		t.Fatalf("validate must succeed with the env-file token and print nothing: %q %v", out, err)
 	}
 }
+
+// FNode.sh defines its own install() function (it forwards to install.sh), so a
+// bare `install -m 755 ...` calls that function, which rejects -m. Coreutils
+// install must be called as `command install`, and a failed copy must stop
+// install_caddy before the unit file is written.
+func TestInstallCaddy_UsesCoreutilsInstallAndStopsOnFailure(t *testing.T) {
+	raw, err := os.ReadFile("../FNode-script/FNode.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	src := string(bytes.ReplaceAll(raw, []byte("\r\n"), []byte("\n")))
+	if !strings.Contains(src, "\ninstall() {") {
+		t.Skip("FNode.sh no longer defines install(); the guard below is moot")
+	}
+	if m := regexp.MustCompile(`(?m)^\s*(?:[a-z_]+\s*&&\s*)?install -[a-zA-Z]`).FindString(src); m != "" {
+		t.Errorf("bare coreutils install call shadowed by the install() function: %q", m)
+	}
+	i := strings.Index(src, "install_caddy() {")
+	body := src[i:]
+	k := strings.Index(body, "command install -m 755")
+	u := strings.Index(body, "caddy.service")
+	if k < 0 || u < 0 || k > u {
+		t.Fatalf("install_caddy must copy with `command install` before writing the unit (k=%d u=%d)", k, u)
+	}
+	if !strings.Contains(body[k-10:k+700], "return 1") {
+		t.Error("install_caddy must return 1 when the copy fails")
+	}
+}

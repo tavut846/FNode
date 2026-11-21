@@ -146,6 +146,10 @@ curl -fsSL https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/
 FNode uninstall --yes
 ```
 
+### 443 SNI 分流 (Sharing 443)
+
+同一台 VPS 上让网站 (Caddy 8443)、Reality 和 AnyTLS (面板连接端口 443、服务端口 8444) 共用公网 443: 运行 `FNode sni-split` (菜单 21)，脚本会配置 nginx `stream` + `ssl_preread` 按 SNI 分流。详见 `FNode-script/LOGIC.md`。
+
 ## 构建
 
 # 编译 sing 内核
