@@ -21,7 +21,7 @@ How to read the confidence column: **S** = backed by a source listed in section 
 | Retransmission backoff | Under loss, RTO doubles per retry. `tcp_retries2` = 15 means about 924 s before the kernel gives up on an unacknowledged established connection (RFC 1122 asks for >= 100 s, i.e. 8) | Kernel doc **S** | Every TCP connection with outstanding data |
 | `tcp_syn_retries` | New connection attempts retry SYN (kernel default 6, about 127 s total; **not re-checked here**). A user on a lossy path sees long connect stalls | G | New connections, clients that reconnect |
 | TCP keepalive | Off per socket unless the app asks. Kernel default 2 h idle. sing-box default for its own dials is 5 min idle / 75 s interval (docs **S**); FNode already sets inbound 30 s / 15 s (**C**) | | TCP inbounds |
-| `TCP_USER_TIMEOUT` | Bounds how long unacknowledged data may stay before the socket is aborted; with keepalive it replaces the keepalive "count x interval" logic. Not in sing-box listen options (**C**: no such field in `third_party/sing-box/option/inbound.go`) | Analysis article **S** | Would need a sing-box patch or `setsockopt` hook |
+| `TCP_USER_TIMEOUT` | Bounds how long unacknowledged data may stay before the socket is aborted; with keepalive it replaces the keepalive "count x interval" logic. Not in sing-box listen options (**C**: no such field in the sing-box `option/inbound.go`) | Analysis article **S** | Would need a sing-box patch or `setsockopt` hook |
 | `tcp_slow_start_after_idle` | Default 1: cwnd shrinks after an idle period, so the first burst after idle is slow. Setting 0 helps bursty long-lived connections (disputed generality) | Docs/thread **S** | TCP nodes with bursty use |
 | Loss detection | RACK-TLP (RFC 8985) turns many tail-loss RTOs into fast recovery; Linux enables it (`tcp_recovery`, `tcp_early_retrans` TLP). Checking values on the VPS is part of the diagnostic | RFC + kernel doc **S**, defaults on a given VPS unverified | TCP |
 | Black-hole PMTU | A path that drops large packets without ICMP looks like "works for small, stalls when busy". `tcp_mtu_probing` 1 enables probing after a black hole is detected, 2 always on at `tcp_base_mss` | Kernel doc **S** | TCP; also hy2/tuic through QUIC's own PMTUD |
@@ -135,7 +135,7 @@ Logs/metrics to look at: `journalctl -u FNode -e` (closes, reload), `FNode confi
 - BBR vs CUBIC under loss: https://www3.cs.stonybrook.edu/~anshul/imc19_bbr.pdf (IMC 2019), https://queue.acm.org/detail.cfm?id=3022184 (BBR, B4 loss test), https://par.nsf.gov/servlets/purl/10252943 (BBRv2 alpha), https://arxiv.org/pdf/2107.03057 (BBRv2+), https://par.nsf.gov/servlets/purl/10545111 (BBRv3 evaluation)
 - TCP Brutal behaviour and warnings: https://github.com/apernet/tcp-brutal
 - netem examples: https://oneuptime.com/blog/post/2026-03-20-simulate-packet-loss-tc-netem/view ; ThousandEyes 1% loss impact: https://www.thousandeyes.com/blog/path-quality-surprising-impact-one-percent-packet-loss
-- Code read in this repo: `core/sing/keepalive.go`, `core/sing/node.go`, `core/sing/hysteria2_cc.go`, `core/sing/netrecovery.go`, `conf/node.go`, `conf/sing.go`, `third_party/sing-box/option/inbound.go`, sing-quic `hysteria/protocol.go`, `hysteria2/service.go`.
+- Code read in this repo: `core/sing/keepalive.go`, `core/sing/node.go`, `core/sing/hysteria2_cc.go`, `core/sing/netrecovery.go`, `conf/node.go`, `conf/sing.go`, the sing-box `option/inbound.go`, sing-quic `hysteria/protocol.go`, `hysteria2/service.go`.
 
 ## 9. Not verified
 

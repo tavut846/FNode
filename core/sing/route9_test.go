@@ -15,6 +15,7 @@ import (
 	M "github.com/sagernet/sing/common/metadata"
 
 	"github.com/tavut846/FNode/api/panel"
+	"github.com/tavut846/FNode/conf"
 )
 
 const route9Tag = "[https://myboard.example]-vless:362"
@@ -124,4 +125,44 @@ func mustJSON(t *testing.T, v any) []byte {
 		t.Fatal(err)
 	}
 	return d
+}
+
+// sing-box 1.13+ ignores the inbound sniff options; FNode must emit the
+// `sniff` rule action first so a client that sends an IP (Hiddify resolving
+// DNS itself) still gets its domain recovered before domain routes match.
+func TestSniffRuleEmitted(t *testing.T) {
+	b := newTestSing(t, nil)
+	b.users.mapLock.Lock()
+	b.inboundConfig[route9Tag] = &conf.Options{SingOptions: &conf.SingOptions{SniffEnabled: true, SniffOverrideDestination: true}}
+	b.inboundConfig["off"] = &conf.Options{SingOptions: &conf.SingOptions{SniffEnabled: false}}
+	b.users.mapLock.Unlock()
+	setNode(b, route9Tag, &panel.CommonNode{Routes: []panel.Route{route9()}})
+	setNode(b, "off", &panel.CommonNode{})
+	if err := b.applyPanelState(true); err != nil {
+		t.Fatal(err)
+	}
+	first := b.last.Rules[0]
+	if first["action"] != "sniff" || first["override_destination"] != true || len(ruleInbounds(first)) != 1 || ruleInbounds(first)[0] != route9Tag {
+		t.Fatalf("first rule must be the sniff action for the node: %v", first)
+	}
+	n := 0
+	for _, r := range b.last.Rules {
+		if r["action"] == "sniff" {
+			n++
+		}
+	}
+	if n != 1 {
+		t.Errorf("EnableSniff=false must not emit a sniff rule: %d sniff rules", n)
+	}
+	rule, err := json.UnmarshalExtendedContext[option.Rule](b.ctx, mustJSON(t, first))
+	if err != nil {
+		t.Fatal(err)
+	}
+	built, err := R.NewRule(b.ctx, log.NewNOPFactory().NewLogger("t"), rule, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if act, ok := built.Action().(*R.RuleActionSniff); !ok || !act.OverrideDestination {
+		t.Errorf("sniff action must override the destination: %v", built.Action())
+	}
 }

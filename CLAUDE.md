@@ -80,9 +80,10 @@ sing-box is the **proxy engine**. FNode manages it programmatically — it never
 
 ### Dependency
 ```
-github.com/sagernet/sing-box v1.14.4
-  → replaced by ./third_party/sing-box (upstream v1.14.4 + Remove()/start-after-boot managers,
-    Router.UpdateRules, Xboard UpdateUsers; see docs/PROJECT_GUIDE.md)
+github.com/sagernet/sing-box v1.15.0-alpha.13   (ALPHA; latest stable is v1.14.4)
+  → replaced by github.com/tavut846/FNode-sing v1.15.0-alpha.13-fnode.1 (public repo, no GOPRIVATE needed;
+    upstream + Remove()/start-after-boot managers, Router.UpdateRules, Xboard UpdateUsers,
+    sniff override_destination; see docs/PROJECT_GUIDE.md)
 ```
 
 ### Core interface (`core/interface.go`)
@@ -231,5 +232,5 @@ Go version required: **1.25+** (`GOEXPERIMENT=jsonv2` is needed for the `encodin
 - `api/panel/panel.go` — query-param auth is baked in; changing param names breaks Xboard compatibility.
 - `core/sing/hook.go` — traffic counting hook; mistakes here cause silent zero-traffic reports.
 - `limiter/limiter.go:CheckLimit()` — device-limit logic is stateful and subtle (two-pass with `OldUserOnline`).
-- `go.mod` replace directive for `sing-box` — points at the vendored, patched `third_party/sing-box`; do not swap to plain upstream (it has no `Remove()`).
+- `go.mod` replace directive for `sing-box` — points at the patched fork `github.com/tavut846/FNode-sing`; do not swap to plain upstream (it has no `Remove()`/`UpdateRules`).
 - `common/migrate` + `cmd/migrate.go` — config migration with backup and rollback; keep rules idempotent and bump `SchemaVersion` when adding one.

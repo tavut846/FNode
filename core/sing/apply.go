@@ -29,6 +29,9 @@ type nodeRouting struct {
 	routes      []panel.Route
 	customRules []conf.CustomRouteRule
 	rawRoutes   []map[string]any
+	// sniff adds a `sniff` rule action for this node's inbound (EnableSniff);
+	// sniffOverride makes the sniffed domain the destination (SniffOverrideDestination).
+	sniff, sniffOverride bool
 }
 
 // panelState is the routing data collected from every node's panel config.
@@ -45,6 +48,15 @@ func (b *Sing) singConfig() *conf.SingConfig {
 		return nil
 	}
 	return b.coreConfig.SingConfig
+}
+
+// sniffSettings returns the node's EnableSniff and SniffOverrideDestination;
+// both default to true (conf.NewSingOptions) when the node has no SingOptions.
+func sniffSettings(c *conf.Options) [2]bool {
+	if c == nil || c.SingOptions == nil {
+		return [2]bool{true, true}
+	}
+	return [2]bool{c.SingOptions.SniffEnabled, c.SingOptions.SniffOverrideDestination}
 }
 
 // ownPorts lists the listen ports of this FNode's nodes.
@@ -80,6 +92,10 @@ func (b *Sing) collectPanelState() panelState {
 	}
 	sort.Strings(tags)
 	infos := make([]*panel.NodeInfo, len(tags))
+	sniffOf := make(map[string][2]bool, len(tags))
+	for _, tag := range tags {
+		sniffOf[tag] = sniffSettings(b.inboundConfig[tag])
+	}
 	for i, tag := range tags {
 		infos[i] = b.inboundInfo[tag]
 	}
@@ -94,7 +110,7 @@ func (b *Sing) collectPanelState() panelState {
 		if info == nil || info.Common == nil {
 			continue
 		}
-		nr := nodeRouting{tag: tags[i]}
+		nr := nodeRouting{tag: tags[i], sniff: sniffOf[tags[i]][0], sniffOverride: sniffOf[tags[i]][1]}
 		for _, r := range info.Common.Routes {
 			// dns routes configure the DNS module, not the router
 			if r.Action == "dns" {
@@ -254,6 +270,18 @@ func compileScopedRules(disableIPv6 bool, local []conf.CustomRouteRule, nodes []
 	// compileAllRouteRules ends with the anti-SSRF pair; the node rules go before it
 	guard := rules[len(rules)-2:]
 	var out []map[string]any
+	// sing-box 1.13 removed the inbound sniff options; sniffing is the `sniff`
+	// rule action, and it must run before any domain rule so a client that sends
+	// an IP (resolved on the client, e.g. Hiddify) still matches domain routes.
+	for _, n := range nodes {
+		if n.sniff {
+			r := map[string]any{"action": "sniff", "inbound": []string{n.tag}}
+			if n.sniffOverride {
+				r["override_destination"] = true
+			}
+			out = append(out, nameRules([]map[string]any{r}, "sniff")...)
+		}
+	}
 	for i, cr := range local {
 		if !cr.Disabled {
 			out = append(out, nameRules(compileCustomRouteRule(cr), ruleLabel(cr.Name, "local-rule", i))...)
