@@ -33,7 +33,7 @@
       "DeviceOnlineMinTraffic": 200,
       "MinReportTraffic": 0,
       "TCPFastOpen": false,
-      "SniffEnabled": true,
+      "EnableSniff": true,
       "CertConfig": {
         "CertMode": "file",
         "RejectUnknownSni": false,
@@ -58,7 +58,7 @@
       "DeviceOnlineMinTraffic": 200,
       "MinReportTraffic": 0,
       "TCPFastOpen": false,
-      "SniffEnabled": true,
+      "EnableSniff": true,
       "CertConfig": {
         "CertMode": "file",
         "RejectUnknownSni": false,
