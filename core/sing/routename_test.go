@@ -35,7 +35,7 @@ func TestRouteNamesResolveFromBuiltRules(t *testing.T) {
 	}
 	h := &HookServer{}
 	h.SetRouteNames(ctx, log.NewNOPFactory().NewLogger("t"), rules, names)
-	want := map[string]string{"netflix.com": "Netflix via US", "example.org": "route#8"}
+	want := map[string]string{"netflix.com": "Netflix via US (#7)", "example.org": "route#8"}
 	found := 0
 	for i, opt := range rules {
 		built, err := R.NewRule(ctx, log.NewNOPFactory().NewLogger("t"), opt, false)

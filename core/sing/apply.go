@@ -176,7 +176,9 @@ func filterRulesMissing(rules []map[string]any, known map[string]bool) ([]map[st
 	missing := make(map[string][]string)
 	for _, r := range rules {
 		if tag := ruleOutbound(r); tag != "" && tag != "block" && tag != "direct" && !known[tag] {
-			warnings = append(warnings, fmt.Sprintf("route rule %v references unknown outbound %q, skipped", r, tag))
+			name, _ := r[ruleNameKey].(string)
+			stripped, _ := takeRuleName(r)
+			warnings = append(warnings, fmt.Sprintf("route %q (node %v) references unknown outbound %q, skipped: define it in sing_origin.json or CustomOutbounds, or add it in the panel (rule %v)", name, ruleInbounds(r), tag, stripped))
 			for _, node := range ruleInbounds(r) {
 				if !containsString(missing[node], tag) {
 					missing[node] = append(missing[node], tag)

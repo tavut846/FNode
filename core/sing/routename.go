@@ -66,7 +66,10 @@ func panelRouteLabel(pr panel.Route) string {
 	if strings.TrimSpace(name) == "" {
 		name = pr.Name
 	}
-	return ruleLabel(name, "route", pr.Id)
+	if strings.TrimSpace(name) == "" {
+		return "route#" + strconv.Itoa(pr.Id)
+	}
+	return strings.TrimSpace(name) + " (#" + strconv.Itoa(pr.Id) + ")"
 }
 
 func ruleKey(rule adapter.Rule) string {
@@ -108,16 +111,22 @@ func (h *HookServer) routeName(rule adapter.Rule) string {
 	return "other"
 }
 
-// logRoute writes one stable line per routed connection:
-// [<inbound>] route=<name> outbound=<tag> dest=<host:port>
-func (h *HookServer) logRoute(m adapter.InboundContext, rule adapter.Rule, out adapter.Outbound) {
+// logRoute writes one line per routed connection through the sing-box logger
+// (so it follows the configured core log level and the log capture), at info:
+//
+//	route AI Domain - IPv6 (#9) -> direct6 for ab.chatgpt.com:443
+//
+// <name> is "default" when no rule matched (route.final) and "other" for a rule
+// FNode did not name (sing_origin.json rules).
+func (h *HookServer) logRoute(ctx context.Context, m adapter.InboundContext, rule adapter.Rule, out adapter.Outbound) {
 	tag := "unknown"
 	if out != nil {
 		tag = out.Tag()
 	}
-	name := h.routeName(rule)
-	if strings.ContainsAny(name, " \t\"") {
-		name = strconv.Quote(name)
+	line := "route " + h.routeName(rule) + " -> " + tag + " for " + m.Destination.String()
+	if h.logger != nil {
+		h.logger.InfoContext(ctx, line)
+		return
 	}
-	log.Info("[", m.Inbound, "] route=", name, " outbound=", tag, " dest=", m.Destination.String())
+	log.Info(line)
 }

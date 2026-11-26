@@ -75,6 +75,31 @@ func BuildDefaultOutbounds(connectTimeout time.Duration, domainStrategy option.D
 	return outbounds
 }
 
+// withBuiltinDirect6 appends the built-in "direct6" outbound (domains resolve
+// to IPv6 first) unless the origin file or the local outbounds define a tag
+// with that name.
+func withBuiltinDirect6(local []map[string]any, origin []outboundEntry, connectTimeout time.Duration) []map[string]any {
+	for _, e := range origin {
+		if strings.EqualFold(e.Tag, "direct6") {
+			return local
+		}
+	}
+	for _, co := range local {
+		if tag, _ := co["tag"].(string); strings.EqualFold(tag, "direct6") {
+			return local
+		}
+	}
+	if connectTimeout <= 0 {
+		connectTimeout = 5 * time.Second
+	}
+	return append(local, map[string]any{
+		"type":            "direct",
+		"tag":             "direct6",
+		"connect_timeout": connectTimeout.String(),
+		"domain_strategy": "prefer_ipv6",
+	})
+}
+
 // CompileRouteRules compiles panel routes, custom route rules, anti-SSRF protections,
 // and optional IPv6 blocking into sing-box native rule map representations.
 func CompileRouteRules(disableIPv6 bool, panelRoutes []panel.Route, customRules []conf.CustomRouteRule) []map[string]any {

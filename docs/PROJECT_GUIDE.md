@@ -284,13 +284,16 @@ Route changes made in the Xboard dashboard reach every FNode server without per-
 
 ### 4.6.3 Route name in the connection log
 
-Every routed connection logs one stable line from `core/sing/hook.go` (`logRoute`):
+Every routed connection logs one line at **info** level from `core/sing/hook.go` (`logRoute`), through the core's own sing-box logger (so it follows the core `Log.Level` and the log capture/shipping; it is not shown at `error`/`warn`, set the core log level to `info`). It follows sing-box's `inbound/<type>[<tag>]: inbound connection to <dest>` line:
 
 ```
-[<inbound>] route=<name> outbound=<tag> dest=<host:port>
+route <name> -> <outbound tag> for <host:port>
+route AI Domain - IPv6 (#9) -> direct6 for ab.chatgpt.com:443
 ```
 
-`<name>` is the panel route's `remarks` (or `name`) when the panel sends one, else `route#<id>`; custom rules use their `name` (else `custom-rule#<i>`), raw `custom_routes` an optional `name`/`remarks` (else `custom-route#<i>`); built-ins are `anti-ssrf` and `ipv6-block`; `default` means no rule matched (final outbound) and `other` a rule FNode did not compile (e.g. `sing_origin.json`). Names with spaces are quoted. Xboard core's `/config` currently selects only `id,match,action,action_value` for routes (`ServerService::getRoutes`), so `route#<id>` is shown until the panel adds `remarks`.
+A missing line means the running binary predates this feature, or the log level is above info. `<name>` is `<remarks> (#<id>)` (the panel route's `remarks` or `name`) when the panel sends one, else `route#<id>`; custom rules use their `name` (else `custom-rule#<i>`), raw `custom_routes` an optional `name`/`remarks` (else `custom-route#<i>`); built-ins are `anti-ssrf` and `ipv6-block`; `default` means no rule matched (final outbound) and `other` a rule FNode did not compile (e.g. `sing_origin.json`). Names with spaces are quoted. Xboard core's `/config` currently selects only `id,match,action,action_value` for routes (`ServerService::getRoutes`), so `route#<id>` is shown until the panel adds `remarks`.
+
+The built-in `direct6` outbound (resolve IPv6 first, `core/sing/route.go:withBuiltinDirect6`) is always provided like `direct`/`block` unless `sing_origin.json`, a local `CustomOutbounds` or the panel defines a `direct6`, so a `sing_origin.json` written before `direct6` existed does not make panel routes to `direct6` get dropped. A panel route to a tag FNode does not have is skipped with the warning `route "<name>" (node [..]) references unknown outbound "<tag>", skipped: ...` and the tag is requested from the panel (`reportMissingOutbounds`).
 
 ### 4.6.0 Multiplex (smux) from the Panel
 

@@ -130,6 +130,10 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 	if len(originEntries) == 0 {
 		rawLocal = BuildDefaultOutbounds(connectTimeout, domainStrategy, "", c.SingConfig.CustomOutbounds)
 	}
+	// direct6 (resolve IPv6 first) is built in like direct/block: a sing_origin.json
+	// written before it existed (or migrated) would otherwise make every panel
+	// route to "direct6" be dropped as an unknown outbound.
+	rawLocal = withBuiltinDirect6(rawLocal, originEntries, connectTimeout)
 	var localEntries []outboundEntry
 	for _, raw := range rawLocal {
 		source := SourceLocal
@@ -230,6 +234,7 @@ func New(c *conf.CoreConfig) (vCore.Core, error) {
 	capture.start()
 	hs := &HookServer{
 		counter: sync.Map{},
+		logger:  b.LogFactory().NewLogger(""),
 	}
 	b.Router().AppendTracker(hs)
 	baseVerbosity := levelToVerbosity(c.SingConfig.LogConfig.Level)
