@@ -122,7 +122,11 @@ func (o *CustomOutbound) UnmarshalJSON(data []byte) error {
 }
 
 type Route struct {
-	Id          int         `json:"id"`
+	Id int `json:"id"`
+	// Name is the route's display name for logs. Xboard stores it as "remarks";
+	// both keys are accepted and both may be absent (older panels).
+	Remarks     string      `json:"remarks"`
+	Name        string      `json:"name"`
 	Match       interface{} `json:"match"`
 	Action      string      `json:"action"`
 	ActionValue string      `json:"action_value"`

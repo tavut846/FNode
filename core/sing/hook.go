@@ -27,6 +27,8 @@ type HookServer struct {
 	// (map[string]*atomic.Int64); a Reality probe that fails the handshake never
 	// gets here.
 	accepted sync.Map
+	// routeNames maps a router rule's description to its display name
+	routeNames atomic.Pointer[map[string]string]
 }
 
 func (h *HookServer) markAccepted(tag string) {
@@ -49,8 +51,9 @@ func (h *HookServer) ModeList() []string {
 	return nil
 }
 
-func (h *HookServer) RoutedConnection(_ context.Context, conn net.Conn, m adapter.InboundContext, _ adapter.Rule, _ adapter.Outbound) net.Conn {
+func (h *HookServer) RoutedConnection(_ context.Context, conn net.Conn, m adapter.InboundContext, rule adapter.Rule, out adapter.Outbound) net.Conn {
 	h.markAccepted(m.Inbound)
+	h.logRoute(m, rule, out)
 	l, err := limiter.GetLimiter(m.Inbound)
 	if err != nil {
 		log.Warn("get limiter for ", m.Inbound, " error: ", err)
@@ -105,8 +108,9 @@ func (h *HookServer) RoutedFlow(_ context.Context, _ adapter.InboundContext, _ a
 	return nil
 }
 
-func (h *HookServer) RoutedPacketConnection(_ context.Context, conn N.PacketConn, m adapter.InboundContext, _ adapter.Rule, _ adapter.Outbound) N.PacketConn {
+func (h *HookServer) RoutedPacketConnection(_ context.Context, conn N.PacketConn, m adapter.InboundContext, rule adapter.Rule, out adapter.Outbound) N.PacketConn {
 	h.markAccepted(m.Inbound)
+	h.logRoute(m, rule, out)
 	l, err := limiter.GetLimiter(m.Inbound)
 	if err != nil {
 		log.Warn("get limiter for ", m.Inbound, " error: ", err)

@@ -250,31 +250,39 @@ func scopeRule(rule map[string]any, tag string) map[string]any {
 func compileScopedRules(disableIPv6 bool, local []conf.CustomRouteRule, nodes []nodeRouting) []map[string]any {
 	rules := compileAllRouteRules(false, nil, local, nil, nil)
 	// compileAllRouteRules ends with the anti-SSRF pair; the node rules go before it
-	base := rules[:len(rules)-2]
 	guard := rules[len(rules)-2:]
-	out := append([]map[string]any{}, base...)
+	var out []map[string]any
+	for i, cr := range local {
+		if !cr.Disabled {
+			out = append(out, nameRules(compileCustomRouteRule(cr), ruleLabel(cr.Name, "local-rule", i))...)
+		}
+	}
+	for _, g := range guard {
+		nameRules([]map[string]any{g}, "anti-ssrf")
+	}
 	for _, n := range nodes {
-		for _, cr := range n.customRules {
+		for i, cr := range n.customRules {
 			if cr.Disabled {
 				continue
 			}
-			for _, r := range compileCustomRouteRule(cr) {
+			for _, r := range nameRules(compileCustomRouteRule(cr), ruleLabel(cr.Name, "custom-rule", i)) {
 				out = append(out, scopeRule(r, n.tag))
 			}
 		}
-		for _, r := range n.rawRoutes {
+		for i, r := range n.rawRoutes {
 			if r = sanitizeRawRule(r); len(r) > 0 {
+				nameRules([]map[string]any{r}, ruleLabel(rawRuleName(r), "custom-route", i))
 				out = append(out, scopeRule(r, n.tag))
 			}
 		}
 	}
 	out = append(out, guard...)
 	if disableIPv6 {
-		out = append(out, map[string]any{"outbound": "block", "ip_version": 6})
+		out = append(out, nameRules([]map[string]any{{"outbound": "block", "ip_version": 6}}, "ipv6-block")...)
 	}
 	for _, n := range nodes {
 		for _, pr := range n.routes {
-			for _, r := range compilePanelRoute(pr) {
+			for _, r := range nameRules(compilePanelRoute(pr), panelRouteLabel(pr)) {
 				out = append(out, scopeRule(r, n.tag))
 			}
 		}
@@ -369,7 +377,10 @@ func (b *Sing) applyPanelState(prune bool) error {
 	// failing the whole update (which would leave the old routing running).
 	rules := make([]option.Rule, 0, len(rawRules))
 	keptRaw := make([]map[string]any, 0, len(rawRules))
+	var ruleNames []string
 	for _, r := range rawRules {
+		var name string
+		r, name = takeRuleName(r)
 		data, err := json.Marshal(r)
 		if err != nil {
 			log.WithFields(log.Fields{"rule": r, "err": err}).Warn("Skip route rule that cannot be encoded")
@@ -382,6 +393,7 @@ func (b *Sing) applyPanelState(prune bool) error {
 		}
 		rules = append(rules, rule)
 		keptRaw = append(keptRaw, r)
+		ruleNames = append(ruleNames, name)
 	}
 	rawRules = keptRaw
 
@@ -411,6 +423,7 @@ func (b *Sing) applyPanelState(prune bool) error {
 		allRules = append(append(allRules, rules...), b.originRules...)
 	}
 
+	b.hookServer.SetRouteNames(b.ctx, b.logFactory.NewLogger("route"), rules, ruleNames)
 	counts := countSources(effective)
 	b.last = &appliedState{
 		Outbounds: effective,

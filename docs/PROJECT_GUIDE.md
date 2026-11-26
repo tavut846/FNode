@@ -282,6 +282,16 @@ Route changes made in the Xboard dashboard reach every FNode server without per-
 - **CLI**: `FNode config show [-c config.json] [--node <tag|file|part of tag>] [--summary] [--dir <dir>]` prints a per-node summary (outbound tag, type, source, contributing node) followed by the effective JSON.
 - **CLI**: `FNode config status [-c config.json] [--dir <dir>]` (`cmd/config_status.go`) prints, per `Nodes` entry, `Panel:` (ApiHost and `machine N, from dashboard` or `node N`), `Token:` (first and last 5 characters; tokens of 10 characters or fewer show only the first) and `Node:` (the running tags read from the effective files; machine-assigned nodes end in `--Panel`, a node entry's tag is shown alone). Node entries claim their tags before a machine entry on the same panel.
 
+### 4.6.3 Route name in the connection log
+
+Every routed connection logs one stable line from `core/sing/hook.go` (`logRoute`):
+
+```
+[<inbound>] route=<name> outbound=<tag> dest=<host:port>
+```
+
+`<name>` is the panel route's `remarks` (or `name`) when the panel sends one, else `route#<id>`; custom rules use their `name` (else `custom-rule#<i>`), raw `custom_routes` an optional `name`/`remarks` (else `custom-route#<i>`); built-ins are `anti-ssrf` and `ipv6-block`; `default` means no rule matched (final outbound) and `other` a rule FNode did not compile (e.g. `sing_origin.json`). Names with spaces are quoted. Xboard core's `/config` currently selects only `id,match,action,action_value` for routes (`ServerService::getRoutes`), so `route#<id>` is shown until the panel adds `remarks`.
+
 ### 4.6.0 Multiplex (smux) from the Panel
 
 Xboard's node form (VLESS, VMess, Trojan) has a multiplex block that the subscription also hands to clients: `multiplex.enabled`, `.padding`, `.brutal.{enabled,up_mbps,down_mbps}` and the client-only `.protocol`, `.max_connections`, `.min_streams`, `.max_streams`. A client that turns multiplex on talks smux to the server, so the server inbound must have multiplex on too, or the connection fails or hangs. FNode used to read multiplex only from the local `config.json` (`SingOptions.Multiplex`), so a dashboard setting did nothing. Now (`api/panel/multiplex.go`, `core/sing/multiplex.go`):
