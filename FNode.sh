@@ -1575,6 +1575,228 @@ caddy_choose_proxy_dest() {
 }
 # ---- end caddy proxy target helpers ----
 
+# ---- caddy domains and certificates view (read-only) ----
+
+# 可能存放 Caddy 证书的数据目录 (其下有 certificates/)；CADDY_DATA_DIR 可指定唯一目录
+caddy_cert_roots() {
+    local r u home seen=""
+    local -a cand=()
+    if [[ -n "${CADDY_DATA_DIR:-}" ]]; then
+        cand+=("$CADDY_DATA_DIR")
+    else
+        if [[ -n "${XDG_DATA_HOME:-}" ]]; then cand+=("${XDG_DATA_HOME}/caddy"); fi
+        # systemd 服务用户不是 root 时 (例如 apt 安装的 caddy 用户)，数据在该用户的家目录下
+        u=$(sed -n 's/^User=//p' /etc/systemd/system/caddy.service /lib/systemd/system/caddy.service /usr/lib/systemd/system/caddy.service 2>/dev/null | head -n1)
+        if [[ -n "$u" && "$u" != "root" ]]; then
+            home=$(getent passwd "$u" 2>/dev/null | cut -d: -f6)
+            if [[ -n "$home" ]]; then cand+=("${home}/.local/share/caddy"); fi
+        fi
+        cand+=("/root/.local/share/caddy" "/var/lib/caddy/.local/share/caddy")
+    fi
+    for r in "${cand[@]}"; do
+        [[ -d "${r}/certificates" ]] || continue
+        case "|${seen}|" in *"|${r}|"*) continue ;; esac
+        seen+="|${r}"
+        echo "$r"
+    done
+}
+
+# caddy_site_list <Caddyfile>: one line per site address, "域名<TAB>反代目标"
+# (全局块、片段 (name) {} 和命名匹配器不算；逗号/空格分隔的多个地址各一行；
+# 地址里的协议和端口被去掉；没有 reverse_proxy 时目标为 -)
+caddy_site_list() {
+    [[ -f "$1" ]] || return 0
+    awk '
+        function strip(s) { sub(/#.*/, "", s); gsub(/^[ \t\r]+|[ \t\r]+$/, "", s); return s }
+        function flush(   i) { for (i = 1; i <= nd; i++) print doms[i] "\t" (proxy == "" ? "-" : proxy); nd = 0; proxy = "" }
+        {
+            t = strip($0)
+            if (depth == 0 && t != "" && t != "{" && t ~ /\{$/ && t !~ /^\(/ && t !~ /^@/) {
+                a = t; sub(/[ \t]*\{$/, "", a)
+                n = split(a, p, /[ \t,]+/)
+                for (i = 1; i <= n; i++) {
+                    d = p[i]; sub(/^[A-Za-z]+:\/\//, "", d); sub(/\/.*$/, "", d); sub(/:[0-9]+$/, "", d)
+                    if (d != "") doms[++nd] = d
+                }
+            } else if (nd > 0 && proxy == "" && t ~ /^reverse_proxy[ \t]/) {
+                m = split(t, q, /[ \t]+/)
+                for (i = 2; i <= m; i++) {
+                    if (q[i] == "{" || q[i] == "") continue
+                    if (substr(q[i], 1, 1) == "/") continue   # path matcher
+                    proxy = q[i]; break
+                }
+            }
+            c = t; o = gsub(/\{/, "{", c); e = gsub(/\}/, "}", c); depth += o - e
+            if (depth <= 0) { depth = 0; flush() }
+        }
+        END { flush() }
+    ' "$1"
+}
+
+# caddy_epoch <openssl notAfter 文本>: 秒数；date 不支持时输出为空
+caddy_epoch() { date -d "$1" +%s 2>/dev/null; }
+
+# caddy_cert_records: 扫描证书库，每张证书一行 (TAB 分隔):
+# 域名  CA  到期日  剩余天数  状态(ok|soon|expired|bad|nossl)  证书文件
+caddy_cert_records() {
+    local root crt name dir domain ca enddate edate end now days status issuer
+    now=$(date +%s)
+    local have_ssl=1
+    command -v openssl &>/dev/null || have_ssl=0
+    local seen=""
+    while IFS= read -r root; do
+        [[ -n "$root" ]] || continue
+        for crt in "$root"/certificates/*/*/*.crt; do
+            [[ -f "$crt" ]] || continue
+            case "|${seen}|" in *"|${crt}|"*) continue ;; esac
+            seen+="|${crt}"
+            name=$(basename "$(dirname "$crt")")
+            dir=$(basename "$(dirname "$(dirname "$crt")")")
+            domain="$name"
+            if [[ "$domain" == wildcard_.* ]]; then domain="*.${domain#wildcard_.}"; fi
+            if [[ $have_ssl == 0 ]]; then
+                printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$domain" "$dir" "-" "-" "nossl" "$crt"
+                continue
+            fi
+            enddate=$(openssl x509 -enddate -noout -in "$crt" 2>/dev/null | sed 's/^notAfter=//')
+            if [[ -z "$enddate" ]]; then
+                printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$domain" "$dir" "-" "-" "bad" "$crt"
+                continue
+            fi
+            issuer=$(openssl x509 -issuer -noout -nameopt RFC2253 -in "$crt" 2>/dev/null | sed 's/^issuer=//')
+            ca=$(printf '%s' "$issuer" | sed -n 's/.*\(^\|,\)O=\([^,]*\).*/\2/p')
+            [[ -n "$ca" ]] || ca=$(printf '%s' "$issuer" | sed -n 's/.*\(^\|,\)CN=\([^,]*\).*/\2/p')
+            [[ -n "$ca" ]] || ca="$dir"
+            end=$(caddy_epoch "$enddate")
+            edate="$enddate"; days="-"
+            if [[ -n "$end" ]]; then
+                edate=$(date -d "@${end}" +%F 2>/dev/null || echo "$enddate")
+                days=$(( (end - now) / 86400 ))
+                if (( end < now )); then days=$(( -((now - end) / 86400) )); fi
+            fi
+            # 状态用 openssl 判断，不依赖 date 的解析
+            if ! openssl x509 -checkend 0 -noout -in "$crt" >/dev/null 2>&1; then
+                status="expired"
+            elif ! openssl x509 -checkend 1209600 -noout -in "$crt" >/dev/null 2>&1; then
+                status="soon"
+            else
+                status="ok"
+            fi
+            printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$domain" "$ca" "$edate" "$days" "$status" "$crt"
+        done
+    done < <(caddy_cert_roots)
+}
+
+# 状态文字 (带颜色)
+caddy_status_text() {
+    case "$1" in
+        ok) echo -e "${green}有效${plain}" ;;
+        soon) echo -e "${yellow}即将过期 (<14天)${plain}" ;;
+        expired) echo -e "${red}已过期${plain}" ;;
+        nossl) echo -e "${yellow}未知 (缺少 openssl)${plain}" ;;
+        *) echo -e "${red}无法解析${plain}" ;;
+    esac
+}
+
+# 只读: 显示 Caddyfile 里的域名与 Caddy 证书库里的证书 (不改配置、不重启、不显示 Token)
+caddy_domains() {
+    local cf="/etc/caddy/Caddyfile" env_file="/etc/caddy/caddy.env"
+    local sites recs port state dom proxy key hit wild found ca ed dl st crt n_nocert=0
+    echo -e "${yellow}===== Caddy 域名与证书 =====${plain}"
+
+    # Caddy 本身
+    if command -v caddy &>/dev/null; then
+        echo -e "Caddy:        ${green}已安装${plain} ($(caddy version 2>/dev/null | head -n1 | awk '{print $1}'))"
+    else
+        echo -e "Caddy:        ${yellow}未安装${plain} (菜单 18 / FNode caddy 可安装并配置)"
+    fi
+    if command -v systemctl &>/dev/null && systemctl cat caddy &>/dev/null; then
+        state=$(systemctl is-active caddy 2>/dev/null)
+        if [[ "$state" == "active" ]]; then
+            echo -e "服务状态:     ${green}运行中${plain}"
+        else
+            echo -e "服务状态:     ${yellow}${state:-未知}${plain}"
+        fi
+    fi
+    if [[ -f "$env_file" ]] && grep -qE '^CLOUDFLARE_API_TOKEN=.+' "$env_file" 2>/dev/null; then
+        echo -e "Cloudflare Token: ${green}已保存${plain} (不显示内容)"
+    else
+        echo -e "Cloudflare Token: ${yellow}未保存${plain}"
+    fi
+
+    # 域名
+    echo
+    echo -e "${yellow}-- Caddyfile 站点 (${cf}) --${plain}"
+    sites=""
+    if [[ -f "$cf" ]]; then
+        port=$(caddy_current_port "$cf")
+        echo -e "HTTPS 端口:   ${green}${port:-443}${plain}$([[ -z "$port" ]] && echo ' (默认)')"
+        sites=$(caddy_site_list "$cf")
+    else
+        echo -e "${yellow}没有找到 ${cf}，还没有配置过 Caddy。请先运行 Caddy 向导 (菜单 18 / FNode caddy)。${plain}"
+    fi
+
+    recs=$(caddy_cert_records)
+    if ! command -v openssl &>/dev/null; then
+        echo -e "${yellow}没有找到 openssl，无法读取证书到期时间 (安装: apt install openssl / yum install openssl)。${plain}"
+    fi
+
+    if [[ -f "$cf" && -z "$sites" ]]; then
+        echo -e "${yellow}Caddyfile 里没有站点地址。${plain}"
+    fi
+    if [[ -n "$sites" ]]; then
+        # 表头里的中文每个字占两列，按显示宽度手动补空格
+        printf '  域名%*s 反代目标%*s 证书\n' 30 "" 30 ""
+        while IFS=$'\t' read -r dom proxy; do
+            [[ -n "$dom" ]] || continue
+            key="$dom"
+            hit=$(printf '%s\n' "$recs" | awk -F'\t' -v d="$key" '$1 == d { print; exit }')
+            wild=""
+            if [[ -z "$hit" && "$dom" == *.*.* && "$dom" != \*.* ]]; then
+                hit=$(printf '%s\n' "$recs" | awk -F'\t' -v d="*.${dom#*.}" '$1 == d { print; exit }')
+                [[ -n "$hit" ]] && wild=" (通配符证书)"
+            fi
+            if [[ -n "$hit" ]]; then
+                st=$(printf '%s' "$hit" | cut -f5); ed=$(printf '%s' "$hit" | cut -f3); dl=$(printf '%s' "$hit" | cut -f4)
+                printf '  %-34s %-38s %s\n' "$dom" "$proxy" "$(caddy_status_text "$st") ${ed} (剩 ${dl} 天)${wild}"
+            else
+                n_nocert=$((n_nocert + 1))
+                printf '  %-34s %-38s %s\n' "$dom" "$proxy" "$(echo -e "${yellow}暂无证书${plain}")"
+            fi
+        done <<< "$sites"
+        if [[ $n_nocert -gt 0 ]]; then
+            echo -e "${yellow}有 ${n_nocert} 个域名还没有证书: 请检查域名解析和 Cloudflare Token，用 FNode caddy 重新配置，或查看 Caddy 日志 (journalctl -u caddy -n 50 --no-pager)。${plain}"
+        fi
+    fi
+
+    # 证书库
+    echo
+    echo -e "${yellow}-- Caddy 证书库 --${plain}"
+    if [[ -z "$recs" ]]; then
+        echo -e "${yellow}没有找到任何证书。${plain}"
+        echo -e "已查找: $(caddy_cert_roots | sed 's|$|/certificates|' | tr '\n' ' ')(默认 /root/.local/share/caddy 与 /var/lib/caddy/.local/share/caddy)"
+    else
+        printf '  域名%*s %-22s 到期日%*s 剩余天 状态\n' 30 "" "CA" 6 ""
+        while IFS=$'\t' read -r dom ca ed dl st crt; do
+            [[ -n "$dom" ]] || continue
+            found=""
+            if [[ -f "$cf" ]]; then
+                found=$(printf '%s\n' "$sites" | awk -F'\t' -v d="$dom" '
+                    $1 == d { print "y"; exit }
+                    d ~ /^\*\./ { suf = substr(d, 2); if (length($1) > length(suf) && substr($1, length($1) - length(suf) + 1) == suf) { print "y"; exit } }')
+            fi
+            printf '  %-34s %-22s %-12s %-6s %s%s\n' "$dom" "${ca:0:22}" "$ed" "$dl" "$(caddy_status_text "$st")" \
+                "$([[ -f "$cf" && -z "$found" ]] && echo -e " ${yellow}[不在 Caddyfile 中]${plain}")"
+        done <<< "$recs"
+    fi
+    echo
+    echo -e "只读视图: 没有修改任何 Caddy 配置，也没有重启服务。"
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+# ---- end caddy domains and certificates view ----
+
 # 配置 Caddy 反向代理与证书申请 (支持多域名)
 setup_caddy_reverse_proxy() {
     if ! caddy_ensure; then
@@ -2446,6 +2668,7 @@ show_usage() {
     echo "FNode config show  - 查看生效配置与出站来源 (--node 标签 --summary)"
     echo "FNode config status - 查看面板地址、令牌(部分)与节点标签"
     echo "FNode caddy        - 安装/配置 Caddy (支持 Cloudflare DNS 反代与证书；伪装站可选 simulate-news / simulate-hub / 自定义，回车随机；脚本用法: CADDY_PROXY_DEST=<网址|news|hub|random>)"
+    echo "FNode caddy-domains - 查看 Caddyfile 里的域名、反代目标和 Caddy 证书 (到期日/剩余天数/状态，只读，不改配置)"
     echo "FNode caddy-port   - 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest，443 留给 FNode；可带端口参数: FNode caddy-port 8443)"
     echo "FNode ignore-panel-outbounds on|off|status - 落地机自救: 忽略面板同步的自定义出站 (改 config.json 并重启)"
     echo "FNode sni-split [on|off|status] - 443 SNI 分流 (nginx stream): AnyTLS 公网 443→本机 8444，网站(Caddy 8443)/Reality 共用 443 (--sni 域名 --anytls-port 8444 --reality 8445 --yes)"
@@ -2484,15 +2707,16 @@ show_menu() {
   ${green}16.${plain} 放行 VPS 的所有网络端口
   ${green}17.${plain} 一键安装 bbr (最新内核)
   ${green}18.${plain} 安装/配置 Caddy 反代与证书
-  ${green}19.${plain} 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest)
-  ${green}20.${plain} 配置 Hysteria 2 多端口/跳跃 NAT 转发
-  ${green}21.${plain} 配置 443 SNI 分流 (AnyTLS 443→8444，与网站/Reality 共用 443)
-  ${green}22.${plain} 落地机自救: 忽略面板自定义出站
-  ${green}23.${plain} 退出脚本
+  ${green}19.${plain} 查看 Caddy 域名与证书 (只读)
+  ${green}20.${plain} 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest)
+  ${green}21.${plain} 配置 Hysteria 2 多端口/跳跃 NAT 转发
+  ${green}22.${plain} 配置 443 SNI 分流 (AnyTLS 443→8444，与网站/Reality 共用 443)
+  ${green}23.${plain} 落地机自救: 忽略面板自定义出站
+  ${green}24.${plain} 退出脚本
  "
  #后续更新可加入上方字符串中
     show_status
-    echo && read -rp "请输入选择 [0-23]: " num
+    echo && read -rp "请输入选择 [0-24]: " num
 
     case "${num}" in
         0) config ;;
@@ -2514,12 +2738,13 @@ show_menu() {
         16) open_ports ;;
         17) install_bbr ;;
         18) setup_caddy_reverse_proxy ;;
-        19) set_caddy_port ;;
-        20) setup_hy2_port_hopping ;;
-        21) sni_split_menu ;;
-        22) check_install && ignore_panel_outbounds_menu ;;
-        23) exit ;;
-        *) echo -e "${red}请输入正确的数字 [0-23]${plain}" ;;
+        19) caddy_domains ;;
+        20) set_caddy_port ;;
+        21) setup_hy2_port_hopping ;;
+        22) sni_split_menu ;;
+        23) check_install && ignore_panel_outbounds_menu ;;
+        24) exit ;;
+        *) echo -e "${red}请输入正确的数字 [0-24]${plain}" ;;
     esac
 }
 
@@ -2550,6 +2775,7 @@ if [[ $# > 0 ]]; then
         "x25519") check_install 0 && generate_x25519_key 0 ;;
         "version") check_install 0 && show_FNode_version 0 ;;
         "caddy") setup_caddy_reverse_proxy 0 || exit 1 ;;
+        "caddy-domains"|"caddy_domains"|"caddy-certs") caddy_domains 0 ;;
         "caddy-port"|"caddy_port") set_caddy_port 0 "$2" ;;
         "ignore-panel-outbounds"|"ignore_panel_outbounds") check_install 0 && { ignore_panel_outbounds 0 "$2" || exit 1; } ;;
         "sni-split"|"sni_split") sni_split 0 "${@:2}" || exit 1 ;;
