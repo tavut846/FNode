@@ -1,0 +1,2477 @@
+#!/bin/bash
+
+red='\033[0;31m'
+green='\033[0;32m'
+yellow='\033[0;33m'
+plain='\033[0m'
+
+# check root
+[[ $EUID -ne 0 ]] && echo -e "${red}错误: ${plain} 必须使用root用户运行此脚本！\n" && exit 1
+
+# check os
+if [[ -f /etc/redhat-release ]]; then
+    release="centos"
+elif cat /etc/issue | grep -Eqi "alpine"; then
+    release="alpine"
+elif cat /etc/issue | grep -Eqi "debian"; then
+    release="debian"
+elif cat /etc/issue | grep -Eqi "ubuntu"; then
+    release="ubuntu"
+elif cat /etc/issue | grep -Eqi "centos|red hat|redhat|rocky|alma|oracle linux"; then
+    release="centos"
+elif cat /proc/version | grep -Eqi "debian"; then
+    release="debian"
+elif cat /proc/version | grep -Eqi "ubuntu"; then
+    release="ubuntu"
+elif cat /proc/version | grep -Eqi "centos|red hat|redhat|rocky|alma|oracle linux"; then
+    release="centos"
+elif cat /proc/version | grep -Eqi "arch"; then
+    release="arch"
+else
+    echo -e "${red}未检测到系统版本，请联系脚本作者！${plain}\n" && exit 1
+fi
+
+# os version
+if [[ -f /etc/os-release ]]; then
+    os_version=$(awk -F'[= ."]' '/VERSION_ID/{print $3}' /etc/os-release)
+fi
+if [[ -z "$os_version" && -f /etc/lsb-release ]]; then
+    os_version=$(awk -F'[= ."]+' '/DISTRIB_RELEASE/{print $2}' /etc/lsb-release)
+fi
+
+if [[ x"${release}" == x"centos" ]]; then
+    if [[ ${os_version} -le 6 ]]; then
+        echo -e "${red}请使用 CentOS 7 或更高版本的系统！${plain}\n" && exit 1
+    fi
+    if [[ ${os_version} -eq 7 ]]; then
+        echo -e "${red}注意： CentOS 7 无法使用hysteria1/2协议！${plain}\n"
+    fi
+elif [[ x"${release}" == x"ubuntu" ]]; then
+    if [[ ${os_version} -lt 16 ]]; then
+        echo -e "${red}请使用 Ubuntu 16 或更高版本的系统！${plain}\n" && exit 1
+    fi
+elif [[ x"${release}" == x"debian" ]]; then
+    if [[ ${os_version} -lt 8 ]]; then
+        echo -e "${red}请使用 Debian 8 或更高版本的系统！${plain}\n" && exit 1
+    fi
+fi
+
+# 检查系统是否有有效公网 IPv6 地址与路由
+check_ipv6_support() {
+    local has_global_ipv6=0
+    local has_ipv6_route=0
+
+    # 检查是否存在全局非保留 IPv6 地址 (排除 ::1 本地回环和 fe80:: 链路本地地址)
+    if ip -6 addr show scope global 2>/dev/null | grep -q "inet6"; then
+        has_global_ipv6=1
+    fi
+
+    # 检查是否存在 IPv6 默认路由网关
+    if ip -6 route show default 2>/dev/null | grep -q "default"; then
+        has_ipv6_route=1
+    fi
+
+    if [[ $has_global_ipv6 -eq 1 && $has_ipv6_route -eq 1 ]]; then
+        echo "1"  # 支持并拥有可用公网 IPv6 (双栈网络)
+    else
+        echo "0"  # 纯 IPv4 (无有效公网 IPv6)
+    fi
+}
+
+confirm() {
+    if [[ $# > 1 ]]; then
+        echo && read -rp "$1 [默认$2]: " temp
+        if [[ x"${temp}" == x"" ]]; then
+            temp=$2
+        fi
+    else
+        read -rp "$1 [y/n]: " temp
+    fi
+    if [[ x"${temp}" == x"y" || x"${temp}" == x"Y" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+confirm_restart() {
+    confirm "是否重启FNode" "y"
+    if [[ $? == 0 ]]; then
+        restart
+    else
+        show_menu
+    fi
+}
+
+before_show_menu() {
+    echo && echo -n -e "${yellow}按回车返回主菜单: ${plain}" && read temp
+    show_menu
+}
+
+# Branch of tavut846/FNode that holds these scripts (script files live at the branch root)
+FNODE_BRANCH="${FNODE_BRANCH:-FNode-script}"
+FNODE_RAW="${FNODE_RAW:-https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}}"
+
+# run_remote_installer ARGS...: downloads install.sh and runs it. An empty or
+# non-script download is an error (running an empty script would report
+# success while nothing was installed).
+run_remote_installer() {
+    local tmp rc
+    tmp=$(mktemp) || return 1
+    if ! curl -fsSL -o "$tmp" "${FNODE_RAW}/install.sh" || [[ "$(head -c 2 "$tmp")" != "#!" ]]; then
+        rm -f "$tmp"
+        echo -e "${red}下载 install.sh 失败，未做任何更改 (could not download install.sh from ${FNODE_RAW}; nothing was changed)${plain}"
+        return 1
+    fi
+    bash "$tmp" "$@"
+    rc=$?
+    rm -f "$tmp"
+    return $rc
+}
+
+install() {
+    # Extra arguments are passed to install.sh (e.g. --mode machine --panel ... --token ... --machine-id 3)
+    [[ "$1" == "0" ]] && shift
+    run_remote_installer "$@"
+}
+
+update() {
+    local target_ver=""
+    if [[ $# == 0 ]]; then
+        echo -e "\n请选择更新版本类型:"
+        echo -e "  ${green}1.${plain} 最新正式版 (Latest Release, 默认)"
+        echo -e "  ${green}2.${plain} 预发布预览版 (Pre-release)"
+        echo -e "  ${green}3.${plain} 自定义指定版本 (Specific Version)"
+        echo -e "  ${green}0.${plain} 返回主菜单"
+        echo && read -rp "请输入选择 [0-3] (默认 1): " update_choice
+        case "${update_choice}" in
+            0)
+                show_menu
+                return
+                ;;
+            2)
+                target_ver="pre"
+                ;;
+            3)
+                read -rp "请输入指定版本号 (例如 0.0.21 或 0.0.22-pre-1): " custom_ver
+                if [[ -z "${custom_ver}" ]]; then
+                    echo -e "${red}版本号不能为空${plain}"
+                    before_show_menu
+                    return
+                fi
+                target_ver="${custom_ver}"
+                ;;
+            1|"")
+                target_ver="latest"
+                ;;
+            *)
+                echo -e "${yellow}输入无效，默认更新至最新正式版${plain}"
+                target_ver="latest"
+                ;;
+        esac
+    else
+        if [[ -z "$2" ]]; then
+            echo -e "\n请选择更新版本类型:"
+            echo -e "  ${green}1.${plain} 最新正式版 (Latest Release, 默认)"
+            echo -e "  ${green}2.${plain} 预发布预览版 (Pre-release)"
+            echo -e "  ${green}3.${plain} 自定义指定版本 (Specific Version)"
+            echo -e "  ${green}0.${plain} 取消退出"
+            echo && read -rp "请输入选择 [0-3] (默认 1): " update_choice
+            case "${update_choice}" in
+                0)
+                    exit 0
+                    ;;
+                2)
+                    target_ver="pre"
+                    ;;
+                3)
+                    read -rp "请输入指定版本号 (例如 0.0.21 或 0.0.22-pre-1): " custom_ver
+                    if [[ -z "${custom_ver}" ]]; then
+                        echo -e "${red}版本号不能为空${plain}"
+                        exit 1
+                    fi
+                    target_ver="${custom_ver}"
+                    ;;
+                1|"")
+                    target_ver="latest"
+                    ;;
+                *)
+                    echo -e "${yellow}输入无效，默认更新至最新正式版${plain}"
+                    target_ver="latest"
+                    ;;
+            esac
+        else
+            target_ver="$2"
+        fi
+    fi
+
+    echo -e "准备更新 FNode: ${green}${target_ver}${plain}"
+    run_remote_installer "${target_ver}"
+    if [[ $? == 0 ]]; then
+        echo -e "${green}更新完成，已自动重启 FNode，请使用 FNode log 查看运行日志${plain}"
+        exit 0
+    fi
+
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+
+config() {
+    echo "FNode在修改配置后会自动尝试重启"
+    vi /etc/FNode/config.json
+    sleep 2
+    restart
+    check_status
+    case $? in
+        0)
+            echo -e "FNode状态: ${green}已运行${plain}"
+            ;;
+        1)
+            echo -e "检测到您未启动FNode或FNode自动重启失败，是否查看日志？[Y/n]" && echo
+            read -e -rp "(默认: y):" yn
+            [[ -z ${yn} ]] && yn="y"
+            if [[ ${yn} == [Yy] ]]; then
+               show_log
+            fi
+            ;;
+        2)
+            echo -e "FNode状态: ${red}未安装${plain}"
+    esac
+}
+
+uninstall() {
+    local assume_yes=false
+    for a in "$@"; do
+        [[ "$a" == "--yes" || "$a" == "-y" ]] && assume_yes=true
+    done
+    if [[ $assume_yes != true ]]; then
+        confirm "确定要卸载 FNode 吗?" "n"
+        if [[ $? != 0 ]]; then
+            if [[ $# == 0 ]]; then
+                show_menu
+            fi
+            return 0
+        fi
+    fi
+    if [[ x"${release}" == x"alpine" ]]; then
+        service FNode stop
+        rc-update del FNode
+        rm /etc/init.d/FNode -f
+    else
+        systemctl stop FNode
+        systemctl disable FNode
+        rm /etc/systemd/system/FNode.service -f
+        systemctl daemon-reload
+        systemctl reset-failed
+    fi
+    rm /etc/FNode/ -rf
+    rm /usr/local/FNode/ -rf
+    rm -f /etc/cron.d/FNode-cleanlog /etc/periodic/weekly/fnode-cleanlog
+    (crontab -l 2>/dev/null | grep -v "FNode clearlog") | crontab - 2>/dev/null || true
+
+    echo ""
+    echo -e "卸载成功，如果你想删除此脚本，则退出脚本后运行 ${green}rm /usr/bin/FNode -f${plain} 进行删除"
+    echo ""
+
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+
+start() {
+    check_status
+    if [[ $? == 0 ]]; then
+        echo ""
+        echo -e "${green}FNode已运行，无需再次启动，如需重启请选择重启${plain}"
+    else
+        if [[ x"${release}" == x"alpine" ]]; then
+            service FNode start
+        else
+            systemctl start FNode
+        fi
+        sleep 2
+        check_status
+        if [[ $? == 0 ]]; then
+            echo -e "${green}FNode 启动成功，请使用 FNode log 查看运行日志${plain}"
+        else
+            echo -e "${red}FNode可能启动失败，请稍后使用 FNode log 查看日志信息${plain}"
+        fi
+    fi
+
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+
+stop() {
+    if [[ x"${release}" == x"alpine" ]]; then
+        service FNode stop
+    else
+        systemctl stop FNode
+    fi
+    sleep 2
+    check_status
+    if [[ $? == 1 ]]; then
+        echo -e "${green}FNode 停止成功${plain}"
+    else
+        echo -e "${red}FNode停止失败，可能是因为停止时间超过了两秒，请稍后查看日志信息${plain}"
+    fi
+
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+
+restart() {
+    if [[ x"${release}" == x"alpine" ]]; then
+        service FNode restart
+    else
+        systemctl restart FNode
+    fi
+    sleep 2
+    check_status
+    if [[ $? == 0 ]]; then
+        echo -e "${green}FNode 重启成功，请使用 FNode log 查看运行日志${plain}"
+    else
+        echo -e "${red}FNode可能启动失败，请稍后使用 FNode log 查看日志信息${plain}"
+    fi
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+
+# Panel, masked token and node tags of each config entry (FNode config status)
+show_panel_info() {
+    if [[ -x /usr/local/FNode/FNode && -f /etc/FNode/config.json ]]; then
+        echo ""
+        /usr/local/FNode/FNode config status -c /etc/FNode/config.json 2>/dev/null || echo -e "${yellow}无法读取面板信息 (this FNode version has no 'config status'; run FNode update)${plain}"
+    fi
+}
+
+status() {
+    if [[ x"${release}" == x"alpine" ]]; then
+        service FNode status
+    else
+        systemctl status FNode --no-pager -l
+    fi
+    show_panel_info
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+
+enable() {
+    if [[ x"${release}" == x"alpine" ]]; then
+        rc-update add FNode
+    else
+        systemctl enable FNode
+    fi
+    if [[ $? == 0 ]]; then
+        echo -e "${green}FNode 设置开机自启成功${plain}"
+    else
+        echo -e "${red}FNode 设置开机自启失败${plain}"
+    fi
+
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+
+disable() {
+    if [[ x"${release}" == x"alpine" ]]; then
+        rc-update del FNode
+    else
+        systemctl disable FNode
+    fi
+    if [[ $? == 0 ]]; then
+        echo -e "${green}FNode 取消开机自启成功${plain}"
+    else
+        echo -e "${red}FNode 取消开机自启失败${plain}"
+    fi
+
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+
+show_log() {
+    if [[ x"${release}" == x"alpine" ]]; then
+        echo -e "${red}alpine系统暂不支持日志查看${plain}\n" && exit 1
+    else
+        journalctl -u FNode.service -e --no-pager -f
+    fi
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+
+setup_cleanlog_cron() {
+    # 自动配置每 7 天清理日志的计划任务
+    if [[ -d "/etc/cron.d" ]]; then
+        cat << 'EOF' > /etc/cron.d/FNode-cleanlog
+# Auto clean up FNode logs every 7 days at 03:00
+0 3 */7 * * root /usr/bin/FNode clearlog >/dev/null 2>&1
+EOF
+        chmod 644 /etc/cron.d/FNode-cleanlog
+    elif [[ -d "/etc/periodic/weekly" ]]; then
+        cat << 'EOF' > /etc/periodic/weekly/fnode-cleanlog
+#!/bin/sh
+/usr/bin/FNode clearlog >/dev/null 2>&1
+EOF
+        chmod +x /etc/periodic/weekly/fnode-cleanlog
+    else
+        (crontab -l 2>/dev/null | grep -v "FNode clearlog" ; echo "0 3 */7 * * /usr/bin/FNode clearlog >/dev/null 2>&1") | crontab - 2>/dev/null || true
+    fi
+}
+
+clean_log() {
+    echo -e "${yellow}正在清理 FNode 运行日志...${plain}"
+
+    # 1. 清理 systemd journal 日志 (针对 FNode 与 Caddy)
+    if [[ x"${release}" != x"alpine" ]] && command -v journalctl &>/dev/null; then
+        echo -e "正在清理 systemd 日志 (FNode.service)..."
+        journalctl --rotate &>/dev/null
+        journalctl --vacuum-time=1s --unit=FNode.service &>/dev/null
+        if systemctl list-unit-files 2>/dev/null | grep -q "caddy.service"; then
+            journalctl --vacuum-time=1s --unit=caddy.service &>/dev/null
+        fi
+        journalctl --vacuum-size=20M &>/dev/null
+    fi
+
+    # 2. 清理配置文件中指定的日志文件 (Log.Output 及 Cores[].Log.Output)
+    config_file="/etc/FNode/config.json"
+    if [[ -f "${config_file}" ]]; then
+        log_paths=$(grep -E '"Output":\s*"[^"]+"' "${config_file}" 2>/dev/null | sed -E 's/.*"Output":\s*"([^"]+)".*/\1/' | grep -v '^$')
+        for lp in ${log_paths}; do
+            if [[ -f "${lp}" ]]; then
+                echo -e "正在截断日志文件: ${lp}"
+                truncate -s 0 "${lp}" 2>/dev/null || : > "${lp}"
+            fi
+        done
+    fi
+
+    # 3. 清理常见的独立日志文件
+    common_logs=(
+        "/var/log/FNode.log"
+        "/var/log/fnode.log"
+        "/var/log/fnode.error.log"
+        "/usr/local/FNode/box.log"
+        "/usr/local/FNode/fnode.log"
+        "/etc/FNode/box.log"
+        "/etc/FNode/fnode.log"
+        "/var/log/caddy/caddy.log"
+        "/var/log/caddy/access.log"
+    )
+
+    for log_file in "${common_logs[@]}"; do
+        if [[ -f "${log_file}" ]]; then
+            echo -e "正在截断日志文件: ${log_file}"
+            truncate -s 0 "${log_file}" 2>/dev/null || : > "${log_file}"
+        fi
+    done
+
+    # 4. 清理超过 7 天的历史归档日志文件 (*.log.1, *.log.gz, 等)
+    find /var/log/ -maxdepth 2 \( -name "fnode*.log*" -o -name "FNode*.log*" \) -mtime +7 -delete 2>/dev/null || true
+
+    # 5. 确保每 7 天自动定时清理任务已启用
+    setup_cleanlog_cron
+
+    echo -e "${green}FNode 日志清理完成 (已配置每 7 天自动定时清理任务)！${plain}"
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+
+install_bbr() {
+    bash <(curl -L -s https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcpx.sh)
+}
+
+update_shell() {
+    wget -O /usr/bin/FNode -N --no-check-certificate "https://raw.githubusercontent.com/tavut846/FNode/${FNODE_BRANCH}/FNode.sh"
+    if [[ $? != 0 ]]; then
+        echo ""
+        echo -e "${red}下载脚本失败，请检查本机能否连接 Github${plain}"
+        before_show_menu
+    else
+        chmod +x /usr/bin/FNode
+        echo -e "${green}升级脚本成功，请重新运行脚本${plain}" && exit 0
+    fi
+}
+
+# 0: running, 1: not running, 2: not installed
+check_status() {
+    if [[ ! -f /usr/local/FNode/FNode ]]; then
+        return 2
+    fi
+    if [[ x"${release}" == x"alpine" ]]; then
+        temp=$(service FNode status | awk '{print $3}')
+        if [[ x"${temp}" == x"started" ]]; then
+            return 0
+        else
+            return 1
+        fi
+    else
+        temp=$(systemctl status FNode | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+        if [[ x"${temp}" == x"running" ]]; then
+            return 0
+        else
+            return 1
+        fi
+    fi
+}
+
+check_enabled() {
+    if [[ x"${release}" == x"alpine" ]]; then
+        temp=$(rc-update show | grep FNode)
+        if [[ x"${temp}" == x"" ]]; then
+            return 1
+        else
+            return 0
+        fi
+    else
+        temp=$(systemctl is-enabled FNode)
+        if [[ x"${temp}" == x"enabled" ]]; then
+            return 0
+        else
+            return 1;
+        fi
+    fi
+}
+
+check_uninstall() {
+    check_status
+    if [[ $? != 2 ]]; then
+        echo ""
+        echo -e "${red}FNode已安装，请不要重复安装${plain}"
+        if [[ $# == 0 ]]; then
+            before_show_menu
+        fi
+        return 1
+    else
+        return 0
+    fi
+}
+
+check_install() {
+    check_status
+    if [[ $? == 2 ]]; then
+        echo ""
+        echo -e "${red}请先安装FNode${plain}"
+        if [[ $# == 0 ]]; then
+            before_show_menu
+        fi
+        return 1
+    else
+        return 0
+    fi
+}
+
+show_status() {
+    check_status
+    case $? in
+        0)
+            echo -e "FNode状态: ${green}已运行${plain}"
+            show_enable_status
+            ;;
+        1)
+            echo -e "FNode状态: ${yellow}未运行${plain}"
+            show_enable_status
+            ;;
+        2)
+            echo -e "FNode状态: ${red}未安装${plain}"
+    esac
+}
+
+show_enable_status() {
+    check_enabled
+    if [[ $? == 0 ]]; then
+        echo -e "是否开机自启: ${green}是${plain}"
+    else
+        echo -e "是否开机自启: ${red}否${plain}"
+    fi
+}
+
+generate_x25519_key() {
+    echo -n "正在生成 x25519 密钥："
+    /usr/local/FNode/FNode x25519
+    echo ""
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+
+show_FNode_version() {
+    echo -n "FNode 版本："
+    /usr/local/FNode/FNode version
+    echo ""
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+
+add_node_config() {
+    echo -e "${green}节点核心类型：singbox${plain}"
+    core_type="1"
+    core="sing"
+    core_sing=true
+    isreality=""
+    istls=""
+    echo -e "${yellow}请选择对接模式：${plain}"
+    echo -e "${green}1. 机器模式 Machine（推荐：与面板「服务器机器」一致，一个 FNode 运行面板分配给该机器的全部节点，避免与面板节点冲突）${plain}"
+    echo -e "${green}2. 单节点模式 Node（通讯密钥 server_token + 节点 ID）${plain}"
+    read -rp "请输入 (默认 1)：" panel_mode
+    if [[ "$panel_mode" == "2" ]]; then
+        machine_mode=false
+    else
+        machine_mode=true
+        NodeType=""
+        while true; do
+            read -rp "请输入机器 Machine ID：" MachineID
+            if [[ "$MachineID" =~ ^[0-9]+$ ]] && [[ "$MachineID" -gt 0 ]]; then
+                break
+            else
+                echo "错误：请输入正确的数字作为 Machine ID。"
+            fi
+        done
+        echo -e "${yellow}机器模式：API Key 需填写该机器的 Token（面板 → 服务器机器）。节点协议由面板决定。${plain}"
+    fi
+    if [ "$machine_mode" != true ]; then
+    while true; do
+        read -rp "请输入节点Node ID：" NodeID
+        # 判断NodeID是否为正整数
+        if [[ "$NodeID" =~ ^[0-9]+$ ]]; then
+            break
+        else
+            echo "错误：请输入正确的数字作为Node ID。"
+        fi
+    done
+
+    echo -e "${yellow}请选择节点传输协议：${plain}"
+    echo -e "${green}0. 自动识别（推荐，使用面板中该节点的协议，避免与面板配置冲突）${plain}"
+    echo -e "${green}1. Shadowsocks${plain}"
+    echo -e "${green}2. Vless${plain}"
+    echo -e "${green}3. Vmess${plain}"
+    echo -e "${green}4. Hysteria${plain}"
+    echo -e "${green}5. Hysteria2${plain}"
+    echo -e "${green}6. Trojan${plain}"  
+    echo -e "${green}7. Tuic${plain}"
+    echo -e "${green}8. AnyTLS${plain}"
+    read -rp "请输入 (默认 0)：" NodeType
+    case "$NodeType" in
+        0 | "" ) NodeType="" ;;
+        1 ) NodeType="shadowsocks" ;;
+        2 ) NodeType="vless" ;;
+        3 ) NodeType="vmess" ;;
+        4 ) NodeType="hysteria" ;;
+        5 ) NodeType="hysteria2" ;;
+        6 ) NodeType="trojan" ;;
+        7 ) NodeType="tuic" ;;
+        8 ) NodeType="anytls" ;;
+        * ) NodeType="shadowsocks" ;;
+    esac
+    fi
+    fastopen=true
+    if [ "$NodeType" == "vless" ]; then
+        read -rp "请选择是否为reality节点？(y/n)" isreality
+    elif [ "$NodeType" == "hysteria" ] || [ "$NodeType" == "hysteria2" ] || [ "$NodeType" == "tuic" ] || [ "$NodeType" == "anytls" ]; then
+        fastopen=false
+        istls="y"
+    fi
+
+    if [[ "$isreality" != "y" && "$isreality" != "Y" &&  "$istls" != "y" ]]; then
+        read -rp "请选择是否进行TLS配置？(y/n)" istls
+    fi
+
+    certmode="none"
+    certdomain="example.com"
+    certfile="/etc/FNode/fullchain.cer"
+    keyfile="/etc/FNode/cert.key"
+    if [[ "$isreality" != "y" && "$isreality" != "Y" && ( "$istls" == "y" || "$istls" == "Y" ) ]]; then
+        echo -e "${yellow}请选择证书申请模式：${plain}"
+        echo -e "${green}1. http模式自动申请，节点域名已正确解析${plain}"
+        echo -e "${green}2. dns模式自动申请，需填入正确域名服务商API参数${plain}"
+        echo -e "${green}3. self模式，自签证书${plain}"
+        echo -e "${green}4. file模式，使用已有证书文件 (支持自动检测 Caddy 证书)${plain}"
+        read -rp "请输入：" certmode
+        case "$certmode" in
+            1 ) certmode="http" ;;
+            2 ) certmode="dns" ;;
+            3 ) certmode="self" ;;
+            4 ) certmode="file" ;;
+            * ) certmode="none" ;;
+        esac
+
+        caddy_base_dir="/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory"
+        if [ "$certmode" == "file" ]; then
+            if [ -d "$caddy_base_dir" ]; then
+                echo -e "${green}检测到 Caddy 证书目录存在，发现以下已申请证书的域名：${plain}"
+                ls -1 "$caddy_base_dir" 2>/dev/null
+            fi
+            read -rp "请输入节点证书域名 (例如: domain.com)：" certdomain
+            caddy_cert="${caddy_base_dir}/${certdomain}/${certdomain}.crt"
+            caddy_key="${caddy_base_dir}/${certdomain}/${certdomain}.key"
+            if [ -f "$caddy_cert" ] && [ -f "$caddy_key" ]; then
+                echo -e "${green}已成功检测并匹配到 Caddy 证书与私钥！${plain}"
+                echo -e "${green}CertFile: ${caddy_cert}${plain}"
+                echo -e "${green}KeyFile:  ${caddy_key}${plain}"
+                certfile="$caddy_cert"
+                keyfile="$caddy_key"
+            else
+                echo -e "${yellow}未在标准 Caddy 目录下检测到该域名的证书文件，请手动输入路径或使用默认路径：${plain}"
+                read -rp "请输入证书文件路径 (默认: ${caddy_cert}): " input_certfile
+                read -rp "请输入私钥文件路径 (默认: ${caddy_key}): " input_keyfile
+                certfile="${input_certfile:-$caddy_cert}"
+                keyfile="${input_keyfile:-$caddy_key}"
+            fi
+        else
+            read -rp "请输入节点证书域名(example.com)：" certdomain
+            if [ "$certmode" != "http" ]; then
+                echo -e "${red}请手动修改配置文件后重启FNode！${plain}"
+            fi
+        fi
+    fi
+    ipv6_support=$(check_ipv6_support)
+    listen_ip="0.0.0.0"
+    disable_ipv6_node="true"
+    if [ "$ipv6_support" -eq 1 ]; then
+        listen_ip="::"
+    fi
+    node_config=""
+    if [ "$machine_mode" = true ]; then
+        panel_fields="\"MachineID\": $MachineID,"
+    elif [ -n "$NodeType" ]; then
+        panel_fields="\"NodeID\": $NodeID,
+            \"NodeType\": \"$NodeType\","
+    else
+        panel_fields="\"NodeID\": $NodeID,"
+    fi
+    node_config=$(cat <<EOF
+{
+            "Core": "$core",
+            "ApiHost": "$ApiHost",
+            "ApiKey": "$ApiKey",
+            $panel_fields
+            "Timeout": 30,
+            "ListenIP": "$listen_ip",
+            "SendIP": "0.0.0.0",
+            "DisableIPv6": $disable_ipv6_node,
+            "DeviceOnlineMinTraffic": 200,
+            "ReportMinTraffic": 0,
+            "EnableTFO": $fastopen,
+            "EnableSniff": true,
+            "Masquerade": "$masquerade_target",
+            "CertConfig": {
+                "CertMode": "$certmode",
+                "RejectUnknownSni": false,
+                "CertDomain": "$certdomain",
+                "CertFile": "$certfile",
+                "KeyFile": "$keyfile",
+                "Email": "fnode@github.com",
+                "Provider": "cloudflare",
+                "DNSEnv": {
+                    "EnvName": "env1"
+                }
+            }
+        },
+EOF
+)
+    nodes_config+=("$node_config")
+}
+
+generate_config_file() {
+    echo -e "${yellow}FNode 配置文件生成向导${plain}"
+    echo -e "${red}请阅读以下注意事项：${plain}"
+    echo -e "${red}1. 目前该功能正处测试阶段${plain}"
+    echo -e "${red}2. 生成的配置文件会保存到 /etc/FNode/config.json${plain}"
+    echo -e "${red}3. 原来的配置文件会保存到 /etc/FNode/config.json.bak${plain}"
+    echo -e "${red}4. 目前仅部分支持TLS${plain}"
+    read -rp "是否继续？(y/n): " continue_prompt
+    if [[ "$continue_prompt" =~ ^[Nn][Oo]? ]]; then
+        exit 0
+    fi
+
+    # 检测 VPS 网络环境 (IPv4 与 IPv6)
+    ipv6_support=$(check_ipv6_support)
+    if [ "$ipv6_support" -eq 1 ]; then
+        echo -e "${green}[网络环境检测] 当前 VPS 具备 IPv4 + IPv6 双栈网络，入站已绑定 [::] 双栈。${plain}"
+        echo -e "${green}默认启用 DisableIPv6: true（出站优先/独占 IPv4，彻底杜绝 IPv6 路由绕路与 AAAA DNS 超时）。${plain}"
+        disable_ipv6_core="true"
+        domain_strategy="prefer_ipv4"
+    else
+        echo -e "${yellow}[网络环境检测] 当前 VPS 仅具备 IPv4 网络 (未检测到有效公网 IPv6)。${plain}"
+        echo -e "${green}已自动配置: DisableIPv6: true，防止客户端本地 IPv6 请求导致连接超时。${plain}"
+        disable_ipv6_core="true"
+        domain_strategy="prefer_ipv4"
+    fi
+    
+    nodes_config=()
+    first_node=true
+    core_xray=false
+    core_sing=false
+    fixed_api_info=false
+    check_api=false
+    
+    while true; do
+        if [ "$first_node" = true ]; then
+            read -rp "请输入机场网址(https://example.com)：" ApiHost
+            read -rp "请输入面板对接API Key：" ApiKey
+            read -rp "是否设置固定的机场网址和API Key？(y/n)" fixed_api
+            if [ "$fixed_api" = "y" ] || [ "$fixed_api" = "Y" ]; then
+                fixed_api_info=true
+                echo -e "${red}成功固定地址${plain}"
+            fi
+            first_node=false
+            add_node_config
+        else
+            read -rp "是否继续添加节点配置？(回车继续，输入n或no退出)" continue_adding_node
+            if [[ "$continue_adding_node" =~ ^[Nn][Oo]? ]]; then
+                break
+            elif [ "$fixed_api_info" = false ]; then
+                read -rp "请输入机场网址：" ApiHost
+                read -rp "请输入面板对接API Key：" ApiKey
+            fi
+            add_node_config
+        fi
+    done
+
+    # 初始化核心配置数组
+    cores_config="[
+    {
+        \"Type\": \"sing\",
+        \"Log\": {
+            \"Level\": \"warn\",
+            \"Timestamp\": true
+        },
+        \"DisableIPv6\": ${disable_ipv6_core},
+        \"DomainStrategy\": \"${domain_strategy}\",
+        \"NTP\": {
+            \"Enable\": true,
+            \"Server\": \"time.apple.com\",
+            \"ServerPort\": 0
+        },
+        \"OriginalPath\": \"/etc/FNode/sing_origin.json\"
+    }]"
+
+    # 切换到配置文件目录
+    cd /etc/FNode
+    
+    # 备份旧的配置文件
+    [ -f config.json ] && cp -f config.json config.json.bak
+    nodes_config_str="${nodes_config[*]}"
+    formatted_nodes_config="${nodes_config_str%,}"
+
+    # 创建 config.json 文件
+    cat <<EOF > /etc/FNode/config.json
+{
+    "Log": {
+        "Level": "info",
+        "Output": ""
+    },
+    "Cores": $cores_config,
+    "Nodes": [$formatted_nodes_config]
+}
+EOF
+    
+    # 创建 custom_outbound.json 文件
+    cat <<EOF > /etc/FNode/custom_outbound.json
+    [
+        {
+            "tag": "IPv4_out",
+            "protocol": "freedom",
+            "settings": {
+                "domainStrategy": "UseIPv4v6"
+            }
+        },
+        {
+            "tag": "IPv6_out",
+            "protocol": "freedom",
+            "settings": {
+                "domainStrategy": "UseIPv6"
+            }
+        },
+        {
+            "protocol": "blackhole",
+            "tag": "block"
+        }
+    ]
+EOF
+    
+    # 创建 route.json 文件
+    cat <<EOF > /etc/FNode/route.json
+    {
+        "domainStrategy": "AsIs",
+        "rules": [
+            {
+                "type": "field",
+                "outboundTag": "block",
+                "ip": [
+                    "geoip:private"
+                ]
+            },
+            {
+                "type": "field",
+                "outboundTag": "block",
+                "domain": [
+                    "regexp:(api|ps|sv|offnavi|newvector|ulog.imap|newloc)(.map|).(baidu|n.shifen).com",
+                    "regexp:(.+.|^)(360|so).(cn|com)",
+                    "regexp:(Subject|HELO|SMTP)",
+                    "regexp:(torrent|.torrent|peer_id=|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=)",
+                    "regexp:(^.@)(guerrillamail|guerrillamailblock|sharklasers|grr|pokemail|spam4|bccto|chacuo|027168).(info|biz|com|de|net|org|me|la)",
+                    "regexp:(.?)(xunlei|sandai|Thunder|XLLiveUD)(.)",
+                    "regexp:(..||)(dafahao|mingjinglive|botanwang|minghui|dongtaiwang|falunaz|epochtimes|ntdtv|falundafa|falungong|wujieliulan|zhengjian).(org|com|net)",
+                    "regexp:(ed2k|.torrent|peer_id=|announce|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=|magnet:|xunlei|sandai|Thunder|XLLiveUD|bt_key)",
+                    "regexp:(.+.|^)(360).(cn|com|net)",
+                    "regexp:(.*.||)(guanjia.qq.com|qqpcmgr|QQPCMGR)",
+                    "regexp:(.*.||)(rising|kingsoft|duba|xindubawukong|jinshanduba).(com|net|org)",
+                    "regexp:(.*.||)(netvigator|torproject).(com|cn|net|org)",
+                    "regexp:(..||)(visa|mycard|gash|beanfun|bank).",
+                    "regexp:(.*.||)(gov|12377|12315|talk.news.pts.org|creaders|zhuichaguoji|efcc.org|cyberpolice|aboluowang|tuidang|epochtimes|zhengjian|110.qq|mingjingnews|inmediahk|xinsheng|breakgfw|chengmingmag|jinpianwang|qi-gong|mhradio|edoors|renminbao|soundofhope|xizang-zhiye|bannedbook|ntdtv|12321|secretchina|dajiyuan|boxun|chinadigitaltimes|dwnews|huaglad|oneplusnews|epochweekly|cn.rfi).(cn|com|org|net|club|net|fr|tw|hk|eu|info|me)",
+                    "regexp:(.*.||)(miaozhen|cnzz|talkingdata|umeng).(cn|com)",
+                    "regexp:(.*.||)(mycard).(com|tw)",
+                    "regexp:(.*.||)(gash).(com|tw)",
+                    "regexp:(.bank.)",
+                    "regexp:(.*.||)(pincong).(rocks)",
+                    "regexp:(.*.||)(taobao).(com)",
+                    "regexp:(.*.||)(laomoe|jiyou|ssss|lolicp|vv1234|0z|4321q|868123|ksweb|mm126).(com|cloud|fun|cn|gs|xyz|cc)",
+                    "regexp:(flows|miaoko).(pages).(dev)"
+                ]
+            },
+            {
+                "type": "field",
+                "outboundTag": "block",
+                "ip": [
+                    "127.0.0.1/32",
+                    "10.0.0.0/8",
+                    "fc00::/7",
+                    "fe80::/10",
+                    "172.16.0.0/12"
+                ]
+            },
+            {
+                "type": "field",
+                "outboundTag": "block",
+                "protocol": [
+                    "bittorrent"
+                ]
+            }
+        ]
+    }
+EOF
+
+    # 创建 sing_origin.json 文件（FNode 默认出站与路由，与内置默认一致）
+    cat <<'EOF' > /etc/FNode/sing_origin.json
+{
+  "outbounds": [
+    {
+      "tag": "direct",
+      "type": "direct",
+      "domain_strategy": "prefer_ipv4"
+    },
+    {
+      "tag": "direct6",
+      "type": "direct",
+      "domain_strategy": "prefer_ipv6"
+    },
+    {
+      "type": "block",
+      "tag": "block"
+    }
+  ],
+  "route": {
+    "auto_detect_interface": true,
+    "rules": [
+      {
+        "ip_is_private": true,
+        "outbound": "block"
+      },
+      {
+        "protocol": [
+          "bittorrent"
+        ],
+        "outbound": "block"
+      },
+      {
+        "port": [
+          25,
+          465,
+          587
+        ],
+        "network": [
+          "tcp"
+        ],
+        "outbound": "block"
+      },
+      {
+        "domain_regex": [
+          "(api|ps|sv|offnavi|newvector|ulog.imap|newloc)(.map|).(baidu|n.shifen).com",
+          "(.+.|^)(360|so).(cn|com)",
+          "(Subject|HELO|SMTP)",
+          "(torrent|.torrent|peer_id=|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=)",
+          "(^.@)(guerrillamail|guerrillamailblock|sharklasers|grr|pokemail|spam4|bccto|chacuo|027168).(info|biz|com|de|net|org|me|la)",
+          "(.?)(xunlei|sandai|Thunder|XLLiveUD)(.)",
+          "(..||)(dafahao|mingjinglive|botanwang|minghui|dongtaiwang|falunaz|epochtimes|ntdtv|falundafa|falungong|wujieliulan|zhengjian).(org|com|net)",
+          "(ed2k|.torrent|peer_id=|announce|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=|magnet:|xunlei|sandai|Thunder|XLLiveUD|bt_key)",
+          "(.+.|^)(360).(cn|com|net)",
+          "(.*.||)(guanjia.qq.com|qqpcmgr|QQPCMGR)",
+          "(.*.||)(rising|kingsoft|duba|xindubawukong|jinshanduba).(com|net|org)",
+          "(.*.||)(netvigator|torproject).(com|cn|net|org)",
+          "(..||)(visa|mycard|gash|beanfun).",
+          "(.*.||)(gov|12377|12315|talk.news.pts.org|creaders|zhuichaguoji|efcc.org|cyberpolice|aboluowang|tuidang|epochtimes|zhengjian|110.qq|mingjingnews|inmediahk|xinsheng|breakgfw|chengmingmag|jinpianwang|qi-gong|mhradio|edoors|renminbao|soundofhope|xizang-zhiye|bannedbook|ntdtv|12321|secretchina|dajiyuan|boxun|chinadigitaltimes|dwnews|huaglad|oneplusnews|epochweekly|cn.rfi).(cn|com|org|net|club|net|fr|tw|hk|eu|info|me)",
+          "(.*.||)(miaozhen|cnzz|talkingdata|umeng).(cn|com)",
+          "(.*.||)(mycard).(com|tw)",
+          "(.*.||)(gash).(com|tw)",
+          "(.*.||)(pincong).(rocks)",
+          "(.*.||)(taobao).(com)",
+          "(.*.||)(laomoe|jiyou|ssss|lolicp|vv1234|0z|4321q|868123|ksweb|mm126).(com|cloud|fun|cn|gs|xyz|cc)",
+          "(flows|miaoko).(pages).(dev)"
+        ],
+        "outbound": "block"
+      },
+      {
+        "outbound": "direct",
+        "network": [
+          "udp",
+          "tcp"
+        ]
+      }
+    ]
+  }
+}
+EOF
+
+    echo -e "${green}FNode 配置文件生成完成，正在重新启动 FNode 服务${plain}"
+    restart 0
+    before_show_menu
+}
+
+# 放开防火墙端口
+open_ports() {
+    systemctl stop firewalld.service 2>/dev/null
+    systemctl disable firewalld.service 2>/dev/null
+    setenforce 0 2>/dev/null
+    ufw disable 2>/dev/null
+    iptables -P INPUT ACCEPT 2>/dev/null
+    iptables -P FORWARD ACCEPT 2>/dev/null
+    iptables -P OUTPUT ACCEPT 2>/dev/null
+    iptables -t nat -F 2>/dev/null
+    iptables -t mangle -F 2>/dev/null
+    iptables -F 2>/dev/null
+    iptables -X 2>/dev/null
+    netfilter-persistent save 2>/dev/null
+    echo -e "${green}放开防火墙端口成功！${plain}"
+}
+
+# Hysteria 2 多端口/端口跳跃 (Port Hopping) NAT 转发设置
+setup_hy2_port_hopping() {
+    echo -e "${green}=== Hysteria 2 多端口/跳跃 NAT 转发配置 ===${plain}"
+    echo -e "${yellow}说明: 将客户端跳跃端口范围 (例如: 10000:20000) 自动转发重定向到 FNode 实际监听端口 (例如: 443)${plain}"
+    echo -e " 1. 查看当前 UDP 端口转发规则"
+    echo -e " 2. 添加/更新 UDP 端口跳跃转发规则"
+    echo -e " 3. 清理所有 NAT 端口转发规则"
+    echo -e " 0. 返回主菜单"
+    read -rp "请输入选项 [0-3]: " opt
+    case "$opt" in
+        1)
+            echo -e "${green}=== iptables NAT PREROUTING 规则 ===${plain}"
+            iptables -t nat -L PREROUTING -n -v --line-numbers 2>/dev/null
+            if command -v ip6tables &>/dev/null; then
+                echo -e "${green}=== ip6tables NAT PREROUTING 规则 ===${plain}"
+                ip6tables -t nat -L PREROUTING -n -v --line-numbers 2>/dev/null
+            fi
+            ;;
+        2)
+            read -rp "请输入 FNode 实际监听的 UDP 端口 (默认: 443): " s_port
+            [[ -z "$s_port" ]] && s_port="443"
+            read -rp "请输入客户端跳跃端口范围 (例如: 10000:20000 或 10000-20000): " c_range
+            if [[ -z "$c_range" ]]; then
+                echo -e "${red}端口范围不能为空！${plain}"
+                return
+            fi
+            c_range="${c_range//-/:}"
+
+            iptables -t nat -A PREROUTING -p udp --dport "$c_range" -j REDIRECT --to-ports "$s_port"
+            if command -v ip6tables &>/dev/null; then
+                ip6tables -t nat -A PREROUTING -p udp --dport "$c_range" -j REDIRECT --to-ports "$s_port" 2>/dev/null
+            fi
+
+            if command -v netfilter-persistent &>/dev/null; then
+                netfilter-persistent save 2>/dev/null
+            elif command -v iptables-save &>/dev/null; then
+                mkdir -p /etc/iptables
+                iptables-save > /etc/iptables/rules.v4 2>/dev/null
+            fi
+            echo -e "${green}成功配置 UDP 端口转发: ${c_range} -> ${s_port}${plain}"
+            ;;
+        3)
+            echo -e "${yellow}正在清除 NAT PREROUTING 端口转发规则...${plain}"
+            iptables -t nat -F PREROUTING 2>/dev/null
+            if command -v ip6tables &>/dev/null; then
+                ip6tables -t nat -F PREROUTING 2>/dev/null
+            fi
+            if command -v netfilter-persistent &>/dev/null; then
+                netfilter-persistent save 2>/dev/null
+            fi
+            echo -e "${green}端口转发规则已清理！${plain}"
+            ;;
+        *)
+            return
+            ;;
+    esac
+}
+
+# ---- caddy install helpers (tested by conf/caddy_install_test.go) ----
+
+# caddy_has_cf [binary]: the binary exists and was built with the Cloudflare DNS
+# module (a standard Caddy cannot parse `dns cloudflare` in a Caddyfile)
+caddy_has_cf() {
+    local bin="${1:-caddy}"
+    command -v "$bin" >/dev/null 2>&1 || return 1
+    "$bin" list-modules 2>/dev/null | grep -q '^dns\.providers\.cloudflare$'
+}
+
+# caddy_mask: stdin -> stdout with the Cloudflare token (when known) hidden
+caddy_mask() {
+    local tok=""
+    [[ -f /etc/caddy/caddy.env ]] && tok=$(grep -E '^CLOUDFLARE_API_TOKEN=' /etc/caddy/caddy.env 2>/dev/null | cut -d '=' -f2-)
+    tok="${cf_token:-$tok}"
+    if [[ -n "$tok" ]]; then
+        TOK="$tok" awk '{ t = ENVIRON["TOK"]; while ((i = index($0, t)) > 0) $0 = substr($0, 1, i - 1) "***" substr($0, i + length(t)); print }'
+    else
+        cat
+    fi
+}
+
+# caddy_try_download <dest> <url>: one source, with retries (HTTP/1.1 avoids the
+# "connection reset" seen on some paths); the file must run and carry the module
+caddy_try_download() {
+    local dest="$1" url="$2"
+    rm -f "$dest"
+    echo -e "${yellow}caddyserver.com 正在服务器端为您编译带 Cloudflare 模块的 Caddy，开头 10-60 秒可能没有数据，请耐心等待 (最长 5 分钟)...${plain}"
+    curl -4 -fL --retry 5 --retry-all-errors --retry-delay 3 --connect-timeout 15 -m 300 -sS -o "$dest" "$url" || return 1
+    # a real build is ~40 MB; anything under 10 MB is an error page or a cut download
+    [[ "$(wc -c < "$dest" 2>/dev/null | tr -d ' ')" -gt 10000000 ]] || return 1
+    chmod +x "$dest"
+    caddy_has_cf "$dest"
+}
+
+# caddy_fetch_cf <dest>: get a Caddy build with dns.providers.cloudflare into
+# <dest>, from (in order) CADDY_CF_BIN / CADDY_CF_URL, the official download API
+# (twice, the second with a cache-buster), and xcaddy / go when installed.
+caddy_fetch_cf() {
+    local dest="$1" arch="${caddy_arch:-amd64}" api="https://caddyserver.com/api/download"
+    if [[ -n "${CADDY_CF_BIN:-}" ]]; then
+        if [[ -f "$CADDY_CF_BIN" ]] && cp -f "$CADDY_CF_BIN" "$dest" && chmod +x "$dest" && caddy_has_cf "$dest"; then return 0; fi
+        echo -e "${red}CADDY_CF_BIN=${CADDY_CF_BIN} 不是带 Cloudflare 模块的 Caddy。${plain}"
+    fi
+    if [[ -n "${CADDY_CF_URL:-}" ]]; then
+        echo -e "尝试 CADDY_CF_URL ..."
+        caddy_try_download "$dest" "$CADDY_CF_URL" && return 0
+        echo -e "${red}CADDY_CF_URL 下载失败或不含 Cloudflare 模块。${plain}"
+    fi
+    echo -e "尝试官方下载接口 ..."
+    caddy_try_download "$dest" "${api}?os=linux&arch=${arch}&p=github.com%2Fcaddy-dns%2Fcloudflare" && return 0
+    echo -e "${yellow}第一次失败，换一个请求再试 ...${plain}"
+    sleep 3
+    caddy_try_download "$dest" "${api}?os=linux&arch=${arch}&p=github.com%2Fcaddy-dns%2Fcloudflare&idempotency=${RANDOM}${RANDOM}" && return 0
+    if command -v xcaddy >/dev/null 2>&1 || command -v go >/dev/null 2>&1; then
+        echo -e "尝试用 xcaddy 本地编译 (需要几分钟) ..."
+        local xc="xcaddy"
+        if ! command -v xcaddy >/dev/null 2>&1; then
+            GOBIN=/tmp/fnode-xcaddy go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest >/dev/null 2>&1 && xc=/tmp/fnode-xcaddy/xcaddy
+        fi
+        "$xc" build --with github.com/caddy-dns/cloudflare --output "$dest" >/dev/null 2>&1 && chmod +x "$dest" && caddy_has_cf "$dest" && return 0
+    fi
+    # last resort: ask for a URL or a local path when run from a terminal
+    if [[ -t 0 && -z "${CADDY_CF_ASKED:-}" ]]; then
+        CADDY_CF_ASKED=1
+        read -rp "自动获取失败。请输入带 Cloudflare 模块的 Caddy 的下载链接或本地路径 [回车放弃]: " src
+        if [[ "$src" == http* ]]; then
+            caddy_try_download "$dest" "$src" && return 0
+        elif [[ -n "$src" && -f "$src" ]]; then
+            cp -f "$src" "$dest" && chmod +x "$dest" && caddy_has_cf "$dest" && return 0
+        fi
+    fi
+    return 1
+}
+
+# caddy_fix_unit: drop `--environ` from the systemd unit's ExecStart (it prints
+# every environment variable, the Cloudflare token included, into the journal)
+caddy_fix_unit() {
+    local unit=/etc/systemd/system/caddy.service
+    [[ -f "$unit" ]] || return 0
+    grep -q -- 'caddy run --environ' "$unit" || return 0
+    sed -i 's/caddy run --environ /caddy run /' "$unit"
+    systemctl daemon-reload >/dev/null 2>&1
+    echo -e "${yellow}已从 caddy.service 去掉 --environ。旧日志 (journalctl -u caddy) 可能含有 Cloudflare API Token：请在 Cloudflare 重新生成 Token，并执行 journalctl --rotate && journalctl --vacuum-time=1s 清理。${plain}"
+}
+
+# caddy_validate: caddy validate on /etc/caddy/Caddyfile with the saved token in
+# the environment; prints Caddy's (masked) error on failure
+caddy_validate() {
+    local out rc k v
+    out=$(
+        if [[ -f /etc/caddy/caddy.env ]]; then
+            while IFS='=' read -r k v; do [[ "$k" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] && export "$k=$v"; done < /etc/caddy/caddy.env
+        fi
+        caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile 2>&1
+    )
+    rc=$?
+    if [[ $rc -ne 0 ]]; then
+        echo "$out" | caddy_mask
+    fi
+    return $rc
+}
+
+# caddy_restart_checked: restart the service and make sure it is running; on
+# failure show the masked last journal lines. Returns non-zero when it is not.
+caddy_restart_checked() {
+    if [[ x"${release}" == x"alpine" ]]; then
+        service caddy restart >/dev/null 2>&1
+        sleep 2
+        service caddy status >/dev/null 2>&1 && return 0
+        echo -e "${red}Caddy 服务未运行 (service caddy status)。${plain}"
+        return 1
+    fi
+    systemctl restart caddy >/dev/null 2>&1
+    sleep 2
+    if systemctl is-active --quiet caddy; then return 0; fi
+    echo -e "${red}Caddy 服务未能启动 (systemctl is-active caddy 不是 active)。最近日志:${plain}"
+    journalctl -u caddy -n 30 --no-pager 2>&1 | caddy_mask
+    return 1
+}
+
+# caddy_ensure: Caddy with the Cloudflare module is installed, else (re)install it.
+# A Caddy without the module is replaced (the old binary is kept as caddy.bak-*).
+caddy_ensure() {
+    if caddy_has_cf caddy; then
+        caddy_fix_unit
+        return 0
+    fi
+    if command -v caddy >/dev/null 2>&1; then
+        echo -e "${yellow}已安装的 Caddy 不含 dns.providers.cloudflare 模块 (标准版)，需要换成带 Cloudflare 模块的版本。${plain}"
+    else
+        echo -e "${yellow}未检测到 Caddy，正在为您自动安装 Caddy...${plain}"
+    fi
+    install_caddy || return 1
+    caddy_has_cf caddy
+}
+
+# 安装 Caddy (集成 Cloudflare DNS 模块)
+install_caddy() {
+    echo -e "${green}开始安装 Caddy (包含 Cloudflare DNS 模块)...${plain}"
+    case "$(uname -m)" in
+        x86_64|amd64) caddy_arch="amd64" ;;
+        aarch64|arm64) caddy_arch="arm64" ;;
+        s390x) caddy_arch="s390x" ;;
+        *) caddy_arch="amd64" ;;
+    esac
+
+    mkdir -p /etc/caddy
+    local tmpbin
+    tmpbin=$(mktemp /tmp/caddy-cf.XXXXXX) || return 1
+    if ! caddy_fetch_cf "$tmpbin"; then
+        rm -f "$tmpbin"
+        echo -e "${red}无法获得带 Cloudflare DNS 模块的 Caddy，已停止 (不会回退到标准版，标准版无法申请 DNS 证书)。${plain}"
+        echo -e "可以: 1) 稍后重试  2) CADDY_CF_URL=<下载链接> FNode install_caddy  3) CADDY_CF_BIN=<本地文件，例如用 scp 拷到服务器> FNode install_caddy"
+        return 1
+    fi
+    # replace the binary: stop the service first, keep the old binary
+    if [[ x"${release}" == x"alpine" ]]; then
+        service caddy stop >/dev/null 2>&1
+    else
+        systemctl stop caddy >/dev/null 2>&1
+    fi
+    local caddy_bak=""
+    if [[ -f /usr/bin/caddy ]]; then
+        caddy_bak="/usr/bin/caddy.bak-$(date +%Y%m%d-%H%M%S)"
+        cp -f /usr/bin/caddy "$caddy_bak"
+    fi
+    # "command install" is coreutils install: this script defines its own install() function
+    if ! command install -m 755 "$tmpbin" /usr/bin/caddy; then
+        echo -e "${red}无法写入 /usr/bin/caddy，安装已中止 (下载的文件保留在 ${tmpbin})。${plain}"
+        if [[ -n "$caddy_bak" ]]; then
+            cp -f "$caddy_bak" /usr/bin/caddy 2>/dev/null
+            if [[ x"${release}" == x"alpine" ]]; then service caddy start >/dev/null 2>&1; else systemctl start caddy >/dev/null 2>&1; fi
+        fi
+        return 1
+    fi
+    rm -f "$tmpbin"
+
+    if [[ x"${release}" == x"alpine" ]]; then
+        cat <<EOF > /etc/init.d/caddy
+#!/sbin/openrc-run
+
+name="caddy"
+description="Caddy web server"
+
+command="/usr/bin/caddy"
+command_args="run --config /etc/caddy/Caddyfile"
+command_user="root"
+pidfile="/run/caddy.pid"
+command_background="yes"
+
+depend() {
+    need net
+}
+EOF
+        chmod +x /etc/init.d/caddy
+        rc-update add caddy default >/dev/null 2>&1
+    else
+        cat <<EOF > /etc/systemd/system/caddy.service
+[Unit]
+Description=Caddy
+Documentation=https://caddyserver.com/docs/
+After=network.target network-online.target
+Requires=network-online.target
+
+[Service]
+Type=notify
+User=root
+Group=root
+EnvironmentFile=-/etc/caddy/caddy.env
+ExecStart=/usr/bin/caddy run --config /etc/caddy/Caddyfile
+ExecReload=/usr/bin/caddy reload --config /etc/caddy/Caddyfile --force
+TimeoutStopSec=5s
+LimitNOFILE=1048576
+PrivateTmp=true
+ProtectSystem=full
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        systemctl daemon-reload
+        systemctl enable caddy >/dev/null 2>&1
+    fi
+    echo -e "${green}Caddy (含 Cloudflare DNS 模块) 安装完成，服务单元已写入 (尚未启动，配置向导会校验后启动)。${plain}"
+}
+
+# ---- end caddy install helpers ----
+
+# ---- caddy https_port helpers (tested by conf/caddy_port_test.go; keep them free of side effects) ----
+
+# caddy_valid_port <p>: a number from 1 to 65535
+caddy_valid_port() {
+    [[ "$1" =~ ^[0-9]+$ ]] && [ "$1" -ge 1 ] && [ "$1" -le 65535 ]
+}
+
+# caddy_current_port <Caddyfile>: the https_port of its global block, empty when
+# it has none (Caddy then uses 443)
+caddy_current_port() {
+    [[ -f "$1" ]] || return 0
+    awk '
+        function strip(s) { sub(/#.*/, "", s); gsub(/^[ \t\r]+|[ \t\r]+$/, "", s); return s }
+        { t = strip($0) }
+        state == 0 && t == "" { next }
+        state == 0 { if (t != "{") exit; state = 1; depth = 1; next }
+        state == 1 {
+            if (depth == 1 && t ~ /^https_port[ \t]+[0-9]+$/) { split(t, a, /[ \t]+/); print a[2]; exit }
+            n = gsub(/\{/, "{", t); m = gsub(/\}/, "}", t); depth += n - m
+            if (depth <= 0) exit
+        }
+    ' "$1"
+}
+
+# caddy_global_state <Caddyfile>: "none" (no global block), "block" (a global
+# block that can be edited) or "unsafe" (one this script does not dare to edit)
+caddy_global_state() {
+    [[ -f "$1" ]] || { echo none; return 0; }
+    awk '
+        function strip(s) { sub(/#.*/, "", s); gsub(/^[ \t\r]+|[ \t\r]+$/, "", s); return s }
+        { t = strip($0) }
+        state == 0 && t == "" { next }
+        state == 0 {
+            if (t == "{") { state = 1; depth = 1; next }
+            if (substr(t, 1, 1) == "{") { print "unsafe"; found = 1; exit }
+            print "none"; found = 1; exit
+        }
+        state == 1 {
+            n = gsub(/\{/, "{", t); m = gsub(/\}/, "}", t); depth += n - m
+            if (depth <= 0) { print "block"; found = 1; exit }
+        }
+        END { if (!found) print (state == 1 ? "unsafe" : "none") }
+    ' "$1"
+}
+
+# caddy_global_block <port>: the global options block, nothing for 443
+caddy_global_block() {
+    [[ "$1" == "443" ]] && return 0
+    printf '{\n    https_port %s\n}\n\n' "$1"
+}
+
+# caddy_set_https_port <Caddyfile> <port>: make the file's global block say
+# https_port <port> (443 removes the option), without ever creating a second
+# global block. Returns 1 and leaves the file alone when the existing global
+# block cannot be edited safely.
+caddy_set_https_port() {
+    local file="$1" port="$2" state tmp
+    state=$(caddy_global_state "$file")
+    tmp=$(mktemp) || return 1
+    case "$state" in
+        none)
+            if [[ "$port" == "443" ]]; then rm -f "$tmp"; return 0; fi
+            { caddy_global_block "$port"; cat "$file" 2>/dev/null; } > "$tmp"
+            ;;
+        block)
+            awk -v port="$port" '
+                function strip(s) { sub(/#.*/, "", s); gsub(/^[ \t\r]+|[ \t\r]+$/, "", s); return s }
+                { line[NR] = $0 }
+                END {
+                    state = 0
+                    for (i = 1; i <= NR; i++) {
+                        t = strip(line[i])
+                        if (state == 0) { if (t == "") continue; start = i; state = 1; depth = 1; continue }
+                        if (state == 1) {
+                            if (depth == 1 && t ~ /^https_port[ \t]+[0-9]+$/) port_line = i
+                            n = gsub(/\{/, "{", t); m = gsub(/\}/, "}", t); depth += n - m
+                            if (depth <= 0) { endi = i; break }
+                        }
+                    }
+                    # 443 restores the default: an https_port-only block goes away entirely
+                    drop = 0
+                    if (port == 443 && port_line && endi && strip(line[endi]) == "}") {
+                        others = 0
+                        for (i = start + 1; i < endi; i++) if (i != port_line && strip(line[i]) != "") others++
+                        if (!others) drop = 1
+                    }
+                    for (i = 1; i <= NR; i++) {
+                        if (drop && i >= start && i <= endi) { skipblank = 1; continue }
+                        if (drop && skipblank && strip(line[i]) == "") continue
+                        skipblank = 0
+                        if (i == port_line) {
+                            if (port != 443) { sub(/https_port[ \t]+[0-9]+/, "https_port " port, line[i]); print line[i] }
+                            continue
+                        }
+                        print line[i]
+                        if (i == start && !port_line && port != 443) print "    https_port " port
+                    }
+                }
+            ' "$file" > "$tmp"
+            ;;
+        *)
+            rm -f "$tmp"
+            return 1
+            ;;
+    esac
+    cat "$tmp" > "$file"
+    rm -f "$tmp"
+}
+
+# caddy_port_conflict <port>: names of other programs listening on the port
+# (empty when it is free, used by caddy itself, or ss is not available)
+caddy_port_conflict() {
+    command -v ss &>/dev/null || return 0
+    ss -ltnpH 2>/dev/null | awk -v p=":$1" '
+        { n = split($4, a, ":"); if (":" a[n] != p) next }
+        $0 ~ /users:/ && $0 !~ /"caddy"/ { match($0, /\("[^"]+"/); print substr($0, RSTART + 2, RLENGTH - 3) }
+        $0 !~ /users:/ { print "unknown" }
+    ' | sort -u | tr '\n' ' '
+}
+
+# caddy_first_domain <Caddyfile>: the first site address (outside the global
+# block and snippets), without scheme or port; empty when there is none
+
+caddy_first_domain() {
+    [[ -f "$1" ]] || return 0
+    awk '
+        function strip(s) { sub(/#.*/, "", s); gsub(/^[ \t\r]+|[ \t\r]+$/, "", s); return s }
+        {
+            t = strip($0)
+            if (depth == 0 && t != "" && t != "{" && t ~ /\{$/ && t !~ /^\(/ && t !~ /^@/) {
+                sub(/[ \t]*\{$/, "", t); split(t, a, /[ \t,]+/)
+                d = a[1]; sub(/^[a-z]+:\/\//, "", d); sub(/:[0-9]+$/, "", d)
+                if (d != "") { print d; exit }
+            }
+            n = gsub(/\{/, "{", t); m = gsub(/\}/, "}", t); depth += n - m
+        }
+    ' "$1"
+}
+
+# ---- end caddy https_port helpers ----
+
+# 配置 Caddy 反向代理与证书申请 (支持多域名)
+setup_caddy_reverse_proxy() {
+    if ! caddy_ensure; then
+        echo -e "${red}Caddy (含 Cloudflare DNS 模块) 不可用，配置已中止。${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    echo -e "${yellow}===== Caddy 反向代理与 Cloudflare DNS 证书配置向导 =====${plain}"
+
+    # 自动探测 /etc/FNode/config.json 中已配置的 CertDomain
+    detected_domains=""
+    if [[ -f "/etc/FNode/config.json" ]]; then
+        detected_domains=$(grep -E '"CertDomain":\s*"[^"]+"' /etc/FNode/config.json 2>/dev/null | sed -E 's/.*"CertDomain":\s*"([^"]+)".*/\1/' | tr '\n' ' ' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+    fi
+    if [[ -n "$detected_domains" ]]; then
+        echo -e "${green}检测到 FNode 配置文件 (config.json) 中的域名: ${detected_domains}${plain}"
+    fi
+
+    echo -e "请输入需要配置的域名 (支持多个域名，用逗号或空格分隔，例如: domain1.com, domain2.com)"
+    read -rp "域名 [默认: ${detected_domains:-domain.com}]: " input_domains
+    caddy_domain_input="${input_domains:-$detected_domains}"
+    if [ -z "$caddy_domain_input" ]; then
+        echo -e "${red}域名不能为空！${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    # 解析多个域名 (兼容逗号、分号、空格分隔)
+    IFS=',; ' read -r -a domain_list <<< "$caddy_domain_input"
+    valid_domains=()
+    for d in "${domain_list[@]}"; do
+        clean_d=$(echo "$d" | tr -d '"' | tr -d "'" | xargs)
+        if [[ -n "$clean_d" ]]; then
+            valid_domains+=("$clean_d")
+        fi
+    done
+
+    if [[ ${#valid_domains[@]} -eq 0 ]]; then
+        echo -e "${red}未能识别有效的域名输入！${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    existing_token=""
+    if [[ -f "/etc/caddy/caddy.env" ]]; then
+        existing_token=$(grep -E '^CLOUDFLARE_API_TOKEN=' /etc/caddy/caddy.env 2>/dev/null | cut -d '=' -f2-)
+    fi
+
+    if [[ -n "$existing_token" ]]; then
+        read -rp "请输入 Cloudflare API Token [直接回车使用已保存的 Token]: " cf_token
+        cf_token="${cf_token:-$existing_token}"
+    else
+        read -rp "请输入 Cloudflare API Token (用于 DNS-01 验证申请证书): " cf_token
+    fi
+
+    if [ -z "$cf_token" ]; then
+        echo -e "${red}Cloudflare API Token 不能为空！${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    read -rp "请输入反向代理伪装目标网站 (默认: https://simulate-news.316293.xyz): " proxy_dest
+    if [ -z "$proxy_dest" ]; then
+        proxy_dest="https://simulate-news.316293.xyz"
+    fi
+
+    # 提取目标网站的 Host (如 simulate-news.316293.xyz)
+    target_host=$(echo "$proxy_dest" | sed -e 's|^[^/]*//||' -e 's|/.*$||')
+
+    mkdir -p /etc/caddy
+    echo "CLOUDFLARE_API_TOKEN=${cf_token}" > /etc/caddy/caddy.env
+    chmod 600 /etc/caddy/caddy.env
+
+    caddyfile_content=""
+    for dom in "${valid_domains[@]}"; do
+        caddyfile_content+="${dom} {
+    encode gzip
+
+    tls {
+        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+        protocols tls1.2 tls1.3
+    }
+
+    reverse_proxy ${proxy_dest} {
+        header_up Host ${target_host}
+        header_up X-Real-IP {http.request.remote}
+        header_up X-Forwarded-Proto https
+        header_up Cache-Control \"no-cache, no-store, must-revalidate\"
+        header_up Pragma \"no-cache\"
+        header_up Expires \"0\"
+
+        header_down Cache-Control \"no-cache, no-store, must-revalidate\"
+        header_down Pragma \"no-cache\"
+        header_down Expires \"0\"
+    }
+}
+
+"
+    done
+
+    caddy_backup=""
+    if [[ -f "/etc/caddy/Caddyfile" ]]; then
+        caddy_backup="/etc/caddy/Caddyfile.bak-$(date +%Y%m%d-%H%M%S)"
+        cp -f /etc/caddy/Caddyfile "$caddy_backup"
+        echo -e "${yellow}检测到已存在 /etc/caddy/Caddyfile 配置文件 (已备份: ${caddy_backup})：${plain}"
+        echo -e "1. 覆盖旧配置 (推荐)"
+        echo -e "2. 追加新域名到现有配置后"
+        read -rp "请选择 [默认: 1]: " caddy_write_mode
+        if [[ "$caddy_write_mode" == "2" ]]; then
+            echo -e "
+${caddyfile_content}" >> /etc/caddy/Caddyfile
+        else
+            echo "${caddyfile_content}" > /etc/caddy/Caddyfile
+        fi
+    else
+        echo "${caddyfile_content}" > /etc/caddy/Caddyfile
+    fi
+
+    # validate before starting; a bad Caddyfile is rolled back, never reported as success
+    if ! caddy_validate; then
+        echo -e "${red}Caddyfile 校验失败 (caddy validate)，已恢复原配置，未启动 Caddy。${plain}"
+        if [[ -n "$caddy_backup" ]]; then cp -f "$caddy_backup" /etc/caddy/Caddyfile; else rm -f /etc/caddy/Caddyfile; fi
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    echo -e "${green}正在启动 Caddy 服务并申请证书...${plain}"
+    if ! caddy_restart_checked; then
+        echo -e "${red}Caddy 启动失败，配置未完成。Caddyfile: /etc/caddy/Caddyfile${caddy_backup:+ (旧配置备份: ${caddy_backup})}${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    echo -e "${green}========================================${plain}"
+    echo -e "${green}Caddy 多域名反向代理已成功配置！${plain}"
+    echo -e "已配置域名列表:"
+    for dom in "${valid_domains[@]}"; do
+        echo -e "  - 域名: ${dom}"
+        echo -e "    证书路径: /root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${dom}/${dom}.crt"
+        echo -e "    私钥路径: /root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${dom}/${dom}.key"
+    done
+    echo -e "伪装反代目标: ${proxy_dest}"
+    echo -e "${green}现在你可以运行 FNode 生成配置，并在各节点中选择 'file' 模式自动对接对应域名的证书！${plain}"
+    echo -e "${green}========================================${plain}"
+    if [[ $# == 0 ]]; then
+        before_show_menu
+    fi
+}
+
+# 修改 Caddy 的 HTTPS 端口 (默认 8443，把 443 留给 FNode，用于 Reality 自偷的 dest)
+# 用法: FNode caddy-port [端口]，也可用环境变量 CADDY_HTTPS_PORT
+set_caddy_port() {
+    local caddy_file="/etc/caddy/Caddyfile" arg_port="${2:-${CADDY_HTTPS_PORT:-}}"
+    if [[ ! -f "$caddy_file" ]] || ! command -v caddy &>/dev/null; then
+        echo -e "${red}未找到 Caddy 或 ${caddy_file}，请先运行 Caddy 向导 (菜单 18 / FNode caddy)。${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    local current new_port conflict go
+    current=$(caddy_current_port "$caddy_file")
+    current="${current:-443}"
+    echo -e "当前 Caddy HTTPS 端口: ${green}${current}${plain}"
+
+    new_port="$arg_port"
+    if [[ -z "$new_port" ]]; then
+        if [[ -t 0 ]]; then
+            read -rp "新的 Caddy HTTPS 端口 (默认 8443；443 = 恢复默认): " new_port
+        fi
+        new_port="${new_port:-8443}"
+    fi
+    if ! caddy_valid_port "$new_port"; then
+        echo -e "${red}端口必须是 1-65535 之间的数字: ${new_port}${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+    if [[ "$new_port" == "$current" ]]; then
+        echo -e "${green}Caddy 已经在使用端口 ${current}，无需修改。${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 0
+    fi
+
+    conflict=$(caddy_port_conflict "$new_port")
+    if [[ -n "${conflict// /}" ]]; then
+        echo -e "${yellow}警告: 端口 ${new_port} 已被其他进程监听: ${conflict}${plain}"
+        if [[ -t 0 ]]; then
+            read -rp "仍然继续? [y/N]: " go
+            if [[ "$go" != "y" && "$go" != "Y" ]]; then
+                if [[ $# == 0 ]]; then before_show_menu; fi
+                return 1
+            fi
+        fi
+    fi
+
+    if [[ "$(caddy_global_state "$caddy_file")" == "unsafe" ]]; then
+        echo -e "${yellow}Caddyfile 开头的全局选项块无法安全地自动修改，文件保持原样。请手动处理:${plain}"
+        echo -e "  在文件开头唯一的全局块 { ... } 里加入一行: https_port ${new_port}  (443 = 删除该行)"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    local backup
+    backup="${caddy_file}.bak.$(date +%Y%m%d%H%M%S)"
+    cp -f "$caddy_file" "$backup"
+    if ! caddy_set_https_port "$caddy_file" "$new_port"; then
+        cp -f "$backup" "$caddy_file"
+        echo -e "${red}修改 Caddyfile 失败，已恢复备份 ${backup}${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    local check_ok=0
+    if [[ -f /etc/caddy/caddy.env ]]; then
+        (set -a; . /etc/caddy/caddy.env; caddy validate --config "$caddy_file" --adapter caddyfile >/dev/null 2>&1) && check_ok=1
+    else
+        caddy validate --config "$caddy_file" --adapter caddyfile >/dev/null 2>&1 && check_ok=1
+    fi
+    if [[ $check_ok -ne 1 ]]; then
+        cp -f "$backup" "$caddy_file"
+        echo -e "${red}caddy validate 未通过，已恢复原 Caddyfile (备份: ${backup})。请检查后重试。${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
+    fi
+
+    echo -e "${green}正在重启 Caddy...${plain}"
+    if [[ x"${release}" == x"alpine" ]]; then
+        service caddy restart
+    else
+        systemctl restart caddy
+    fi
+    sleep 3
+    if command -v ss &>/dev/null; then
+        ss -ltnp 2>/dev/null | grep -E ":${new_port}[[:space:]]" || echo -e "${yellow}暂未看到端口 ${new_port} 在监听，请查看: systemctl status caddy${plain}"
+    fi
+
+    local domain
+    domain=$(caddy_first_domain "$caddy_file")
+    echo -e "${green}========================================${plain}"
+    echo -e "Caddy HTTPS 端口: ${green}${new_port}${plain} (备份: ${backup})"
+    if [[ "$new_port" != "443" ]]; then
+        echo -e "${green}Reality in the panel: Destination Site = ${domain:-<域名>}, port = ${new_port}, Connection/Server port 443, flow xtls-rprx-vision, multiplex off. Caddy is on ${new_port}, FNode must be the one on 443.${plain}"
+        if [[ "$current" == "443" ]]; then
+            echo -e "${yellow}Caddy 之前在 443: 请确认现在 443 只被 FNode 占用 (ss -ltnp | grep ':443 ')，必要时重启 FNode。${plain}"
+        fi
+        echo -e "验证: curl -v https://${domain:-<域名>}:${new_port}/ (应返回带有效证书的伪装站点)"
+    else
+        echo -e "${yellow}已恢复默认: Caddy 占用 443，同机 FNode 不能再监听 443。${plain}"
+    fi
+    echo -e "${green}========================================${plain}"
+    if [[ $# == 0 ]]; then before_show_menu; fi
+}
+
+# ---- ignore-panel-outbounds (tested by conf/ignore_panel_outbounds_test.go) ----
+
+# ignore_panel_outbounds_read <config.json>: the first value written for the
+# key (true, false or whatever else is there), empty when the key is absent
+ignore_panel_outbounds_read() {
+    grep -Eo '"IgnorePanelOutbounds"[[:space:]]*:[[:space:]]*[^],}[:space:]]+' "$1" 2>/dev/null | head -n 1 | sed -E 's/^.*:[[:space:]]*//; s/"//g'
+}
+
+# ignore_panel_outbounds_set <on|off> <config.json>: set the top-level
+# "IgnorePanelOutbounds" key in place (comments stay), backup first.
+# IGNORE_PANEL_BACKUP is set to the backup path, or empty when nothing needed
+# changing ("off" while the key is absent)
+ignore_panel_outbounds_set() {
+    local val="false" f="$2" bak
+    [[ "$1" == "on" ]] && val="true"
+    IGNORE_PANEL_BACKUP=""
+    if grep -q '"IgnorePanelOutbounds"' "$f"; then
+        bak="${f}.bak-$(date +%Y%m%d-%H%M%S)"
+        cp -f "$f" "$bak" || return 1
+        # any current value form (true, false, "true", 1, ...) becomes the new one
+        sed -i -E "s/(\"IgnorePanelOutbounds\"[[:space:]]*:[[:space:]]*)[^],}[:space:]]+/\1${val}/" "$f" || { cp -f "$bak" "$f"; return 1; }
+    elif [[ "$val" == "true" ]]; then
+        bak="${f}.bak-$(date +%Y%m%d-%H%M%S)"
+        cp -f "$f" "$bak" || return 1
+        # insert after the first "{" that is not on a comment line
+        if ! awk -v v="$val" '!done && $0 !~ /^[[:space:]]*(\/\/|#|\/\*|\*)/ && index($0, "{") { sub(/[{]/, "{\n  \"IgnorePanelOutbounds\": " v ","); done = 1 } { print } END { exit !done }' "$f" > "${f}.tmp"; then
+            rm -f "${f}.tmp"
+            return 1
+        fi
+        # write through the original file so its mode (the config holds tokens) stays
+        cat "${f}.tmp" > "$f" && rm -f "${f}.tmp" || return 1
+    else
+        return 0
+    fi
+    IGNORE_PANEL_BACKUP="$bak"
+}
+
+# ---- end ignore-panel-outbounds ----
+
+# FNode ignore-panel-outbounds on|off|status: emergency switch for a landing node
+# whose dashboard-synced outbounds point back at itself (works from SSH)
+#
+# The binary is asked what it will really use (FNode config ignore-panel-outbounds):
+# a binary without that command is too old for the option, and the command
+# then says so instead of claiming success.
+ignore_panel_outbounds_binary_state() {
+    [[ -x /usr/local/FNode/FNode ]] || return 1
+    /usr/local/FNode/FNode config ignore-panel-outbounds -c "$1" 2>/dev/null
+}
+
+ignore_panel_outbounds_hint() {
+    if [[ x"${release}" == x"alpine" ]] || ! command -v journalctl &>/dev/null; then
+        echo "FNode log"
+    else
+        echo "journalctl -u FNode -e   (只看相关行: journalctl -u FNode -e | grep -i ignoring)"
+    fi
+}
+
+# ignore_panel_outbounds_run <on|off|status>: 0 = done and verified
+ignore_panel_outbounds_run() {
+    local mode="$1" f="${FNODE_CONFIG:-/etc/FNode/config.json}" want pre post fileval rc
+    if [[ ! -f "$f" ]]; then
+        echo -e "${red}未找到 ${f}${plain}"
+        return 1
+    fi
+    fileval=$(ignore_panel_outbounds_read "$f")
+    case "$mode" in
+        status|"")
+            post=$(ignore_panel_outbounds_binary_state "$f")
+            echo -e "config.json (${f}): IgnorePanelOutbounds = ${fileval:-未设置 (默认 off)}"
+            if [[ -z "$post" ]]; then
+                echo -e "${yellow}已安装的 FNode 不支持此选项或配置无法解析 (版本: $(/usr/local/FNode/FNode version --short 2>/dev/null || echo 未知))，请先运行: FNode update${plain}"
+                return 1
+            fi
+            case "$post" in
+                on) echo -e "FNode 将使用: ${red}on${plain} (面板同步的自定义出站及其路由被忽略)" ;;
+                off) echo -e "FNode 将使用: ${green}off${plain}" ;;
+                *) echo -e "FNode 将使用: ${yellow}${post}${plain}" ;;
+            esac
+            ;;
+        on|off)
+            want="$mode"
+            pre=$(ignore_panel_outbounds_binary_state "$f")
+            ignore_panel_outbounds_set "$mode" "$f" || { echo -e "${red}写入 ${f} 失败 (未找到顶层 { 或无权限)，请手动在最外层加入 \"IgnorePanelOutbounds\": true${plain}"; return 1; }
+            if [[ -z "$pre" ]]; then
+                # no output before the edit: binary lacks the command (too old) or the config never parsed
+                echo -e "${yellow}已写入 ${f} 的 IgnorePanelOutbounds = ${mode} (备份: ${IGNORE_PANEL_BACKUP:-无})，但无法确认生效:${plain}"
+                echo -e "${red}已安装的 FNode 过旧(不认识此选项)，或当前 config.json 本身无法解析 (版本: $(/usr/local/FNode/FNode version --short 2>/dev/null || echo 未知))。请先运行 FNode update，再重试。未重启 FNode。${plain}"
+                return 1
+            fi
+            post=$(ignore_panel_outbounds_binary_state "$f")
+            if [[ -z "$post" ]] || { [[ "$want" == "on" ]] && [[ "$post" != "on" ]]; } || { [[ "$want" == "off" ]] && [[ "$post" == "on" ]]; }; then
+                [[ -n "$IGNORE_PANEL_BACKUP" ]] && cp -f "$IGNORE_PANEL_BACKUP" "$f"
+                echo -e "${red}写入后 FNode 读到的状态是 \"${post:-无法解析}\"，与期望的 ${want} 不符，已恢复原配置 (${IGNORE_PANEL_BACKUP:-无需恢复})。请手动检查 ${f} 中的 IgnorePanelOutbounds 写法。${plain}"
+                return 1
+            fi
+            restart 0
+            check_status
+            rc=$?
+            echo -e "${green}========================================${plain}"
+            echo -e "IgnorePanelOutbounds: ${post} (config.json: $(ignore_panel_outbounds_read "$f"); 备份: ${IGNORE_PANEL_BACKUP:-无变化})"
+            if [[ $rc -eq 0 ]]; then
+                echo -e "FNode 已重启并运行中: ${green}active${plain}"
+            else
+                echo -e "FNode ${red}未在运行${plain}，请查看日志"
+            fi
+            echo -e "日志: $(ignore_panel_outbounds_hint)"
+            echo -e "${green}========================================${plain}"
+            [[ $rc -eq 0 ]] || return 1
+            ;;
+        *)
+            echo "用法: FNode ignore-panel-outbounds on|off|status"
+            return 1
+            ;;
+    esac
+}
+
+# $1 = 0 when called from the command line (no menu afterwards), $2 = mode
+ignore_panel_outbounds() {
+    local rc
+    ignore_panel_outbounds_run "$2"
+    rc=$?
+    if [[ "$1" != "0" ]]; then
+        before_show_menu
+    fi
+    return $rc
+}
+
+# menu entry: on / off / status sub-choices
+ignore_panel_outbounds_menu() {
+    echo -e "
+  ${green}落地机自救: 忽略面板同步的自定义出站 (Ignore panel outbounds)${plain}
+  ${green}1.${plain} 开启 on  (忽略面板的所有自定义出站及其路由，并重启 FNode)
+  ${green}2.${plain} 关闭 off (恢复使用面板的自定义出站，并重启 FNode)
+  ${green}3.${plain} 查看状态 status
+  ${green}0.${plain} 返回
+"
+    local c
+    read -rp "请输入选择 [0-3]: " c
+    case "$c" in
+        1) ignore_panel_outbounds_run on ;;
+        2) ignore_panel_outbounds_run off ;;
+        3) ignore_panel_outbounds_run status ;;
+        0) ;;
+        *) echo -e "${red}请输入正确的数字 [0-3]${plain}" ;;
+    esac
+    before_show_menu
+}
+
+# ---- sni-split helpers (tested by conf/sni_split_test.go; keep them free of side effects) ----
+
+# sni_valid_domain <d>: a host name with at least one dot, optionally "*." in front
+sni_valid_domain() {
+    [[ "$1" =~ ^(\*\.)?[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)+$ ]]
+}
+
+# sni_normalize_list <list>: split on commas/spaces, lowercase, drop empties and
+# duplicates, one name per line
+sni_normalize_list() {
+    printf '%s\n' "$1" | tr ', \t' '\n\n\n' | tr 'A-Z' 'a-z' | awk 'NF && !seen[$0]++'
+}
+
+# sni_split_conf <sni list> <anytls port> <default port> <ipv6: 0|1>: the stream
+# block that routes 443 by SNI. Names in the list go to the AnyTLS port, every
+# other (or missing) name to the default port.
+sni_split_conf() {
+    local d
+    echo "# Managed by FNode (FNode sni-split). Do not edit by hand; run: FNode sni-split"
+    echo "stream {"
+    echo "    map \$ssl_preread_server_name \$fnode_sni_backend {"
+    echo "        hostnames;"
+    while read -r d; do
+        [[ -n "$d" ]] && echo "        $d 127.0.0.1:$2;"
+    done < <(sni_normalize_list "$1")
+    echo "        default 127.0.0.1:$3;"
+    echo "    }"
+    echo "    server {"
+    echo "        listen 443;"
+    [[ "$4" == "1" ]] && echo "        listen [::]:443;"
+    echo "        ssl_preread on;"
+    echo "        proxy_connect_timeout 10s;"
+    echo "        proxy_pass \$fnode_sni_backend;"
+    echo "    }"
+    echo "}"
+}
+
+# sni_split_parse <file>: snis=, anytls_port=, default_port= of a file written by
+# sni_split_conf (nothing when the file does not exist)
+sni_split_parse() {
+    [[ -f "$1" ]] || return 0
+    awk '
+        /ssl_preread_server_name/ { inmap = 1; next }
+        inmap && /^[ \t]*}/ { inmap = 0 }
+        inmap && $2 ~ /^127\.0\.0\.1:[0-9]+;$/ {
+            p = $2; sub(/^127\.0\.0\.1:/, "", p); sub(/;$/, "", p)
+            if ($1 == "default") def = p
+            else { snis = snis (snis == "" ? "" : ",") $1; ap = p }
+        }
+        END { print "snis=" snis; print "anytls_port=" ap; print "default_port=" def }
+    ' "$1"
+}
+
+# sni_split_has_include <nginx.conf> <file>: the config already includes <file>
+sni_split_has_include() {
+    [[ -f "$1" ]] && grep -Fq "include $2;" "$1"
+}
+
+# sni_split_with_include <nginx.conf> <file>: the config text with exactly one
+# top-level include line for <file> (added at the end when missing)
+sni_split_with_include() {
+    cat "$1"
+    if ! sni_split_has_include "$1" "$2"; then
+        [[ -n "$(tail -c1 "$1")" ]] && echo
+        echo "# FNode sni-split"
+        echo "include $2;"
+    fi
+}
+
+# sni_split_without_include <nginx.conf> <file>: the config text without our include
+sni_split_without_include() {
+    grep -vF -e "include $2;" -e "# FNode sni-split" "$1"
+}
+
+# ---- end sni-split helpers ----
+
+SNI_SPLIT_INC="/etc/nginx/fnode-stream.conf"
+SNI_NGINX_CONF="/etc/nginx/nginx.conf"
+
+# sni_port_holders <port>: names of the processes listening on a TCP port
+sni_port_holders() {
+    command -v ss &>/dev/null || return 0
+    ss -ltnpH 2>/dev/null | awk -v p=":$1" '
+        { n = split($4, a, ":"); if (":" a[n] != p) next }
+        $0 ~ /users:/ { match($0, /\("[^"]+"/); print substr($0, RSTART + 2, RLENGTH - 3) }
+        $0 !~ /users:/ { print "unknown" }
+    ' | sort -u | tr '\n' ' '
+}
+
+sni_nginx_active() {
+    if [[ x"${release}" == x"alpine" ]]; then
+        service nginx status 2>/dev/null | grep -q started
+    else
+        systemctl is-active --quiet nginx
+    fi
+}
+
+# nginx must be able to load the stream module: install nginx and its stream package
+sni_ensure_nginx() {
+    case "${release}" in
+        debian|ubuntu)
+            if ! command -v nginx &>/dev/null; then
+                echo -e "${green}安装 nginx 与 stream 模块...${plain}"
+                apt-get update -y >/dev/null 2>&1
+                DEBIAN_FRONTEND=noninteractive apt-get install -y nginx libnginx-mod-stream || return 1
+            elif ! dpkg -s libnginx-mod-stream >/dev/null 2>&1; then
+                echo -e "${green}安装 libnginx-mod-stream...${plain}"
+                DEBIAN_FRONTEND=noninteractive apt-get install -y libnginx-mod-stream || return 1
+            fi
+            ;;
+        centos)
+            if ! command -v nginx &>/dev/null; then
+                echo -e "${green}安装 nginx 与 stream 模块...${plain}"
+                yum install -y nginx nginx-mod-stream || yum install -y nginx || return 1
+            elif ! rpm -q nginx-mod-stream >/dev/null 2>&1; then
+                yum install -y nginx-mod-stream >/dev/null 2>&1 || true
+            fi
+            ;;
+        alpine)
+            if ! command -v nginx &>/dev/null; then
+                echo -e "${green}安装 nginx 与 stream 模块...${plain}"
+                apk add nginx nginx-mod-stream || return 1
+            elif ! apk info -e nginx-mod-stream >/dev/null 2>&1; then
+                apk add nginx-mod-stream || return 1
+            fi
+            ;;
+        *)
+            command -v nginx &>/dev/null || { echo -e "${red}此系统请手动安装带 stream 模块的 nginx。${plain}"; return 1; }
+            ;;
+    esac
+    command -v nginx &>/dev/null
+}
+
+# nginx's own default site must not fight another service for port 80
+sni_free_default_site() {
+    local held
+    held=$(sni_port_holders 80)
+    held="${held//nginx/}"
+    [[ -n "${held// /}" ]] || return 0
+    if [[ -e /etc/nginx/sites-enabled/default ]]; then
+        rm -f /etc/nginx/sites-enabled/default
+        echo -e "${yellow}端口 80 已被 ${held}占用: 已停用 nginx 默认站点 (删除 /etc/nginx/sites-enabled/default 链接，原文件 sites-available/default 保留)。${plain}"
+    fi
+    if [[ -f /etc/nginx/conf.d/default.conf ]]; then
+        mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.disabled-by-fnode
+        echo -e "${yellow}端口 80 已被 ${held}占用: 已停用 /etc/nginx/conf.d/default.conf (改名为 default.conf.disabled-by-fnode)。${plain}"
+    fi
+    if grep -Eq '^[[:space:]]*listen[[:space:]]+(\[::\]:)?80[[:space:]]*(default_server)?;' "$SNI_NGINX_CONF" 2>/dev/null; then
+        echo -e "${yellow}nginx.conf 自带的 http server 监听 80，可能与 ${held}冲突；如 nginx -t 或启动失败，请注释掉其中 server { ... } 段。${plain}"
+    fi
+}
+
+sni_nginx_apply() {
+    if [[ x"${release}" == x"alpine" ]]; then
+        rc-update add nginx default >/dev/null 2>&1
+        service nginx restart
+    else
+        systemctl enable nginx >/dev/null 2>&1
+        if systemctl is-active --quiet nginx; then
+            systemctl reload nginx || systemctl restart nginx
+        else
+            systemctl start nginx
+        fi
+    fi
+}
+
+# the blanket rule people add to send 443 to the AnyTLS port: it would bypass nginx
+sni_remove_redirect() {
+    local port="$1" yes="$2" rule ans
+    command -v iptables &>/dev/null || return 0
+    while read -r rule; do
+        [[ -n "$rule" ]] || continue
+        echo -e "${yellow}发现 iptables 规则会把 443 直接转到 ${port}，绕过 SNI 分流 (网站和 Reality 都会被打断):${plain}"
+        echo "  iptables -t nat ${rule}"
+        ans="y"
+        if [[ "$yes" != "1" && -t 0 ]]; then
+            read -rp "删除该规则? [Y/n]: " ans
+            ans="${ans:-y}"
+        fi
+        if [[ "$ans" == "y" || "$ans" == "Y" ]]; then
+            # shellcheck disable=SC2086
+            if iptables -t nat ${rule/#-A /-D } 2>/dev/null; then
+                echo -e "${green}已删除。若要恢复: iptables -t nat ${rule}${plain}"
+                if command -v netfilter-persistent &>/dev/null; then netfilter-persistent save >/dev/null 2>&1; fi
+                echo -e "${yellow}如规则写在开机脚本/iptables-persistent/rc.local 中，请同时从那里删除，否则重启后会回来。${plain}"
+            else
+                echo -e "${red}删除失败，请手动执行: iptables -t nat ${rule/#-A /-D }${plain}"
+            fi
+        else
+            echo -e "${yellow}保留了该规则: 443 的流量不会经过 nginx。${plain}"
+        fi
+    done < <(iptables -t nat -S PREROUTING 2>/dev/null | grep -E -- "--dport 443 .*-j REDIRECT --to-ports ${port}\$")
+}
+
+sni_split_status() {
+    local info snis anytls def
+    echo -e "${green}443 SNI 分流状态${plain}"
+    if [[ ! -f "$SNI_SPLIT_INC" ]] || ! sni_split_has_include "$SNI_NGINX_CONF" "$SNI_SPLIT_INC"; then
+        echo -e "未启用 (没有 ${SNI_SPLIT_INC} 或 nginx.conf 没有 include)。启用: FNode sni-split"
+        return 0
+    fi
+    info=$(sni_split_parse "$SNI_SPLIT_INC")
+    snis=$(echo "$info" | sed -n 's/^snis=//p')
+    anytls=$(echo "$info" | sed -n 's/^anytls_port=//p')
+    def=$(echo "$info" | sed -n 's/^default_port=//p')
+    echo -e "  ${snis//,/ } -> 127.0.0.1:${anytls}  (AnyTLS)"
+    echo -e "  其他/无 SNI -> 127.0.0.1:${def}"
+    if sni_nginx_active; then
+        echo -e "  nginx: ${green}运行中${plain}"
+    else
+        echo -e "  nginx: ${red}未运行${plain}  (systemctl status nginx)"
+    fi
+    echo -e "  443 监听: $(sni_port_holders 443)"
+    echo -e "  ${anytls} 监听: $(sni_port_holders "$anytls")  ${def} 监听: $(sni_port_holders "$def")"
+}
+
+# FNode sni-split off: remove our include and file, keep nginx installed
+sni_split_off() {
+    local ts conf_bak out
+    ts=$(date +%Y%m%d-%H%M%S)
+    if [[ ! -f "$SNI_SPLIT_INC" ]] && ! sni_split_has_include "$SNI_NGINX_CONF" "$SNI_SPLIT_INC"; then
+        echo -e "${green}SNI 分流本来就没有启用。${plain}"
+        return 0
+    fi
+    conf_bak="${SNI_NGINX_CONF}.bak-${ts}"
+    cp -f "$SNI_NGINX_CONF" "$conf_bak" || return 1
+    sni_split_without_include "$SNI_NGINX_CONF" "$SNI_SPLIT_INC" > "${SNI_NGINX_CONF}.tmp" && cat "${SNI_NGINX_CONF}.tmp" > "$SNI_NGINX_CONF"
+    rm -f "${SNI_NGINX_CONF}.tmp"
+    [[ -f "$SNI_SPLIT_INC" ]] && mv -f "$SNI_SPLIT_INC" "${SNI_SPLIT_INC}.off-${ts}"
+    if ! out=$(nginx -t 2>&1); then
+        cp -f "$conf_bak" "$SNI_NGINX_CONF"
+        [[ -f "${SNI_SPLIT_INC}.off-${ts}" ]] && mv -f "${SNI_SPLIT_INC}.off-${ts}" "$SNI_SPLIT_INC"
+        echo -e "${red}nginx -t 未通过，已恢复原配置:${plain}\n${out}"
+        return 1
+    fi
+    sni_nginx_apply
+    echo -e "${green}已关闭 443 SNI 分流 (备份: ${conf_bak}, ${SNI_SPLIT_INC}.off-${ts})。nginx 仍保持安装并在运行；不再需要可执行: systemctl disable --now nginx${plain}"
+    echo -e "${yellow}443 现在没有人监听。把 FNode 节点的 Server port 改回 443，或用 FNode 的 Reality 节点占用 443。${plain}"
+}
+
+# FNode sni-split on [--sni a,b] [--anytls-port 8444] [--reality[-port] 8445 | --no-reality] [--yes]
+sni_split_on() {
+    local sni_list="${SNI_SPLIT_SNI:-}" anytls_port="${SNI_SPLIT_ANYTLS_PORT:-}" reality="" reality_port="${SNI_SPLIT_REALITY_PORT:-}" yes=0
+    local caddy_file="/etc/caddy/Caddyfile" caddy_port="" default_port d ans holders ts out
+    local inc_bak="" conf_bak="" had_inc=0 site
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --sni) sni_list="${2:-}"; shift; [[ $# -gt 0 ]] && shift ;;
+            --anytls-port) anytls_port="${2:-}"; shift; [[ $# -gt 0 ]] && shift ;;
+            --reality-port) reality=1; reality_port="${2:-}"; shift; [[ $# -gt 0 ]] && shift ;;
+            --reality) reality=1; shift ;;
+            --no-reality) reality=0; shift ;;
+            --yes|-y) yes=1; shift ;;
+            *) echo -e "${red}未知参数: $1${plain}"; echo "用法: FNode sni-split [on|off|status] [--sni a.example.com,b.example.com] [--anytls-port 8444] [--reality[-port] 8445 | --no-reality] [--yes]"; return 1 ;;
+        esac
+    done
+
+    # ---- inputs ----
+    if [[ -z "$sni_list" ]]; then
+        if [[ -t 0 ]]; then
+            read -rp "AnyTLS 客户端使用的 SNI 域名 (可多个，逗号分隔，例如 jp-j35c-n.888833.best): " sni_list
+        fi
+    fi
+    if [[ -z "$(sni_normalize_list "$sni_list")" ]]; then
+        echo -e "${red}需要至少一个 AnyTLS SNI 域名 (--sni 或环境变量 SNI_SPLIT_SNI)。${plain}"
+        return 1
+    fi
+    while read -r d; do
+        if ! sni_valid_domain "$d"; then
+            echo -e "${red}SNI 域名不合法: ${d}${plain}"
+            return 1
+        fi
+    done < <(sni_normalize_list "$sni_list")
+    if [[ -z "$anytls_port" ]]; then
+        anytls_port=8444
+        if [[ -t 0 ]]; then
+            read -rp "AnyTLS 节点在本机真正监听的端口 [默认 8444]: " ans
+            anytls_port="${ans:-8444}"
+        fi
+    fi
+    if [[ -z "$reality" ]]; then
+        reality=0
+        if [[ -t 0 ]]; then
+            read -rp "这台 VPS 上还有 Reality 节点要共用 443 吗? [y/N]: " ans
+            [[ "$ans" == "y" || "$ans" == "Y" ]] && reality=1
+        fi
+    fi
+    if [[ "$reality" == "1" && -z "$reality_port" ]]; then
+        reality_port=8445
+        if [[ -t 0 ]]; then
+            read -rp "Reality 节点的真实监听端口 (面板 Server port) [默认 8445]: " ans
+            reality_port="${ans:-8445}"
+        fi
+    fi
+    caddy_port=$(caddy_current_port "$caddy_file")
+    for d in "$anytls_port" ${reality_port:+"$reality_port"}; do
+        if ! caddy_valid_port "$d" || [[ "$d" == "443" ]]; then
+            echo -e "${red}端口必须是 1-65535 且不能是 443: ${d}${plain}"
+            return 1
+        fi
+    done
+    if [[ -f "$caddy_file" ]]; then
+        if [[ -z "$caddy_port" || "$caddy_port" == "443" ]]; then
+            echo -e "${red}Caddy 还在使用 443 (Caddyfile 没有 https_port)。nginx 要占用 443，请先: FNode caddy-port 8443${plain}"
+            return 1
+        fi
+    else
+        caddy_port=8443
+        echo -e "${yellow}没有找到 ${caddy_file}: 假定网站 (Caddy) 将运行在 8443。先用菜单 18 配置 Caddy，否则访问网站会连接失败。${plain}"
+    fi
+    if [[ "$reality" == "1" ]]; then
+        default_port="$reality_port"
+    else
+        default_port="$caddy_port"
+    fi
+    if [[ "$anytls_port" == "$default_port" || ( "$reality" == "1" && "$reality_port" == "$caddy_port" ) || "$anytls_port" == "$caddy_port" ]]; then
+        echo -e "${red}端口冲突: AnyTLS ${anytls_port} / Reality ${reality_port:--} / Caddy ${caddy_port} 必须互不相同。${plain}"
+        return 1
+    fi
+
+    # ---- who holds 443 (nothing is touched before this is clear) ----
+    holders=$(sni_port_holders 443)
+    holders="${holders% }"
+    if [[ -n "$holders" ]]; then
+        if [[ "$holders" == "nginx" ]] && sni_split_has_include "$SNI_NGINX_CONF" "$SNI_SPLIT_INC"; then
+            :   # our own nginx: reconfigure it
+        elif [[ "$holders" == *nginx* ]]; then
+            echo -e "${red}443 已被 nginx 占用 (不是本脚本配置的)。请把你自己的 nginx 配置改成 stream + ssl_preread，或先停用它。未做任何修改。${plain}"
+            return 1
+        elif [[ "${holders,,}" == *fnode* ]]; then
+            echo -e "${red}443 现在由 FNode 自己监听 (某个节点的 Server port = 443，通常是 Reality 或 AnyTLS)。${plain}"
+            echo -e "请先在面板把该节点的 Server port 改成: Reality -> ${reality_port:-8445}，AnyTLS -> ${anytls_port} (Connection port 保持 443)，等 FNode 重新监听后再运行本命令。未做任何修改。"
+            return 1
+        elif [[ "${holders,,}" == *caddy* ]]; then
+            echo -e "${red}443 现在由 Caddy 监听。请先: FNode caddy-port 8443，再重试。未做任何修改。${plain}"
+            return 1
+        else
+            echo -e "${red}443 已被其他进程占用: ${holders} (例如 1Panel/openresty、apache、x-ui)。请先停掉或改到别的端口再重试。未做任何修改。${plain}"
+            return 1
+        fi
+    fi
+
+    # ---- nginx ----
+    sni_ensure_nginx || { echo -e "${red}无法安装 nginx / stream 模块，已停止。${plain}"; return 1; }
+    sni_free_default_site
+
+    ts=$(date +%Y%m%d-%H%M%S)
+    conf_bak="${SNI_NGINX_CONF}.bak-${ts}"
+    cp -f "$SNI_NGINX_CONF" "$conf_bak" || return 1
+    if [[ -f "$SNI_SPLIT_INC" ]]; then
+        had_inc=1
+        inc_bak="${SNI_SPLIT_INC}.bak-${ts}"
+        cp -f "$SNI_SPLIT_INC" "$inc_bak"
+    fi
+    sni_split_conf "$sni_list" "$anytls_port" "$default_port" "$(check_ipv6_support)" > "$SNI_SPLIT_INC"
+    sni_split_with_include "$SNI_NGINX_CONF" "$SNI_SPLIT_INC" > "${SNI_NGINX_CONF}.tmp" && cat "${SNI_NGINX_CONF}.tmp" > "$SNI_NGINX_CONF"
+    rm -f "${SNI_NGINX_CONF}.tmp"
+    if ! out=$(nginx -t 2>&1); then
+        cp -f "$conf_bak" "$SNI_NGINX_CONF"
+        if [[ $had_inc == 1 ]]; then cp -f "$inc_bak" "$SNI_SPLIT_INC"; else rm -f "$SNI_SPLIT_INC"; fi
+        echo -e "${red}nginx -t 未通过，已恢复原配置:${plain}\n${out}"
+        if [[ "$out" == *'unknown directive "stream"'* ]]; then
+            echo -e "${yellow}nginx 没有加载 stream 模块: Debian/Ubuntu 需要 libnginx-mod-stream，CentOS 需要 nginx-mod-stream，Alpine 需要 nginx-mod-stream。${plain}"
+        fi
+        return 1
+    fi
+    if ! sni_nginx_apply; then
+        cp -f "$conf_bak" "$SNI_NGINX_CONF"
+        if [[ $had_inc == 1 ]]; then cp -f "$inc_bak" "$SNI_SPLIT_INC"; else rm -f "$SNI_SPLIT_INC"; fi
+        echo -e "${red}nginx 启动/重载失败，已恢复原配置。查看: systemctl status nginx / journalctl -u nginx -e${plain}"
+        return 1
+    fi
+    sleep 1
+    sni_remove_redirect "$anytls_port" "$yes"
+
+    # ---- summary ----
+    site=$(caddy_first_domain "$caddy_file")
+    echo -e "${green}========================================${plain}"
+    echo -e "${green}443 SNI 分流已启用 (nginx stream + ssl_preread)${plain}"
+    echo -e "路由表 (公网 443):"
+    while read -r d; do
+        echo -e "  SNI ${green}${d}${plain} -> 127.0.0.1:${anytls_port}  (AnyTLS)"
+    done < <(sni_normalize_list "$sni_list")
+    if [[ "$reality" == "1" ]]; then
+        echo -e "  其他/无 SNI -> 127.0.0.1:${default_port}  (Reality 节点；非 Reality 访客由 Reality 转到 dest -> Caddy ${caddy_port}，仍看到正常网站)"
+    else
+        echo -e "  其他/无 SNI -> 127.0.0.1:${default_port}  (Caddy 网站)"
+    fi
+    echo -e "面板设置:"
+    echo -e "  AnyTLS 节点: 连接端口(Connection port) ${green}443${plain}，服务端口(Server port) ${green}${anytls_port}${plain}；客户端 SNI = ${sni_list}"
+    if [[ "$reality" == "1" ]]; then
+        echo -e "  Reality 节点: 连接端口 ${green}443${plain}，服务端口 ${green}${reality_port}${plain}；dest = ${site:-<域名>}:${caddy_port}"
+    else
+        echo -e "  Reality 节点 (如有): 不要和 443 共用，除非重新运行: FNode sni-split --reality"
+    fi
+    echo -e "验证:"
+    echo -e "  ss -ltnp | grep -E ':(443|${anytls_port}|${default_port})\\b'"
+    echo -e "  openssl s_client -connect 127.0.0.1:443 -servername $(sni_normalize_list "$sni_list" | head -n 1) </dev/null 2>/dev/null | openssl x509 -noout -subject -issuer   # AnyTLS 证书"
+    echo -e "  curl -svk --connect-to ${site:-<网站域名>}:443:127.0.0.1:443 https://${site:-<网站域名>}/ -o /dev/null   # 网站"
+    echo -e "${yellow}注意: 经 nginx 转发后，FNode 看到的 AnyTLS 客户端地址都是 127.0.0.1 (按 IP 的限制/在线 IP 统计会失效)；sing-box 的 AnyTLS 不支持 PROXY protocol。${plain}"
+    echo -e "备份: ${conf_bak}${inc_bak:+, ${inc_bak}}。关闭: FNode sni-split off"
+    echo -e "${green}========================================${plain}"
+}
+
+# sni_split_run [on|off|status] [flags]; default on
+sni_split_run() {
+    local mode="on"
+    if [[ $# -gt 0 && "$1" != -* ]]; then mode="$1"; shift; fi
+    case "$mode" in
+        on|setup) sni_split_on "$@" ;;
+        off|uninstall) sni_split_off ;;
+        status) sni_split_status ;;
+        *) echo "用法: FNode sni-split [on|off|status] [--sni a.example.com] [--anytls-port 8444] [--reality[-port] 8445 | --no-reality] [--yes]"; return 1 ;;
+    esac
+}
+
+# $1 = 0 when called from the command line (no menu afterwards), rest = sni_split_run args
+sni_split() {
+    local nonint="$1" rc
+    shift
+    sni_split_run "$@"
+    rc=$?
+    if [[ "$nonint" != "0" ]]; then before_show_menu; fi
+    return $rc
+}
+
+sni_split_menu() {
+    echo -e "
+  ${green}443 SNI 分流 (nginx stream): 同一台 VPS 上 网站 + Reality + AnyTLS(443→8444) 共用 443${plain}
+  ${green}1.${plain} 配置 / 更新分流
+  ${green}2.${plain} 关闭分流
+  ${green}3.${plain} 查看状态
+  ${green}0.${plain} 返回
+"
+    local c
+    read -rp "请输入选择 [0-3]: " c
+    case "$c" in
+        1) sni_split_run on ;;
+        2) sni_split_run off ;;
+        3) sni_split_run status ;;
+        0) ;;
+        *) echo -e "${red}请输入正确的数字 [0-3]${plain}" ;;
+    esac
+    before_show_menu
+}
+
+show_usage() {
+    echo "FNode 管理脚本使用方法: "
+    echo "------------------------------------------"
+    echo "FNode              - 显示管理菜单 (功能更多)"
+    echo "FNode start        - 启动 FNode"
+    echo "FNode stop         - 停止 FNode"
+    echo "FNode restart      - 重启 FNode"
+    echo "FNode status       - 查看 FNode 状态 (含面板地址、令牌、节点标签)"
+    echo "FNode enable       - 设置 FNode 开机自启"
+    echo "FNode disable      - 取消 FNode 开机自启"
+    echo "FNode log          - 查看 FNode 日志"
+    echo "FNode clearlog     - 清理 FNode 日志"
+    echo "FNode x25519       - 生成 x25519 密钥"
+    echo "FNode generate     - 生成 FNode 配置文件"
+    echo "FNode update       - 更新 FNode (交互式选择: 最新版/预发布版/指定版本)"
+    echo "FNode update pre   - 更新 FNode 至最新预发布预览版"
+    echo "FNode update x.x.x - 安装 FNode 指定版本"
+    echo "FNode install      - 安装 FNode (可选: --mode machine|node --panel --token --machine-id|--node-id)"
+    echo "FNode uninstall    - 卸载 FNode (--yes 跳过确认)"
+    echo "FNode config show  - 查看生效配置与出站来源 (--node 标签 --summary)"
+    echo "FNode config status - 查看面板地址、令牌(部分)与节点标签"
+    echo "FNode caddy        - 安装/配置 Caddy (支持 Cloudflare DNS 反代与证书)"
+    echo "FNode caddy-port   - 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest，443 留给 FNode；可带端口参数: FNode caddy-port 8443)"
+    echo "FNode ignore-panel-outbounds on|off|status - 落地机自救: 忽略面板同步的自定义出站 (改 config.json 并重启)"
+    echo "FNode sni-split [on|off|status] - 443 SNI 分流 (nginx stream): AnyTLS 公网 443→本机 8444，网站(Caddy 8443)/Reality 共用 443 (--sni 域名 --anytls-port 8444 --reality 8445 --yes)"
+    echo "FNode version      - 查看 FNode 版本"
+    echo "------------------------------------------"
+}
+
+show_menu() {
+    fnode_version="未安装"
+    if [[ -f /usr/local/FNode/FNode ]]; then
+        fnode_version=$(/usr/local/FNode/FNode version --short 2>/dev/null || /usr/local/FNode/FNode version 2>/dev/null | grep "Version:" | awk '{print $2}')
+    fi
+    echo -e "
+  ${green}FNode 后端管理脚本，${plain}${red}不适用于docker${plain}
+  ${green}当前 FNode 版本: ${plain}${red}${fnode_version}${plain}
+--- https://github.com/tavut846/FNode ---
+  ${green}0.${plain} 修改配置
+  ${green}1.${plain} 安装 FNode
+  ${green}2.${plain} 更新 FNode
+  ${green}3.${plain} 卸载 FNode
+————————————————
+  ${green}4.${plain} 启动 FNode
+  ${green}5.${plain} 停止 FNode
+  ${green}6.${plain} 重启 FNode
+  ${green}7.${plain} 查看 FNode 状态
+  ${green}8.${plain} 查看 FNode 日志
+  ${green}9.${plain} 清理 FNode 日志 (已启用每7天自动清理)
+————————————————
+  ${green}10.${plain} 设置 FNode 开机自启
+  ${green}11.${plain} 取消 FNode 开机自启
+————————————————
+  ${green}12.${plain} 查看 FNode 版本
+  ${green}13.${plain} 生成 X25519 密钥
+  ${green}14.${plain} 升级 FNode 维护脚本
+  ${green}15.${plain} 生成 FNode 配置文件
+  ${green}16.${plain} 放行 VPS 的所有网络端口
+  ${green}17.${plain} 一键安装 bbr (最新内核)
+  ${green}18.${plain} 安装/配置 Caddy 反代与证书
+  ${green}19.${plain} 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest)
+  ${green}20.${plain} 配置 Hysteria 2 多端口/跳跃 NAT 转发
+  ${green}21.${plain} 配置 443 SNI 分流 (AnyTLS 443→8444，与网站/Reality 共用 443)
+  ${green}22.${plain} 落地机自救: 忽略面板自定义出站
+  ${green}23.${plain} 退出脚本
+ "
+ #后续更新可加入上方字符串中
+    show_status
+    echo && read -rp "请输入选择 [0-23]: " num
+
+    case "${num}" in
+        0) config ;;
+        1) check_uninstall && install ;;
+        2) check_install && update ;;
+        3) check_install && uninstall ;;
+        4) check_install && start ;;
+        5) check_install && stop ;;
+        6) check_install && restart ;;
+        7) check_install && status ;;
+        8) check_install && show_log ;;
+        9) check_install && clean_log ;;
+        10) check_install && enable ;;
+        11) check_install && disable ;;
+        12) check_install && show_FNode_version ;;
+        13) check_install && generate_x25519_key ;;
+        14) update_shell ;;
+        15) generate_config_file ;;
+        16) open_ports ;;
+        17) install_bbr ;;
+        18) setup_caddy_reverse_proxy ;;
+        19) set_caddy_port ;;
+        20) setup_hy2_port_hopping ;;
+        21) sni_split_menu ;;
+        22) check_install && ignore_panel_outbounds_menu ;;
+        23) exit ;;
+        *) echo -e "${red}请输入正确的数字 [0-23]${plain}" ;;
+    esac
+}
+
+
+if [[ $# > 0 ]]; then
+    case $1 in
+        "start") check_install 0 && start 0 ;;
+        "stop") check_install 0 && stop 0 ;;
+        "restart") check_install 0 && restart 0 ;;
+        "status") check_install 0 && status 0 ;;
+        "enable") check_install 0 && enable 0 ;;
+        "disable") check_install 0 && disable 0 ;;
+        "log") check_install 0 && show_log 0 ;;
+        "clearlog"|"cleanlog"|"clean_log") check_install 0 && clean_log 0 ;;
+        "update") check_install 0 && update 0 $2 ;;
+        "config")
+            if [[ "$2" == "show" || "$2" == "status" ]]; then
+                # FNode config show [--node tag] [--summary]: effective config per node
+                # FNode config status: panel, masked token and node tags per entry
+                /usr/local/FNode/FNode config "$2" -c /etc/FNode/config.json "${@:3}"
+            else
+                config $*
+            fi
+            ;;
+        "generate") generate_config_file ;;
+        "install") check_uninstall 0 && install 0 "${@:2}" ;;
+        "uninstall") check_install 0 && uninstall 0 "${@:2}" ;;
+        "x25519") check_install 0 && generate_x25519_key 0 ;;
+        "version") check_install 0 && show_FNode_version 0 ;;
+        "caddy") setup_caddy_reverse_proxy 0 || exit 1 ;;
+        "caddy-port"|"caddy_port") set_caddy_port 0 "$2" ;;
+        "ignore-panel-outbounds"|"ignore_panel_outbounds") check_install 0 && { ignore_panel_outbounds 0 "$2" || exit 1; } ;;
+        "sni-split"|"sni_split") sni_split 0 "${@:2}" || exit 1 ;;
+        "install_caddy") install_caddy 0 || exit 1 ;;
+        "porthop"|"port_hop"|"mport") setup_hy2_port_hopping ;;
+        "update_shell") update_shell ;;
+        *) show_usage
+    esac
+else
+    show_menu
+fi

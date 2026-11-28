@@ -1,0 +1,478 @@
+#!/bin/bash
+# 一键配置
+
+# 检查系统是否有有效公网 IPv6 地址与路由
+check_ipv6_support() {
+    local has_global_ipv6=0
+    local has_ipv6_route=0
+
+    # 检查是否存在全局非保留 IPv6 地址 (排除 ::1 本地回环和 fe80:: 链路本地地址)
+    if ip -6 addr show scope global 2>/dev/null | grep -q "inet6"; then
+        has_global_ipv6=1
+    fi
+
+    # 检查是否存在 IPv6 默认路由网关
+    if ip -6 route show default 2>/dev/null | grep -q "default"; then
+        has_ipv6_route=1
+    fi
+
+    if [[ $has_global_ipv6 -eq 1 && $has_ipv6_route -eq 1 ]]; then
+        echo "1"  # 支持并拥有可用公网 IPv6 (双栈网络)
+    else
+        echo "0"  # 纯 IPv4 (无有效公网 IPv6)
+    fi
+}
+
+add_node_config() {
+    echo -e "${green}节点核心类型：singbox${plain}"
+    core_type="2"
+    core="sing"
+    core_sing=true
+    isreality=""
+    istls=""
+    echo -e "${yellow}请选择对接模式：${plain}"
+    echo -e "${green}1. 机器模式 Machine（推荐：与面板「服务器机器」一致，一个 FNode 运行面板分配给该机器的全部节点，避免与面板节点冲突）${plain}"
+    echo -e "${green}2. 单节点模式 Node（通讯密钥 server_token + 节点 ID）${plain}"
+    read -rp "请输入 (默认 1)：" panel_mode
+    if [[ "$panel_mode" == "2" ]]; then
+        machine_mode=false
+    else
+        machine_mode=true
+        NodeType=""
+        while true; do
+            read -rp "请输入机器 Machine ID：" MachineID
+            if [[ "$MachineID" =~ ^[0-9]+$ ]] && [[ "$MachineID" -gt 0 ]]; then
+                break
+            else
+                echo "错误：请输入正确的数字作为 Machine ID。"
+            fi
+        done
+        echo -e "${yellow}机器模式：API Key 需填写该机器的 Token（面板 → 服务器机器）。节点协议由面板决定。${plain}"
+    fi
+    if [ "$machine_mode" != true ]; then
+    while true; do
+        read -rp "请输入节点Node ID：" NodeID
+        # 判断NodeID是否为正整数
+        if [[ "$NodeID" =~ ^[0-9]+$ ]]; then
+            break  # 输入正确，退出循环
+        else
+            echo "错误：请输入正确的数字作为Node ID。"
+        fi
+    done
+
+    echo -e "${yellow}请选择节点传输协议：${plain}"
+    echo -e "${green}0. 自动识别（推荐，使用面板中该节点的协议，避免与面板配置冲突）${plain}"
+    echo -e "${green}1. Shadowsocks${plain}"
+    echo -e "${green}2. Vless${plain}"
+    echo -e "${green}3. Vmess${plain}"
+    echo -e "${green}4. Hysteria${plain}"
+    echo -e "${green}5. Hysteria2${plain}"
+    echo -e "${green}6. Trojan${plain}"  
+    echo -e "${green}7. Tuic${plain}"
+    echo -e "${green}8. AnyTLS${plain}"
+    read -rp "请输入 (默认 0)：" NodeType
+    case "$NodeType" in
+        0 | "" ) NodeType="" ;;
+        1 ) NodeType="shadowsocks" ;;
+        2 ) NodeType="vless" ;;
+        3 ) NodeType="vmess" ;;
+        4 ) NodeType="hysteria" ;;
+        5 ) NodeType="hysteria2" ;;
+        6 ) NodeType="trojan" ;;
+        7 ) NodeType="tuic" ;;
+        8 ) NodeType="anytls" ;;
+        * ) NodeType="shadowsocks" ;;
+    esac
+    fi
+    fastopen=true
+    if [ "$NodeType" == "vless" ]; then
+        read -rp "请选择是否为reality节点？(y/n)" isreality
+    elif [ "$NodeType" == "hysteria" ] || [ "$NodeType" == "hysteria2" ] || [ "$NodeType" == "tuic" ] || [ "$NodeType" == "anytls" ]; then
+        fastopen=false
+        istls="y"
+    fi
+
+    if [[ "$isreality" != "y" && "$isreality" != "Y" &&  "$istls" != "y" ]]; then
+        read -rp "请选择是否进行TLS配置？(y/n)" istls
+    fi
+
+    certmode="none"
+    certdomain="example.com"
+    certfile="/etc/FNode/fullchain.cer"
+    keyfile="/etc/FNode/cert.key"
+    if [[ "$isreality" != "y" && "$isreality" != "Y" && ( "$istls" == "y" || "$istls" == "Y" ) ]]; then
+        echo -e "${yellow}请选择证书申请模式：${plain}"
+        echo -e "${green}1. http模式自动申请，节点域名已正确解析${plain}"
+        echo -e "${green}2. dns模式自动申请，需填入正确域名服务商API参数${plain}"
+        echo -e "${green}3. self模式，自签证书${plain}"
+        echo -e "${green}4. file模式，使用已有证书文件 (支持自动检测 Caddy 证书)${plain}"
+        read -rp "请输入：" certmode
+        case "$certmode" in
+            1 ) certmode="http" ;;
+            2 ) certmode="dns" ;;
+            3 ) certmode="self" ;;
+            4 ) certmode="file" ;;
+            * ) certmode="none" ;;
+        esac
+
+        caddy_base_dir="/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory"
+        if [ "$certmode" == "file" ]; then
+            if [ -d "$caddy_base_dir" ]; then
+                echo -e "${green}检测到 Caddy 证书目录存在，发现以下已申请证书的域名：${plain}"
+                ls -1 "$caddy_base_dir" 2>/dev/null
+            fi
+            read -rp "请输入节点证书域名 (例如: domain.com)：" certdomain
+            caddy_cert="${caddy_base_dir}/${certdomain}/${certdomain}.crt"
+            caddy_key="${caddy_base_dir}/${certdomain}/${certdomain}.key"
+            if [ -f "$caddy_cert" ] && [ -f "$caddy_key" ]; then
+                echo -e "${green}已成功检测并匹配到 Caddy 证书与私钥！${plain}"
+                echo -e "${green}CertFile: ${caddy_cert}${plain}"
+                echo -e "${green}KeyFile:  ${caddy_key}${plain}"
+                certfile="$caddy_cert"
+                keyfile="$caddy_key"
+            else
+                echo -e "${yellow}未在标准 Caddy 目录下检测到该域名的证书文件，请手动输入路径或使用默认路径：${plain}"
+                read -rp "请输入证书文件路径 (默认: ${caddy_cert}): " input_certfile
+                read -rp "请输入私钥文件路径 (默认: ${caddy_key}): " input_keyfile
+                certfile="${input_certfile:-$caddy_cert}"
+                keyfile="${input_keyfile:-$caddy_key}"
+            fi
+        else
+            read -rp "请输入节点证书域名(example.com)：" certdomain
+            if [ "$certmode" != "http" ]; then
+                echo -e "${red}请手动修改配置文件后重启FNode！${plain}"
+            fi
+        fi
+    fi
+    ipv6_support=$(check_ipv6_support)
+    listen_ip="0.0.0.0"
+    disable_ipv6_node="true"
+    if [ "$ipv6_support" -eq 1 ]; then
+        listen_ip="::"
+    fi
+    if [ "$machine_mode" = true ]; then
+        panel_fields="\"MachineID\": $MachineID,"
+    elif [ -n "$NodeType" ]; then
+        panel_fields="\"NodeID\": $NodeID,
+            \"NodeType\": \"$NodeType\","
+    else
+        panel_fields="\"NodeID\": $NodeID,"
+    fi
+    node_config=$(cat <<EOF
+{
+            "Core": "$core",
+            "ApiHost": "$ApiHost",
+            "ApiKey": "$ApiKey",
+            $panel_fields
+            "Timeout": 30,
+            "ListenIP": "$listen_ip",
+            "SendIP": "0.0.0.0",
+            "DisableIPv6": $disable_ipv6_node,
+            "DeviceOnlineMinTraffic": 200,
+            "ReportMinTraffic": 0,
+            "EnableTFO": $fastopen,
+            "EnableSniff": true,
+            "Masquerade": "$masquerade_target",
+            "CertConfig": {
+                "CertMode": "$certmode",
+                "RejectUnknownSni": false,
+                "CertDomain": "$certdomain",
+                "CertFile": "$certfile",
+                "KeyFile": "$keyfile",
+                "Email": "fnode@github.com",
+                "Provider": "cloudflare",
+                "DNSEnv": {
+                    "EnvName": "env1"
+                }
+            }
+        },
+EOF
+)
+    nodes_config+=("$node_config")
+}
+
+generate_config_file() {
+    echo -e "${yellow}FNode 配置文件生成向导${plain}"
+    echo -e "${red}请阅读以下注意事项：${plain}"
+    echo -e "${red}1. 目前该功能正处测试阶段${plain}"
+    echo -e "${red}2. 生成的配置文件会保存到 /etc/FNode/config.json${plain}"
+    echo -e "${red}3. 原来的配置文件会保存到 /etc/FNode/config.json.bak${plain}"
+    echo -e "${red}4. 目前仅部分支持TLS${plain}"
+    read -rp "是否继续？(y/n): " continue_prompt
+    if [[ "$continue_prompt" =~ ^[Nn][Oo]? ]]; then
+        exit 0
+    fi
+
+    # 检测 VPS 网络环境 (IPv4 与 IPv6)
+    ipv6_support=$(check_ipv6_support)
+    if [ "$ipv6_support" -eq 1 ]; then
+        echo -e "${green}[网络环境检测] 当前 VPS 具备 IPv4 + IPv6 双栈网络，入站已绑定 [::] 双栈。${plain}"
+        echo -e "${green}默认启用 DisableIPv6: true（出站优先/独占 IPv4，彻底杜绝 IPv6 路由绕路与 AAAA DNS 超时）。${plain}"
+        disable_ipv6_core="true"
+        domain_strategy="prefer_ipv4"
+    else
+        echo -e "${yellow}[网络环境检测] 当前 VPS 仅具备 IPv4 网络 (未检测到有效公网 IPv6)。${plain}"
+        echo -e "${green}已自动配置: DisableIPv6: true，防止客户端本地 IPv6 请求导致连接超时。${plain}"
+        disable_ipv6_core="true"
+        domain_strategy="prefer_ipv4"
+    fi
+    
+    nodes_config=()
+    first_node=true
+    core_sing=true
+    fixed_api_info=false
+    check_api=false
+    
+    while true; do
+        if [ "$first_node" = true ]; then
+            read -rp "请输入机场网址(https://example.com)：" ApiHost
+            read -rp "请输入面板对接API Key：" ApiKey
+            read -rp "是否设置固定的机场网址和API Key？(y/n)" fixed_api
+            if [ "$fixed_api" = "y" ] || [ "$fixed_api" = "Y" ]; then
+                fixed_api_info=true
+                echo -e "${red}成功固定地址${plain}"
+            fi
+            first_node=false
+            add_node_config
+        else
+            read -rp "是否继续添加节点配置？(回车继续，输入n或no退出)" continue_adding_node
+            if [[ "$continue_adding_node" =~ ^[Nn][Oo]? ]]; then
+                break
+            elif [ "$fixed_api_info" = false ]; then
+                read -rp "请输入机场网址(https://example.com)：" ApiHost
+                read -rp "请输入面板对接API Key：" ApiKey
+            fi
+            add_node_config
+        fi
+    done
+
+    # 初始化核心配置 - singbox only
+    cores_config="[
+    {
+        \"Type\": \"sing\",
+        \"Log\": {
+            \"Level\": \"warn\",
+            \"Timestamp\": true
+        },
+        \"DisableIPv6\": ${disable_ipv6_core},
+        \"DomainStrategy\": \"${domain_strategy}\",
+        \"NTP\": {
+            \"Enable\": true,
+            \"Server\": \"time.apple.com\",
+            \"ServerPort\": 0
+        },
+        \"OriginalPath\": \"/etc/FNode/sing_origin.json\"
+    }]"
+
+    # 切换到配置文件目录
+    cd /etc/FNode
+    
+    # 备份旧的配置文件
+    [ -f config.json ] && cp -f config.json config.json.bak
+    nodes_config_str="${nodes_config[*]}"
+    formatted_nodes_config="${nodes_config_str%,}"
+
+    # 创建 config.json 文件
+    cat <<EOF > /etc/FNode/config.json
+{
+    "Log": {
+        "Level": "info",
+        "Output": ""
+    },
+    "Cores": $cores_config,
+    "Nodes": [$formatted_nodes_config]
+}
+EOF
+    
+    # 创建 custom_outbound.json 文件
+    cat <<EOF > /etc/FNode/custom_outbound.json
+[
+    {
+        "tag": "IPv4_out",
+        "protocol": "freedom",
+        "settings": {
+            "domainStrategy": "UseIPv4v6"
+        }
+    },
+    {
+        "tag": "IPv6_out",
+        "protocol": "freedom",
+        "settings": {
+            "domainStrategy": "UseIPv6"
+        }
+    },
+    {
+        "protocol": "blackhole",
+        "tag": "block"
+    }
+]
+EOF
+    
+    # 创建 route.json 文件
+    cat <<EOF > /etc/FNode/route.json
+{
+    "domainStrategy": "AsIs",
+    "rules": [
+        {
+            "outboundTag": "block",
+            "ip": [
+                "geoip:private"
+            ]
+        },
+        {
+            "outboundTag": "block",
+            "domain": [
+                "regexp:(api|ps|sv|offnavi|newvector|ulog.imap|newloc)(.map|).(baidu|n.shifen).com",
+                "regexp:(.+.|^)(360|so).(cn|com)",
+                "regexp:(Subject|HELO|SMTP)",
+                "regexp:(torrent|.torrent|peer_id=|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=)",
+                "regexp:(^.@)(guerrillamail|guerrillamailblock|sharklasers|grr|pokemail|spam4|bccto|chacuo|027168).(info|biz|com|de|net|org|me|la)",
+                "regexp:(.?)(xunlei|sandai|Thunder|XLLiveUD)(.)",
+                "regexp:(..||)(dafahao|mingjinglive|botanwang|minghui|dongtaiwang|falunaz|epochtimes|ntdtv|falundafa|falungong|wujieliulan|zhengjian).(org|com|net)",
+                "regexp:(ed2k|.torrent|peer_id=|announce|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=|magnet:|xunlei|sandai|Thunder|XLLiveUD|bt_key)",
+                "regexp:(.+.|^)(360).(cn|com|net)",
+                "regexp:(.*.||)(guanjia.qq.com|qqpcmgr|QQPCMGR)",
+                "regexp:(.*.||)(rising|kingsoft|duba|xindubawukong|jinshanduba).(com|net|org)",
+                "regexp:(.*.||)(netvigator|torproject).(com|cn|net|org)",
+                "regexp:(..||)(visa|mycard|gash|beanfun|bank).",
+                "regexp:(.*.||)(gov|12377|12315|talk.news.pts.org|creaders|zhuichaguoji|efcc.org|cyberpolice|aboluowang|tuidang|epochtimes|zhengjian|110.qq|mingjingnews|inmediahk|xinsheng|breakgfw|chengmingmag|jinpianwang|qi-gong|mhradio|edoors|renminbao|soundofhope|xizang-zhiye|bannedbook|ntdtv|12321|secretchina|dajiyuan|boxun|chinadigitaltimes|dwnews|huaglad|oneplusnews|epochweekly|cn.rfi).(cn|com|org|net|club|net|fr|tw|hk|eu|info|me)",
+                "regexp:(.*.||)(miaozhen|cnzz|talkingdata|umeng).(cn|com)",
+                "regexp:(.*.||)(mycard).(com|tw)",
+                "regexp:(.*.||)(gash).(com|tw)",
+                "regexp:(.bank.)",
+                "regexp:(.*.||)(pincong).(rocks)",
+                "regexp:(.*.||)(taobao).(com)",
+                "regexp:(.*.||)(laomoe|jiyou|ssss|lolicp|vv1234|0z|4321q|868123|ksweb|mm126).(com|cloud|fun|cn|gs|xyz|cc)",
+                "regexp:(flows|miaoko).(pages).(dev)"
+            ]
+        },
+        {
+            "outboundTag": "block",
+            "ip": [
+                "127.0.0.1/32",
+                "10.0.0.0/8",
+                "fc00::/7",
+                "fe80::/10",
+                "172.16.0.0/12"
+            ]
+        },
+        {
+            "outboundTag": "block",
+            "protocol": [
+                "bittorrent"
+            ]
+        },
+        {
+            "outboundTag": "IPv4_out",
+            "network": "udp,tcp"
+        }
+    ]
+}
+EOF
+    # 创建 sing_origin.json 文件（FNode 默认出站与路由，与内置默认一致）
+    cat <<'EOF' > /etc/FNode/sing_origin.json
+{
+  "outbounds": [
+    {
+      "tag": "direct",
+      "type": "direct",
+      "domain_strategy": "prefer_ipv4"
+    },
+    {
+      "tag": "direct6",
+      "type": "direct",
+      "domain_strategy": "prefer_ipv6"
+    },
+    {
+      "type": "block",
+      "tag": "block"
+    }
+  ],
+  "route": {
+    "auto_detect_interface": true,
+    "rules": [
+      {
+        "ip_is_private": true,
+        "outbound": "block"
+      },
+      {
+        "protocol": [
+          "bittorrent"
+        ],
+        "outbound": "block"
+      },
+      {
+        "port": [
+          25,
+          465,
+          587
+        ],
+        "network": [
+          "tcp"
+        ],
+        "outbound": "block"
+      },
+      {
+        "domain_regex": [
+          "(api|ps|sv|offnavi|newvector|ulog.imap|newloc)(.map|).(baidu|n.shifen).com",
+          "(.+.|^)(360|so).(cn|com)",
+          "(Subject|HELO|SMTP)",
+          "(torrent|.torrent|peer_id=|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=)",
+          "(^.@)(guerrillamail|guerrillamailblock|sharklasers|grr|pokemail|spam4|bccto|chacuo|027168).(info|biz|com|de|net|org|me|la)",
+          "(.?)(xunlei|sandai|Thunder|XLLiveUD)(.)",
+          "(..||)(dafahao|mingjinglive|botanwang|minghui|dongtaiwang|falunaz|epochtimes|ntdtv|falundafa|falungong|wujieliulan|zhengjian).(org|com|net)",
+          "(ed2k|.torrent|peer_id=|announce|info_hash|get_peers|find_node|BitTorrent|announce_peer|announce.php?passkey=|magnet:|xunlei|sandai|Thunder|XLLiveUD|bt_key)",
+          "(.+.|^)(360).(cn|com|net)",
+          "(.*.||)(guanjia.qq.com|qqpcmgr|QQPCMGR)",
+          "(.*.||)(rising|kingsoft|duba|xindubawukong|jinshanduba).(com|net|org)",
+          "(.*.||)(netvigator|torproject).(com|cn|net|org)",
+          "(..||)(visa|mycard|gash|beanfun).",
+          "(.*.||)(gov|12377|12315|talk.news.pts.org|creaders|zhuichaguoji|efcc.org|cyberpolice|aboluowang|tuidang|epochtimes|zhengjian|110.qq|mingjingnews|inmediahk|xinsheng|breakgfw|chengmingmag|jinpianwang|qi-gong|mhradio|edoors|renminbao|soundofhope|xizang-zhiye|bannedbook|ntdtv|12321|secretchina|dajiyuan|boxun|chinadigitaltimes|dwnews|huaglad|oneplusnews|epochweekly|cn.rfi).(cn|com|org|net|club|net|fr|tw|hk|eu|info|me)",
+          "(.*.||)(miaozhen|cnzz|talkingdata|umeng).(cn|com)",
+          "(.*.||)(mycard).(com|tw)",
+          "(.*.||)(gash).(com|tw)",
+          "(.*.||)(pincong).(rocks)",
+          "(.*.||)(taobao).(com)",
+          "(.*.||)(laomoe|jiyou|ssss|lolicp|vv1234|0z|4321q|868123|ksweb|mm126).(com|cloud|fun|cn|gs|xyz|cc)",
+          "(flows|miaoko).(pages).(dev)"
+        ],
+        "outbound": "block"
+      },
+      {
+        "outbound": "direct",
+        "network": [
+          "udp",
+          "tcp"
+        ]
+      }
+    ]
+  }
+}
+EOF
+
+    # 创建 hy2config.yaml 文件           
+    cat <<EOF > /etc/FNode/hy2config.yaml
+quic:
+  initStreamReceiveWindow: 8388608
+  maxStreamReceiveWindow: 8388608
+  initConnReceiveWindow: 20971520
+  maxConnReceiveWindow: 20971520
+  maxIdleTimeout: 30s
+  maxIncomingStreams: 1024
+  disablePathMTUDiscovery: false
+ignoreClientBandwidth: false
+disableUDP: false
+udpIdleTimeout: 60s
+resolver:
+  type: system
+acl:
+  inline:
+    - direct(geosite:google)
+    - reject(geosite:cn)
+    - reject(geoip:cn)
+masquerade:
+  type: 404
+EOF
+    echo -e "${green}FNode 配置文件生成完成,正在重新启动服务${plain}"
+    fnode restart
+}
