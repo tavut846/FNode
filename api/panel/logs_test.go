@@ -139,3 +139,72 @@ func TestParseWSMessage_LogModeShip(t *testing.T) {
 		t.Fatalf("absent means unchanged: %+v %v", ev, err)
 	}
 }
+
+func TestSendUpdateProgress(t *testing.T) {
+	old := Version
+	Version = "0.1.1"
+	defer func() { Version = old }()
+
+	status := http.StatusOK
+	var path string
+	var body map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path = r.URL.Path
+		data, _ := io.ReadAll(r.Body)
+		body = nil
+		_ = json.Unmarshal(data, &body)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(status)
+		_, _ = w.Write([]byte(`{"data":{"log_mode":"info","accepted":0}}`))
+	}))
+	defer srv.Close()
+
+	c, err := New(&conf.ApiConfig{APIHost: srv.URL, MachineID: 3, MachineToken: "mt"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	pct := 63
+	err = c.SendUpdateProgress(context.Background(), UpdateReport{Version: "0.1.2", Stage: "downloading", Percent: &pct, Bytes: 6300, Total: 10000})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// same route and credentials as the log push, no log entries, version of the running FNode
+	if path != LogsPath || body["machine_id"] != 3.0 || body["token"] != "mt" || body["node_id"] != nil || body["version"] != "0.1.1" {
+		t.Errorf("path %q body %v", path, body)
+	}
+	if es, ok := body["entries"].([]any); !ok || len(es) != 0 {
+		t.Errorf("entries must be an empty list: %v", body["entries"])
+	}
+	u, _ := body["update"].(map[string]any)
+	if u["version"] != "0.1.2" || u["stage"] != "downloading" || u["percent"] != 63.0 || u["bytes"] != 6300.0 || u["total"] != 10000.0 {
+		t.Errorf("update: %v", u)
+	}
+
+	// a stage without a percentage sends no percent key at all
+	if err = c.SendUpdateProgress(context.Background(), UpdateReport{Version: "0.1.2", Stage: "verifying"}); err != nil {
+		t.Fatal(err)
+	}
+	u, _ = body["update"].(map[string]any)
+	if _, has := u["percent"]; has || u["stage"] != "verifying" {
+		t.Errorf("verifying: %v", u)
+	}
+
+	// an ordinary push carries no update field (an old plugin sees today's body)
+	if _, err = c.SendLogs(context.Background(), nil); err != nil {
+		t.Fatal(err)
+	}
+	if _, has := body["update"]; has {
+		t.Errorf("log push must not carry update: %v", body)
+	}
+
+	status = http.StatusInternalServerError
+	if err = c.SendUpdateProgress(context.Background(), UpdateReport{Stage: "failed"}); err == nil {
+		t.Error("HTTP 500 must be an error (callers ignore it)")
+	}
+
+	// node mode has no machine to report for
+	n, _ := New(&conf.ApiConfig{APIHost: srv.URL, Key: "st", NodeID: 12, NodeType: "vless"})
+	if err = n.SendUpdateProgress(context.Background(), UpdateReport{Stage: "failed"}); err == nil {
+		t.Error("node mode must refuse")
+	}
+}

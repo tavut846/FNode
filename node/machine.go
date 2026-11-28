@@ -72,7 +72,16 @@ func NewMachine(cfg conf.NodeConfig, core vCore.Core) (*Machine, error) {
 		interval:    make(chan struct{}, 1),
 	}
 	m.newController = m.startController
+	selfupdate.SetPublisher(selfupdate.NewPublisher(m.postUpdateProgress))
 	return m, nil
+}
+
+// postUpdateProgress sends one remote-update step to the CustomNode plugin.
+func (m *Machine) postUpdateProgress(ctx context.Context, p selfupdate.Progress) error {
+	return m.client.SendUpdateProgress(ctx, panel.UpdateReport{
+		Version: p.Version, Stage: string(p.Stage), Percent: p.Percent,
+		Bytes: p.Bytes, Total: p.Total, Message: p.Message,
+	})
 }
 
 func (m *Machine) logger() *log.Entry {
@@ -93,6 +102,11 @@ func (m *Machine) Start() error {
 		return fmt.Errorf("get machine %d nodes error: %s", m.cfg.ApiConfig.MachineID, err)
 	}
 	m.applyIntervals(resp.BaseConfig)
+	// the last update was rolled back by the previous run: tell the panel why
+	if reason := selfupdate.TakeRollbackReason(); reason != "" {
+		pub := selfupdate.NewPublisher(m.postUpdateProgress)
+		pub.Publish(selfupdate.Progress{Stage: selfupdate.StageRolledBack, Message: reason})
+	}
 	m.prepareWS()
 	m.Sync(resp.Nodes)
 	m.logger().Infof("Machine started with %d nodes", len(m.RunningIDs()))

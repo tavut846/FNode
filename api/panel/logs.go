@@ -27,6 +27,22 @@ type LogsRequest struct {
 	MissingOutbounds map[string][]string `json:"missing_outbounds,omitempty"`
 	// Dropped counts entries lost to FNode's full buffer since the last push.
 	Dropped int `json:"dropped,omitempty"`
+	// Update is the progress of a remote FNode update (CustomNode 1.19). An older
+	// plugin ignores the field; it only accepts it for a machine with a pending
+	// update command.
+	Update *UpdateReport `json:"update,omitempty"`
+}
+
+// UpdateReport is one remote-update progress report (machine mode only).
+type UpdateReport struct {
+	Version string `json:"version"`
+	// Stage: downloading, verifying, extracting, installing, restarting, failed, rolled_back
+	Stage string `json:"stage"`
+	// Percent is only set while downloading and when the size is known.
+	Percent *int   `json:"percent,omitempty"`
+	Bytes   int64  `json:"bytes,omitempty"`
+	Total   int64  `json:"total,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 // BuildLogsRequest builds the body with the same credentials as the node API:
@@ -111,4 +127,29 @@ func (c *Client) SendLogsMeta(ctx context.Context, entries []logship.Entry, meta
 		return logship.Response{}, fmt.Errorf("log push failed: HTTP %d", r.StatusCode())
 	}
 	return ParseLogsResponse(r.Body())
+}
+
+// SendUpdateProgress reports a remote-update step to the CustomNode plugin on the
+// log route, with the same credentials as the log push (machine id + machine
+// token). The body carries no log entries. Callers treat a failure as harmless:
+// an older plugin simply does not show progress.
+func (c *Client) SendUpdateProgress(ctx context.Context, u UpdateReport) error {
+	if c.MachineID <= 0 {
+		return fmt.Errorf("update progress needs machine mode")
+	}
+	req := c.BuildLogsRequest(nil)
+	req.Update = &u
+	r, err := c.client.R().
+		SetContext(ctx).
+		SetHeader("Content-Type", "application/json").
+		ForceContentType("application/json").
+		SetBody(req).
+		Post(LogsPath)
+	if err != nil {
+		return err
+	}
+	if r.StatusCode() >= 400 {
+		return fmt.Errorf("update progress: HTTP %d", r.StatusCode())
+	}
+	return nil
 }

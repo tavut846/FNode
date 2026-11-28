@@ -190,6 +190,12 @@ func ParseSHA256(dgst string) (string, error) {
 }
 
 func fetch(ctx context.Context, url string, dst io.Writer, limit int64) error {
+	return fetchProgress(ctx, url, dst, limit, nil)
+}
+
+// fetchProgress is fetch that calls onProgress(bytes so far, Content-Length or
+// -1) as the body arrives.
+func fetchProgress(ctx context.Context, url string, dst io.Writer, limit int64, onProgress func(n, total int64)) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return err
@@ -201,6 +207,9 @@ func fetch(ctx context.Context, url string, dst io.Writer, limit int64) error {
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("GET %s: HTTP %d", url, resp.StatusCode)
+	}
+	if onProgress != nil {
+		dst = &progressWriter{w: dst, total: resp.ContentLength, fn: onProgress}
 	}
 	n, err := io.Copy(dst, io.LimitReader(resp.Body, limit+1))
 	if err != nil {
@@ -216,6 +225,11 @@ func fetch(ctx context.Context, url string, dst io.Writer, limit int64) error {
 // runs, keeps the current binary as <exe>.old and puts the new one in its place.
 // It does not restart; call Restart afterwards.
 func Apply(ctx context.Context, tag string) (string, error) {
+	return apply(ctx, tag, newTracker(currentPublisher(), tag))
+}
+
+// apply is Apply reporting its steps to tr (a nil tracker reports nothing).
+func apply(ctx context.Context, tag string, tr *tracker) (string, error) {
 	if Disabled {
 		return "", errors.New("remote update is disabled in the config (DisableRemoteUpdate)")
 	}
@@ -244,12 +258,13 @@ func Apply(ctx context.Context, tag string) (string, error) {
 
 	base := releaseBase + "/" + tag + "/" + asset
 	log.Infof("Update: downloading %s", base)
+	tr.stage(StageDownloading, "")
 	zipPath := filepath.Join(tmp, "release.zip")
 	zf, err := os.Create(zipPath)
 	if err != nil {
 		return "", err
 	}
-	err = fetch(ctx, base, zf, maxZipBytes)
+	err = fetchProgress(ctx, base, zf, maxZipBytes, tr.download)
 	if cerr := zf.Close(); err == nil {
 		err = cerr
 	}
@@ -257,6 +272,7 @@ func Apply(ctx context.Context, tag string) (string, error) {
 		return "", fmt.Errorf("download: %w", err)
 	}
 
+	tr.stage(StageVerifying, "")
 	var dg strings.Builder
 	if err = fetch(ctx, base+".dgst", &dg, 64<<10); err != nil {
 		return "", fmt.Errorf("download checksum: %w", err)
@@ -273,6 +289,7 @@ func Apply(ctx context.Context, tag string) (string, error) {
 		return "", fmt.Errorf("checksum mismatch (expected %s, got %s): nothing was changed", want, got)
 	}
 
+	tr.stage(StageExtracting, "")
 	newBin := filepath.Join(tmp, "FNode.new")
 	if err = extractBinary(zipPath, newBin); err != nil {
 		return "", err
@@ -285,6 +302,7 @@ func Apply(ctx context.Context, tag string) (string, error) {
 	}
 	newVer := strings.TrimSpace(string(out))
 
+	tr.stage(StageInstalling, "")
 	old := exe + ".old"
 	_ = os.Remove(old)
 	if err = os.Rename(exe, old); err != nil {
@@ -358,7 +376,21 @@ func ReportRollback() {
 		return
 	}
 	_ = os.Remove(rollbackNote(exe))
-	log.Errorf("The last FNode update was rolled back: %s", strings.TrimSpace(string(b)))
+	reason := strings.TrimSpace(string(b))
+	rolledBack.Store(&reason)
+	log.Errorf("The last FNode update was rolled back: %s", reason)
+}
+
+var rolledBack atomic.Pointer[string]
+
+// TakeRollbackReason returns, once, the reason ReportRollback found at start-up
+// ("" when the last update was not rolled back). The machine reports it to the
+// panel as the rolled_back stage as soon as it has a connection.
+func TakeRollbackReason() string {
+	if r := rolledBack.Swap(nil); r != nil {
+		return *r
+	}
+	return ""
 }
 
 func fileSHA256(path string) (string, error) {
@@ -430,12 +462,22 @@ func Run(tag, current string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancel()
 	log.Infof("Update: panel asked to update FNode %s -> %s", current, tag)
-	ver, err := Apply(ctx, tag)
+	pub := currentPublisher()
+	tr := newTracker(pub, tag)
+	ver, err := apply(ctx, tag, tr)
 	if err != nil {
 		log.Errorf("Update failed, FNode %s keeps running: %v", current, err)
+		tr.stage(StageFailed, err.Error())
+		fctx, fcancel := context.WithTimeout(context.Background(), flushTimeout)
+		pub.Flush(fctx)
+		fcancel()
 		return
 	}
 	log.Infof("Update: FNode %s installed, restarting now", ver)
+	tr.stage(StageRestarting, "")
+	fctx, fcancel := context.WithTimeout(context.Background(), flushTimeout)
+	pub.Flush(fctx) // the last report must leave before the process restarts
+	fcancel()
 	time.Sleep(2 * time.Second) // let the log line reach the panel
 	Restart()
 }
