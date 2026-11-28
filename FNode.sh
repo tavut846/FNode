@@ -1490,6 +1490,91 @@ caddy_first_domain() {
 
 # ---- end caddy https_port helpers ----
 
+# ---- caddy proxy target helpers (camouflage site menu) ----
+CADDY_PROXY_NEWS="https://simulate-news.316293.xyz"
+CADDY_PROXY_HUB="https://simulate-hub.316293.xyz"
+
+# 0 或 1 (随机选 news / hub)；单独成函数，测试里可以替换
+caddy_rand2() { echo $((RANDOM % 2)); }
+
+# 随机选择 news / hub，结果写入 proxy_dest 与 proxy_pick_name
+caddy_pick_random_proxy() {
+    if [[ "$(caddy_rand2)" == "0" ]]; then
+        proxy_dest="$CADDY_PROXY_NEWS"; proxy_pick_name="simulate-news"
+    else
+        proxy_dest="$CADDY_PROXY_HUB"; proxy_pick_name="simulate-hub"
+    fi
+}
+
+# 规范化并校验自定义目标网址：缺少协议时补 https://，去掉末尾 /，
+# 只接受 http(s)://主机[:端口] (不接受路径、空格、引号、花括号，避免写坏 Caddyfile)。
+# 成功: 规范化后的网址输出到 stdout；失败: 返回 1。
+caddy_normalize_proxy_dest() {
+    local u="$1"
+    u="${u#"${u%%[![:space:]]*}"}"; u="${u%"${u##*[![:space:]]}"}"
+    [[ -n "$u" ]] || return 1
+    if ! [[ "$u" =~ ^[A-Za-z][A-Za-z0-9+.-]*:// ]]; then u="https://${u}"; fi
+    while [[ "$u" == */ ]]; do u="${u%/}"; done
+    [[ "$u" =~ ^https?://[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?(:[0-9]{1,5})?$ ]] || return 1
+    printf '%s' "$u"
+}
+
+# 选择反向代理伪装目标网站，结果写入 proxy_dest。
+# 非交互: 环境变量 CADDY_PROXY_DEST = 网址 / news / hub / random；未设置则在 news、hub 中随机。
+# 交互: 菜单 1) news 2) hub 3) 自定义，直接回车 = 随机。
+caddy_choose_proxy_dest() {
+    local choice custom norm
+    proxy_dest=""; proxy_pick_name=""
+    if [[ -n "${CADDY_PROXY_DEST:-}" ]]; then
+        case "$CADDY_PROXY_DEST" in
+            news) proxy_dest="$CADDY_PROXY_NEWS" ;;
+            hub) proxy_dest="$CADDY_PROXY_HUB" ;;
+            random) caddy_pick_random_proxy; echo -e "${green}已随机选择伪装目标: ${proxy_pick_name} (${proxy_dest})${plain}"; return 0 ;;
+            *)
+                if ! proxy_dest=$(caddy_normalize_proxy_dest "$CADDY_PROXY_DEST"); then
+                    proxy_dest=""
+                    echo -e "${red}CADDY_PROXY_DEST 不是有效的网址: ${CADDY_PROXY_DEST}${plain}"
+                    return 1
+                fi
+                ;;
+        esac
+        return 0
+    fi
+
+    echo -e "请选择反向代理伪装目标网站:"
+    echo -e "  1) simulate-news  (${CADDY_PROXY_NEWS}，旧站)"
+    echo -e "  2) simulate-hub   (${CADDY_PROXY_HUB}，新站)"
+    echo -e "  3) 自定义 (手动输入网址)"
+    echo -e "  直接回车 = 在 simulate-news / simulate-hub 中随机选一个"
+    while true; do
+        if ! read -rp "请选择 [1/2/3，直接回车 = 在 news / hub 中随机]: " choice; then choice=""; fi
+        case "$choice" in
+            1) proxy_dest="$CADDY_PROXY_NEWS"; return 0 ;;
+            2) proxy_dest="$CADDY_PROXY_HUB"; return 0 ;;
+            3)
+                while true; do
+                    if ! read -rp "请输入伪装目标网址 (例如 https://example.com): " custom; then
+                        echo -e "${red}未读取到输入，已中止。${plain}"
+                        return 1
+                    fi
+                    if norm=$(caddy_normalize_proxy_dest "$custom"); then
+                        proxy_dest="$norm"
+                        return 0
+                    fi
+                    echo -e "${red}网址无效 (需要 http(s)://域名[:端口]，不含路径/空格)，请重新输入。${plain}"
+                done
+                ;;
+            "")
+                caddy_pick_random_proxy
+                echo -e "${green}已随机选择伪装目标: ${proxy_pick_name} (${proxy_dest})${plain}"
+                return 0
+                ;;
+            *) echo -e "${red}无效选择: ${choice}，请输入 1、2、3 或直接回车。${plain}" ;;
+        esac
+    done
+}
+# ---- end caddy proxy target helpers ----
+
 # 配置 Caddy 反向代理与证书申请 (支持多域名)
 setup_caddy_reverse_proxy() {
     if ! caddy_ensure; then
@@ -1552,9 +1637,10 @@ setup_caddy_reverse_proxy() {
         return 1
     fi
 
-    read -rp "请输入反向代理伪装目标网站 (默认: https://simulate-news.316293.xyz): " proxy_dest
-    if [ -z "$proxy_dest" ]; then
-        proxy_dest="https://simulate-news.316293.xyz"
+    if ! caddy_choose_proxy_dest || [ -z "$proxy_dest" ]; then
+        echo -e "${red}未能确定反向代理伪装目标网站，配置已中止。${plain}"
+        if [[ $# == 0 ]]; then before_show_menu; fi
+        return 1
     fi
 
     # 提取目标网站的 Host (如 simulate-news.316293.xyz)
@@ -2359,7 +2445,7 @@ show_usage() {
     echo "FNode uninstall    - 卸载 FNode (--yes 跳过确认)"
     echo "FNode config show  - 查看生效配置与出站来源 (--node 标签 --summary)"
     echo "FNode config status - 查看面板地址、令牌(部分)与节点标签"
-    echo "FNode caddy        - 安装/配置 Caddy (支持 Cloudflare DNS 反代与证书)"
+    echo "FNode caddy        - 安装/配置 Caddy (支持 Cloudflare DNS 反代与证书；伪装站可选 simulate-news / simulate-hub / 自定义，回车随机；脚本用法: CADDY_PROXY_DEST=<网址|news|hub|random>)"
     echo "FNode caddy-port   - 修改 Caddy HTTPS 端口 (默认 8443，用于 Reality dest，443 留给 FNode；可带端口参数: FNode caddy-port 8443)"
     echo "FNode ignore-panel-outbounds on|off|status - 落地机自救: 忽略面板同步的自定义出站 (改 config.json 并重启)"
     echo "FNode sni-split [on|off|status] - 443 SNI 分流 (nginx stream): AnyTLS 公网 443→本机 8444，网站(Caddy 8443)/Reality 共用 443 (--sni 域名 --anytls-port 8444 --reality 8445 --yes)"

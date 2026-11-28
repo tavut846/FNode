@@ -27,6 +27,7 @@ The FNode deployment system consists of three main parts:
 -   **Caddy & Reverse Proxy Integration**:
     -   Option to install Caddy with the Cloudflare DNS module (`caddy-dns/cloudflare`).
     -   Automated multi-domain configuration of `/etc/caddy/Caddyfile` with reverse proxy camouflage and Cloudflare DNS-01 ACME certificate issuance. `FNode caddy-port` changes the Caddy HTTPS port afterwards (see "Reality self-steal with Caddy").
+    -   Camouflage (reverse-proxy) site menu in the Caddy wizard: `1) simulate-news` (`https://simulate-news.316293.xyz`, old site), `2) simulate-hub` (`https://simulate-hub.316293.xyz`, new site), `3) custom` (type a URL; `https://` is added when the scheme is missing, a trailing `/` is dropped, only `http(s)://host[:port]` is accepted, empty or invalid input asks again). Pressing Enter picks one of news/hub at random and prints which. The `Host` header sent upstream is taken from the chosen URL. Scripts set `CADDY_PROXY_DEST=<URL|news|hub|random>`; unset (and no terminal input) means a random pick between hub and news. An invalid `CADDY_PROXY_DEST` aborts before anything is written. `FNode caddy-port` changes the Caddy HTTPS port afterwards (see "Reality self-steal with Caddy").
     -   Auto-detection of individual Caddy certificates under `/root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/<domain>/` for seamless binding across multiple nodes in FNode with `CertMode: "file"`.
 -   **Log Management & Cleanup**:
     -   View real-time logs via `journalctl -u FNode.service -e --no-pager -f`.
