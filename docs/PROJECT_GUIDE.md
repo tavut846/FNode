@@ -583,7 +583,7 @@ FNode uses GitHub Actions (`.github/workflows/release.yml`) for automated multi-
 - **Continuous Commit Releases**:
   - Each new commit build automatically fetches all existing tags (`git fetch --tags --force`) and increments the patch version (+1, e.g. `0.0.13` -> `0.0.14` -> `0.0.15`).
   - Automatically checks and verifies against existing git tags to prevent tag collisions, ensuring each commit creates a brand new GitHub Release instead of overwriting/replacing existing release assets.
-- **`master` / `main` / `stable` Branches**:
+- **`master` / `main` Branches** (the old `stable` branch was renamed `old_v2bx` and no longer builds or releases):
   - Increments the stable patch version and publishes a full GitHub Release marked as **Latest** (`make_latest: true`, `prerelease: false`).
   - **Pre-Release Auto-Deletion**: Automatically detects, deletes, and cleans up obsolete pre-releases (e.g. `<version>-pre-<N>`, N = 1, 2, 3 ...) and remote git tags when an official version comes out, ensuring the GitHub releases list remains pristine.
 - **`dev` / `dev_new` Branches**:

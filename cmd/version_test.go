@@ -117,15 +117,6 @@ func TestResolveReleaseMetadata(t *testing.T) {
 			expectedLatest:  true,
 		},
 		{
-			name:            "Stable branch upgrade from 0.0.13",
-			refName:         "refs/heads/stable",
-			latestStableTag: "0.0.13",
-			commitsSince:    1,
-			expectedTag:     "0.0.14",
-			expectedPre:     false,
-			expectedLatest:  true,
-		},
-		{
 			name:            "Master push upgrade from 0.0.12",
 			refName:         "refs/heads/master",
 			latestStableTag: "0.0.12",

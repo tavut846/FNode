@@ -112,7 +112,7 @@ func FormatDevTag(targetVersion string, n int) string {
 }
 
 // ResolveReleaseMetadata determines the release tag, pre-release state, and latest state based on the ref and git context.
-// Master/main/stable builds increment the patch version to create a new Latest Release.
+// Master/main builds increment the patch version to create a new Latest Release.
 // Dev/dev_new builds create the next pre-release tag <targetVersion>-pre-<N>; existingTags (all
 // repository tags) decide N.
 func ResolveReleaseMetadata(refName string, latestStableTag string, commitsSince int, existingTags ...string) (tagName string, isPreRelease bool, isLatest bool) {
@@ -120,7 +120,7 @@ func ResolveReleaseMetadata(refName string, latestStableTag string, commitsSince
 	cleanRef := strings.TrimPrefix(ref, "refs/heads/")
 	cleanRef = strings.TrimPrefix(cleanRef, "refs/tags/")
 
-	if cleanRef == "master" || cleanRef == "main" || cleanRef == "stable" {
+	if cleanRef == "master" || cleanRef == "main" {
 		tagName = NextPatchVersion(latestStableTag)
 		return tagName, false, true
 	}

@@ -10,7 +10,6 @@ on:
   push:
     branches:
       - master
-      - stable
       - dev
       - dev_new
     tags:
@@ -18,7 +17,6 @@ on:
   pull_request:
     branches:
       - master
-      - stable
       - dev
       - dev_new
   release:
@@ -125,7 +123,7 @@ jobs:
               IS_LATEST="true"
               RELEASE_TITLE="FNode $TAG_NAME"
             fi
-          elif [[ "$REF_NAME" == "master" || "$REF_NAME" == "main" || "$REF_NAME" == "stable" ]]; then
+          elif [[ "$REF_NAME" == "master" || "$REF_NAME" == "main" ]]; then
             # Every new build of a commit increments the version (+1 to patch) and creates a new Latest Release
             VERSION="$UPGRADED_VERSION"
             TAG_NAME="$VERSION"
