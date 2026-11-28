@@ -11,7 +11,7 @@ import (
 // sniScript returns the side-effect-free sni-split helpers of FNode.sh.
 func sniScript(t *testing.T) string {
 	t.Helper()
-	raw, err := os.ReadFile("../FNode-script/FNode.sh")
+	raw, err := readScript(t, "FNode.sh")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,7 +119,7 @@ sni_split_has_include '` + nginx + `.3' $inc || echo GONE`
 }
 
 func TestSniSplit_ScriptWiring(t *testing.T) {
-	raw, err := os.ReadFile("../FNode-script/FNode.sh")
+	raw, err := readScript(t, "FNode.sh")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -145,7 +145,7 @@ func TestSniSplit_ScriptWiring(t *testing.T) {
 // /etc/caddy in a temp dir, with stubbed nginx, ss, systemctl and iptables.
 func sniRun(t *testing.T, dir, nginxBody, ssOut, extra string) (string, error) {
 	t.Helper()
-	raw, err := os.ReadFile("../FNode-script/FNode.sh")
+	raw, err := readScript(t, "FNode.sh")
 	if err != nil {
 		t.Fatal(err)
 	}

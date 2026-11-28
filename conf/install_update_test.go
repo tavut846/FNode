@@ -162,7 +162,7 @@ func lookup(t *testing.T, g *fakeGitHub, noJQ bool, call string) (string, string
 	if err != nil {
 		t.Skip("bash not available")
 	}
-	src, err := os.ReadFile("../FNode-script/install.sh")
+	src, err := readScript(t, "install.sh")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -320,7 +320,7 @@ func (s *updateSandbox) run(inject string, args ...string) (string, error) {
 	if _, err = exec.LookPath("unzip"); err != nil {
 		s.t.Skip("unzip not available")
 	}
-	src, err := os.ReadFile("../FNode-script/install.sh")
+	src, err := readScript(s.t, "install.sh")
 	if err != nil {
 		s.t.Fatal(err)
 	}
@@ -482,7 +482,7 @@ func TestFNodeScript_RemoteInstallerDownloadIsChecked(t *testing.T) {
 	if _, err = exec.LookPath("curl"); err != nil {
 		t.Skip("curl not available")
 	}
-	src, err := os.ReadFile("../FNode-script/FNode.sh")
+	src, err := readScript(t, "FNode.sh")
 	if err != nil {
 		t.Fatal(err)
 	}

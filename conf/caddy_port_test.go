@@ -10,12 +10,12 @@ import (
 	"testing"
 )
 
-// caddyScript returns the part of FNode-script/FNode.sh the Caddy wizard needs
+// caddyScript returns the part of FNode.sh (branch FNode-script) the Caddy wizard needs
 // (the https_port helpers and set_caddy_port), CRLF stripped, with
 // /etc/caddy and /etc/FNode redirected into dir.
 func caddyScript(t *testing.T, dir string) string {
 	t.Helper()
-	raw, err := os.ReadFile("../FNode-script/FNode.sh")
+	raw, err := readScript(t, "FNode.sh")
 	if err != nil {
 		t.Fatal(err)
 	}

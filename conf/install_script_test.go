@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-// runInstaller runs FNode-script/install.sh (CRLF stripped, as on a Windows
+// runInstaller runs install.sh of the FNode-script branch (CRLF stripped, as on a Windows
 // checkout) with the given arguments.
 func runInstaller(t *testing.T, args ...string) (string, error) {
 	t.Helper()
@@ -21,7 +21,7 @@ func runInstaller(t *testing.T, args ...string) (string, error) {
 	if err != nil {
 		t.Skip("bash not available")
 	}
-	src, err := os.ReadFile("../FNode-script/install.sh")
+	src, err := readScript(t, "install.sh")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,7 +167,7 @@ func TestInstallScript_MemoryLimits(t *testing.T) {
 	if err != nil {
 		t.Skip("bash not available")
 	}
-	src, err := os.ReadFile("../FNode-script/install.sh")
+	src, err := readScript(t, "install.sh")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -200,7 +200,7 @@ func TestInstallScript_MemoryLimits(t *testing.T) {
 // installHelpers returns the extract/download helper block of install.sh.
 func installHelpers(t *testing.T) string {
 	t.Helper()
-	src, err := os.ReadFile("../FNode-script/install.sh")
+	src, err := readScript(t, "install.sh")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -325,7 +325,7 @@ func TestInstallScript_DownloadFile(t *testing.T) {
 // The unit must not restart forever when the binary is missing, and the
 // install must verify the binary before it replaces the old one.
 func TestInstallScript_GuardsBrokenInstall(t *testing.T) {
-	src, err := os.ReadFile("../FNode-script/install.sh")
+	src, err := readScript(t, "install.sh")
 	if err != nil {
 		t.Fatal(err)
 	}

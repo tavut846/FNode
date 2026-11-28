@@ -10,7 +10,7 @@ import (
 
 func ignoreScript(t *testing.T) string {
 	t.Helper()
-	raw, err := os.ReadFile("../FNode-script/FNode.sh")
+	raw, err := readScript(t, "FNode.sh")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,7 +123,7 @@ func TestIgnorePanelOutbounds_OffWithoutKeyChangesNothing(t *testing.T) {
 }
 
 func TestIgnorePanelOutbounds_ScriptWiring(t *testing.T) {
-	raw, err := os.ReadFile("../FNode-script/FNode.sh")
+	raw, err := readScript(t, "FNode.sh")
 	if err != nil {
 		t.Fatal(err)
 	}

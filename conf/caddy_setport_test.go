@@ -11,7 +11,7 @@ import (
 
 // The existing wizard keeps today's behaviour: no port prompt, no global block.
 func TestCaddyWizardUnchanged(t *testing.T) {
-	raw, err := os.ReadFile("../FNode-script/FNode.sh")
+	raw, err := readScript(t, "FNode.sh")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -104,7 +104,7 @@ FNode config show --node vless:1 --summary
 ### 一键安装
 
 ```
-wget -N https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh && bash install.sh
+wget -N https://raw.githubusercontent.com/tavut846/FNode/FNode-script/install.sh && bash install.sh
 ```
 
 ### 脚本化安装 (Non-interactive install)
@@ -112,13 +112,13 @@ wget -N https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/ins
 Machine mode (one Xboard machine token runs every node assigned to the machine):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh | sudo bash -s -- --mode machine --panel 'https://panel' --token 'MACHINE_TOKEN' --machine-id 3
+curl -fsSL https://raw.githubusercontent.com/tavut846/FNode/FNode-script/install.sh | sudo bash -s -- --mode machine --panel 'https://panel' --token 'MACHINE_TOKEN' --machine-id 3
 ```
 
 Node mode (server token + node id; the node type is read from the panel unless `--type` is given):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh | sudo bash -s -- --mode node --panel 'https://panel' --token 'SERVER_TOKEN' --node-id 12
+curl -fsSL https://raw.githubusercontent.com/tavut846/FNode/FNode-script/install.sh | sudo bash -s -- --mode node --panel 'https://panel' --token 'SERVER_TOKEN' --node-id 12
 ```
 
 | Flag | Meaning |
@@ -139,7 +139,7 @@ With any of these flags the script asks nothing, writes `/etc/FNode/config.json`
 Uninstall without prompts:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tavut846/FNode/master/FNode-script/install.sh | sudo bash -s -- uninstall --yes
+curl -fsSL https://raw.githubusercontent.com/tavut846/FNode/FNode-script/install.sh | sudo bash -s -- uninstall --yes
 ```
 
 ```bash
@@ -148,7 +148,7 @@ FNode uninstall --yes
 
 ### 443 SNI 分流 (Sharing 443)
 
-同一台 VPS 上让网站 (Caddy 8443)、Reality 和 AnyTLS (面板连接端口 443、服务端口 8444) 共用公网 443: 运行 `FNode sni-split` (菜单 21)，脚本会配置 nginx `stream` + `ssl_preread` 按 SNI 分流。详见 `FNode-script/LOGIC.md`。
+同一台 VPS 上让网站 (Caddy 8443)、Reality 和 AnyTLS (面板连接端口 443、服务端口 8444) 共用公网 443: 运行 `FNode sni-split` (菜单 21)，脚本会配置 nginx `stream` + `ssl_preread` 按 SNI 分流。详见 `FNode-script` 分支的 `LOGIC.md` (https://github.com/tavut846/FNode/blob/FNode-script/LOGIC.md)。
 
 ## 构建
 

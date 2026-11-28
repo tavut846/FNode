@@ -14,7 +14,7 @@ import (
 // in PATH (caddy, systemctl) and the given extra shell appended.
 func caddyInstallScript(t *testing.T, dir, extra string) string {
 	t.Helper()
-	raw, err := os.ReadFile("../FNode-script/FNode.sh")
+	raw, err := readScript(t, "FNode.sh")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -118,7 +118,7 @@ func TestCaddyFixUnit_DropsEnviron(t *testing.T) {
 }
 
 func TestInstallCaddy_NeverFallsBackToStandardAndUnitHasNoEnviron(t *testing.T) {
-	raw, err := os.ReadFile("../FNode-script/FNode.sh")
+	raw, err := readScript(t, "FNode.sh")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -149,7 +149,7 @@ func TestCaddyValidate_PassesTokenFromEnvFile(t *testing.T) {
 // install must be called as `command install`, and a failed copy must stop
 // install_caddy before the unit file is written.
 func TestInstallCaddy_UsesCoreutilsInstallAndStopsOnFailure(t *testing.T) {
-	raw, err := os.ReadFile("../FNode-script/FNode.sh")
+	raw, err := readScript(t, "FNode.sh")
 	if err != nil {
 		t.Fatal(err)
 	}
